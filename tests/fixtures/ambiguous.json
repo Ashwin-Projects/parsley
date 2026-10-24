@@ -20,7 +20,7 @@
      "input": "print scroe",
      "expected_status": "ambiguous", "ambiguity": "typo",
      "expected_question": "Did you mean the variable score?", "options": ["yes", "no"],
-     "note": "edit distance 2 from score"},
+     "note": "edit distance 1 (adjacent swap) from the 5-letter name score"},
     {"id": "A05", "rule": "MUL1", "given": {"symbols": {"x": "number"}, "ref_stack": ["x"]},
      "input": "multiply x by 2 plus 3",
      "expected_status": "ambiguous", "ambiguity": "operator_scope",
@@ -30,11 +30,6 @@
      "input": "repeat print hello",
      "expected_status": "ambiguous", "ambiguity": "missing_slot",
      "expected_question": "How many times should it repeat?", "options": []},
-    {"id": "A07", "rule": "IF1", "given": {"symbols": {"count": "number"}, "ref_stack": ["count"]},
-     "input": "if count is greater than 5 then print big and print done",
-     "expected_status": "ambiguous", "ambiguity": "block_boundary",
-     "expected_question": "Should \"print done\" run only when the condition is true, or always?",
-     "options": ["only when true", "always"]},
     {"id": "A08", "rule": "MUL1", "given": {"symbols": {"total": "number"}, "ref_stack": ["total"]},
      "input": "multiply total",
      "expected_status": "ambiguous", "ambiguity": "missing_slot",
@@ -43,10 +38,15 @@
      "input": "show totl",
      "expected_status": "ambiguous", "ambiguity": "typo",
      "expected_question": "Did you mean the variable total?", "options": ["yes", "no"],
-     "note": "edit distance 1 from total"},
+     "note": "edit distance 1 from the 5-letter name total"},
     {"id": "A10", "rule": "S1", "given": {"symbols": {"y": "number"}, "ref_stack": ["y"]},
      "input": "set y to",
      "expected_status": "ambiguous", "ambiguity": "missing_slot",
-     "expected_question": "What value should y be set to?", "options": []}
+     "expected_question": "What value should y be set to?", "options": []},
+    {"id": "A11", "rule": "P1", "given": {"symbols": {"counter": "number"}, "ref_stack": ["counter"]},
+     "input": "print contr",
+     "expected_status": "ambiguous", "ambiguity": "typo",
+     "expected_question": "Did you mean the variable counter?", "options": ["yes", "no"],
+     "note": "edit distance 2 from the 7-letter name counter (6+ letters allow 2)"}
   ]
 }

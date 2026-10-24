@@ -46,10 +46,13 @@ in Phases 5-6.
 | Phase | State |
 |---|---|
 | 0 - Setup | Done: skeleton, packaging, placeholder CLI, smoke test |
-| 1 - Spec, contracts, fixtures, related work | Draft done; **awaiting team freeze** (see LANGUAGE_SPEC.md Section 9) |
-| 2-9 | Not started |
+| 1 - Spec, contracts, fixtures, related work | Done; spec frozen 2026-10-25 (decision log: LANGUAGE_SPEC.md Section 9) |
+| 2 - NLP front end | Next (branch `phase-2`, ASUS) |
+| 3 - AST, IR builder, lexer, parser | `ast_nodes.py` implemented as a data contract; parser next (branch `phase-3-parser`, MacBook) |
+| 4-9 | Not started |
 
-No compiler logic exists yet. Every module under `src/parsley/` is a docstring-only stub.
+Apart from the AST node dataclasses, no compiler logic exists yet; the other modules under
+`src/parsley/` are docstring-only stubs.
 
 ## Documentation
 
@@ -62,13 +65,14 @@ No compiler logic exists yet. Every module under `src/parsley/` is a docstring-o
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Phases 0-9, exit tests, team, branch/PR workflow |
 | [TESTING.md](TESTING.md) | Test layout, ownership, fixture format |
 | [CLAUDE.md](CLAUDE.md) | Rules for the coding agent |
+| [docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf](docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf) | The original plan (v2.1); "Clarix" = Parsley |
 
 ## Team
 
 | Member | Responsibility |
 |---|---|
 | ASUS | Core + integration (Phases 0, 1, 2, 4, 5, 6) |
-| Gaming | Evaluation, ablation, AST evaluator, mutation tests, optional learned scorer |
+| Gaming | Evaluation, ablation, AST evaluator, mutation tests, optional learned scorer (separate `parsley_ml/` package, off by default) |
 | MacBook | Lexer, parser, interpreter, round-trip compare, suggestions, demo |
 
 Each person works on a feature branch and merges via pull request (see DEVELOPMENT.md).

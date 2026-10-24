@@ -1,13 +1,11 @@
 # MiniLang and Constrained-English Specification
 
-Status: **Phase 1 draft, pending team freeze.** Source of truth: plan v2.1, Section 4
-(`Clarix_NL_MiniLang_Compiler_Plan_Final.pdf`; "Clarix" in the PDF = Parsley).
+Status: **frozen for Phase 2 (2026-10-25).** Source of truth: plan v2.1, Section 4
+([`docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf`](docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf);
+"Clarix" in the PDF = Parsley), plus the team decisions recorded in
+[Section 9](#9-decision-log).
 
 Changes to this file require updating tests in the same commit (CLAUDE.md rule 4).
-Items marked **[P1 decision]** fill gaps the plan leaves open; they are Phase 1 work
-(plan Phase 1, steps 2-3) and are open to review before the freeze. Items in
-[Section 9](#9-open-questions-need-team-decision-before-freeze) are unresolved and are
-deliberately kept out of the fixtures.
 
 ---
 
@@ -25,42 +23,54 @@ block        := "{" statement* "}"
 condition    := expression ( ">" | "<" | "==" | ">=" | "<=" | "!=" ) expression
 expression   := term   (("+" | "-") term)*
 term         := factor (("*" | "/") factor)*
-factor       := NUMBER | STRING | IDENT | "(" expression ")"
+factor       := "-" factor | NUMBER | STRING | IDENT | "(" expression ")"
 ```
 
-Precedence: `*` and `/` bind tighter than `+` and `-`; all four are left-associative.
-Parentheses override precedence.
+Precedence, from tightest: unary `-`, then `*` `/`, then `+` `-`. The binary operators are
+left-associative. Parentheses override precedence.
 
 ## 2. Types and lexical rules
 
 | Rule | Decision |
 |---|---|
 | Types | `number` (integer or decimal) and `string`. No booleans as values in MVP; conditions appear only inside `IF`. |
-| String + number | Semantic error in MVP (no implicit conversion). String + string is allowed (concatenation). |
-| Identifiers | Letters, digits, underscore; must start with a letter; case-sensitive; MiniLang keywords reserved. |
-| Keywords | `LET`, `PRINT`, `IF`, `THEN`, `ELSE`, `REPEAT`, `TIMES` (see open question Q3 on case). |
-| NUMBER | Digits with an optional single decimal part (`20`, `2.5`). No sign; see open question Q5. |
-| STRING | Double-quoted text (`"hello world"`). Escaping: see open question Q4. |
+| Number operations | `+ - * /`, unary `-`, and all six comparisons. |
+| String operations | `+` between two strings (concatenation), and `==` / `!=` between two strings. Nothing else. |
+| Mixed types | No implicit conversion. String + number, string vs. number comparison, and unary `-` on a string are semantic errors. |
+| Identifiers | Letters, digits, underscore; must start with a letter; case-sensitive. |
+| Keywords | `LET`, `PRINT`, `IF`, `THEN`, `ELSE`, `REPEAT`, `TIMES`, reserved **in any case**: `let`, `Let` and `LET` are all unusable as identifiers. MiniLang source writes keywords in upper case; any other casing of a keyword is a lexical error. |
+| NUMBER | Digits with an optional single decimal part (`20`, `2.5`). No sign in the token; negatives use unary `-`. |
+| STRING | Double-quoted. The only escapes are `\"` (quote) and `\\` (backslash). Any other backslash sequence is a lexical error. |
+| REPEAT count | An integer literal from 1 to 1000 (1000 is also the V3 safety cap). |
+| Block scope | One global scope. `LET` inside a block (`IF` or `REPEAT` body) is a semantic error, `E202`. |
 
-### 2.1 Canonical MiniLang formatting [P1 decision]
+### 2.1 Canonical MiniLang formatting
 
 The code generator (Phase 5) prints exactly one canonical form, so golden fixtures can
 compare text. The form follows the examples in plan Section 4:
 
 - One statement per line; every simple statement ends with `;`.
 - Single spaces around `=`, binary operators and comparison operators: `LET x = a + 1;`
+- Unary minus is attached with no space: `-5`, `-x`, `-(a + b)`; after a binary operator
+  it reads `a - -5`.
 - Keywords upper-case; identifiers and string contents keep their original spelling.
 - Number literals are printed as written in the input (`2.5` stays `2.5`, `20` stays `20`).
-- Blocks print on one line: `{ ` + statements separated by single spaces + ` }`.
+- String literals are printed with `"` and `\` escaped as `\"` and `\\`.
+- Blocks print on one line: `{ ` + the statement + ` }`.
   Example: `IF age > 17 THEN { PRINT "adult"; } ELSE { PRINT "minor"; }`
 - Parentheses appear only where precedence requires them: `x * (2 + 3)`, but `x * 2 + 3`.
 
 ### 2.2 Semantic errors (detected in Phase 4)
 
-Undefined variable (e.g. `E201 'score is used before it is created'`), redeclaration
-(warning), type mismatch (string arithmetic), division by literal zero, invalid
-`REPEAT` count. Diagnostics are plain English with a stage and a code
-(see ARCHITECTURE.md, `Diagnostic`). Errors exit non-zero and never print fake success.
+| Code | Condition | Example message |
+|---|---|---|
+| `E201` | Variable used before it is created | `score is used before it is created` |
+| `E202` | `LET` inside an `IF` or `REPEAT` block | `variables must be created outside IF and REPEAT blocks` |
+
+Phase 4 assigns codes for the remaining checks: redeclaration (warning), type mismatch
+(Section 2), division by literal zero, and REPEAT count outside 1-1000. Diagnostics are
+plain English with a stage and a code (see ARCHITECTURE.md, `Diagnostic`). Errors exit
+non-zero and never print fake success.
 
 ## 3. Normalization and case
 
@@ -72,36 +82,62 @@ The normalizer also collapses repeated spaces and strips trailing punctuation
 
 ## 4. Variable vs. text policy (N1)
 
-When an English value is a bare word or words, it is resolved in this fixed order:
+When an English operand is a bare word, it is resolved by the first rule that applies:
 
-1. Exact match to a declared variable -> identifier.
-2. Quoted text -> always a string.
-3. Anything else -> string literal by default.
-4. Within edit distance 2 of a declared name -> ask to confirm
-   (`Did you mean the variable score?`).
+1. **Declared name.** An exact match to a declared variable becomes an identifier.
+2. **Quoted text.** Quoted text is always a string.
+3. **Near-miss of a declared name.** Ask to confirm (`Did you mean the variable score?`) when
+   the word is close to a declared name, measured against the length of that declared name:
 
-No other case of the variable-vs-text decision asks a question. (Other ambiguity types
-in Section 7 still clarify.) Rule 1 is checked before rule 4, so an exact match never
-asks.
+   | Declared name length | Asks when edit distance is |
+   |---|---|
+   | 1-2 letters | never (no typo check) |
+   | 3-5 letters | <= 1 |
+   | 6+ letters | <= 2 |
+
+   Edit distance is the optimal-string-alignment distance: insert, delete, substitute, or
+   swap two adjacent letters, each counting 1 (so `scroe` is 1 from `score`). A word on the
+   common-English-word list (Section 4.1) is **never** treated as a typo.
+4. **Operand of an operator word.** A word directly next to an operator word (`plus`,
+   `minus`, `times`, `multiplied by`, `divided by`, `negative`, or the symbols `+ - * /`)
+   becomes an identifier. If it is not declared, the semantic analyzer reports `E201`.
+5. **Anything else.** It becomes a string literal (the whole run of words, e.g. `hello world`).
+
+Only rule 3 asks a question. Other kinds of ambiguity (Section 7) still clarify.
 
 Examples, after `LET age = 20;` and `LET score = 10;`:
 
-| English | MiniLang | Why |
+| English | Result | Rule |
 |---|---|---|
-| `print age` | `PRINT age;` | rule 1 |
-| `print "age"` | `PRINT "age";` | rule 2 |
-| `print total` | `PRINT "total";` | rule 3 (not declared, not near a declared name) |
-| `print scroe` | clarify: `Did you mean the variable score?` | rule 4 |
+| `print age` | `PRINT age;` | 1 |
+| `print "age"` | `PRINT "age";` | 2 |
+| `print scroe` | clarify: `Did you mean the variable score?` | 3 (distance 1, 5-letter name) |
+| `print store` | `PRINT "store";` | 5 (`store` is a common English word, so no typo check) |
+| `set age to x plus 1` | `age = x + 1;` and then `E201` | 4 |
+| `print total` | `PRINT "total";` | 5 |
+
+### 4.1 Common-English-word list
+
+The list is data in `parsley/nlp/patterns.py`. It contains every command word, synonym,
+operator word, comparison word and pronoun in Section 6, plus this starting set:
+
+```
+a an the and or not no yes this these those is are was be been to by of in on at for
+from with as all any some one two three more less most least than then else if
+hello hi bye world done big small store start end stop go up down ok good bad true false
+```
+
+Adding a word is a spec change: update this list and the tests together.
 
 ## 5. Context rules (N1)
 
 | Situation | Behaviour |
 |---|---|
 | Pronouns | `it`, `that`, `the variable` in a variable position resolve to the most recently assigned or referenced variable (top of the reference stack). |
-| Empty reference stack | The pronoun is an unfilled required slot -> clarify (Section 7). |
+| Empty reference stack | The pronoun is an unfilled required slot, so it clarifies (Section 7). |
 | Implicit declaration | Assignment intents (`set`, `change`, `update`, `assign`) to an undeclared name generate `LET` instead of assignment, with a warning diagnostic, rather than failing. |
-| Typos | Edit distance <= 2 to a declared name -> confirmation question; never silently auto-correct. |
-| Type-aware wording | The symbol table stores inferred types; arithmetic on a string variable (`add 5 to name`) is flagged with a plain-English type error. |
+| Typos | Section 4 rule 3: confirmation question, never silent auto-correction. |
+| Type-aware wording | The symbol table stores inferred types. Arithmetic on a string variable (`add 5 to name`) gets a plain-English type error. |
 
 The `and set it to` inside pattern D1 is part of the pattern, not a context pronoun.
 
@@ -146,19 +182,21 @@ Synonym groups (plan Phase 2): `make/create/declare`, `show/display/print`,
 ### 6.1 Values
 
 A `VALUE` is one operand, or operands joined by operator words, read with standard
-precedence (`times`/`divided by` before `plus`/`minus`):
+precedence (`negative` first, then `times`/`divided by`, then `plus`/`minus`):
 
 | Operator words | MiniLang |
 |---|---|
 | `plus`, `+` | `+` |
-| `minus`, `-` | `-` |
+| `minus`, `-` (between two operands) | `-` |
 | `times`, `multiplied by`, `*` | `*` |
 | `divided by`, `/` | `/` |
+| `negative OPERAND`, or `-` written directly before a number (`-5`) | unary `-` |
 
-Operands are a number (`20`, `2.5`), quoted text (`"Hello"`), a word or words resolved by
-the Section 4 policy, or a pronoun. Number words (`ten` -> `10`, for 0-20) are optional
-in Phase 2 ("if cheap") and are not used in the fixtures. How unquoted text that contains
-operator words is read is open question Q1.
+`minus` is always binary. A value that starts with `minus` is unsupported.
+
+Operands are a number (`20`, `2.5`), quoted text (`"Hello"`), a bare word resolved by the
+Section 4 policy, or a pronoun. Number words (`ten` -> `10`, for 0-20) are optional
+in Phase 2 ("if cheap") and are not used in the fixtures.
 
 ### 6.2 Conditions
 
@@ -178,12 +216,13 @@ Bare `is` is **not** a comparison (it is too ambiguous).
 
 ### 6.3 Block bodies
 
-In MVP English input, `IF` and `REPEAT` blocks contain exactly one statement.
-**[P1 decision]** That statement may be a `print`, `assign`, `increment`, `decrement`,
-`multiply` or `divide` sentence. It cannot be a declaration or a nested `if`/`repeat` (see
-open question Q6 on scoping). Multi-statement blocks through `then ... and ...` are only
-added if time allows. Until then, `and <statement>` after a block body is a
-block-boundary ambiguity (Section 7).
+In MVP, `IF` and `REPEAT` blocks hold **exactly one** statement. That statement may be a
+`print`, `assign`, `increment`, `decrement`, `multiply` or `divide` sentence. It cannot be
+a declaration (the MiniLang equivalent is error `E202`) or a nested `if`/`repeat`; such
+input matches no pattern and is rejected.
+
+An `and ...` continuation after an `IF`/`REPEAT` body (`if x is greater than 5 then print
+big and print done`) is **rejected** with a suggestion to split the sentence (Section 8).
 
 ## 7. Accept / clarify / reject rules (N2)
 
@@ -193,12 +232,14 @@ The NLP returns 0..k scored candidates. The ambiguity gate decides:
 |---|---|---|
 | **Accept** | `ok` | Exactly one candidate, or the top score is clearly ahead of the next (margin above threshold), and no required slot is missing or unresolved. |
 | **Clarify** | `ambiguous` | Two or more plausible candidates, or a required slot is missing. Ask a targeted question listing the options. |
-| **Reject** | `unsupported` | No candidate matches a supported pattern. Hand over to N4 for a suggestion. |
+| **Reject** | `unsupported` | No candidate matches a supported pattern, or the input is an `and ...` block continuation. Hand over to N4 for a suggestion. |
 
-### 7.1 What clarifies, and the exact question [P1 decision on wording]
+Ambiguity sources covered: missing values, alternatives (`or`), likely typos of declared
+names, and unclear operator scope.
 
-Questions are filled from these templates. `{name}` keeps its original spelling. Wording
-follows the plan's demo and Phase 6 examples where they exist.
+### 7.1 What clarifies, and the exact question
+
+Questions are filled from these templates. `{name}` keeps its original spelling.
 
 | Ambiguity type | Trigger | Question template | Options |
 |---|---|---|---|
@@ -211,10 +252,8 @@ follows the plan's demo and Phase 6 examples where they exist.
 | `missing_slot` | REP1 with no `N times` | `How many times should it repeat?` | free answer |
 | `missing_slot` | pronoun with an empty reference stack | `Which variable does "{pronoun}" refer to?` | free answer |
 | `alternatives` | `VALUE or VALUE` in a value position | `{a} or {b}?` | `[a, b]` |
-| `typo` | Section 4 rule 4 | `Did you mean the variable {name}?` | `["yes", "no"]` |
+| `typo` | Section 4 rule 3 | `Did you mean the variable {name}?` | `["yes", "no"]` |
 | `operator_scope` | MUL1/DIV1 whose `VALUE` contains `plus` or `minus` | `Do you mean ({name} {op} {a}) {op2} {b}, or {name} {op} ({a} {op2} {b})?` | the two readings |
-| `block_boundary` | IF1/IF2 body followed by `and STMT` | `Should "{clause}" run only when the condition is true, or always?` | `["only when true", "always"]` |
-| `block_boundary` | REP1-REP3 body followed by `and STMT` | `Should "{clause}" be repeated, or run once after the loop?` | `["repeated", "once after"]` |
 
 In `operator_scope`, `{op}` is `times` or `divided by` and `{op2}` is `plus` or `minus`.
 Arithmetic in other positions (e.g. `set y to x times 2 plus 3`) uses standard precedence
@@ -222,7 +261,7 @@ and does **not** clarify.
 
 ### 7.2 What auto-resolves (no question)
 
-- Variable vs. text, by Section 4 rules 1-3.
+- Variable vs. text, by Section 4 rules 1, 2, 4 and 5.
 - Pronouns when the reference stack is non-empty.
 - Assignment to an undeclared name: implicit `LET` plus a warning.
 - Operator precedence outside the `operator_scope` trigger.
@@ -241,42 +280,36 @@ and does **not** clarify.
 Rejected input returns `unsupported` with an N4 suggestion where one is close enough.
 It never crashes and never produces code.
 
-| Category | Examples |
-|---|---|
-| Out of scope: functions | `define a function called greet` |
-| Out of scope: lists / collections | `create a list of numbers`, `sort the list descending` |
-| Out of scope: user input | `ask the user for their age` |
-| Out of scope: other loops | `while x is less than 10 print x` |
-| Out of scope: library maths | `calculate the square root of 16` |
-| Out of scope: files / I/O / jumps | `open the file data.txt`, `go to line 10` |
-| Unsupported phrasing of a supported idea | `store 50 in bonus` (suggest `set bonus to 50`) |
-| Malformed / empty input | `!!!` (empty after normalization) |
-| Nested IF/REPEAT, declarations inside blocks | see Section 6.3 |
+| Category (`reason`) | Examples | Suggestion |
+|---|---|---|
+| `out_of_scope`: functions | `define a function called greet` | none, or nearest pattern |
+| `out_of_scope`: lists / collections | `create a list of numbers`, `sort the list descending` | none, or nearest pattern |
+| `out_of_scope`: user input | `ask the user for their age` | none, or nearest pattern |
+| `out_of_scope`: other loops | `while x is less than 10 print x` | none, or nearest pattern |
+| `out_of_scope`: library maths | `calculate the square root of 16` | none, or nearest pattern |
+| `out_of_scope`: files / I/O / jumps | `open the file data.txt`, `go to line 10` | none, or nearest pattern |
+| `unsupported_phrasing` | `store 50 in bonus` | nearest pattern, e.g. `set bonus to 50` |
+| `block_continuation` | `if count is greater than 5 then print big and print done` | `Blocks hold one statement. Try: "{sentence before and}" and then "{clause}" as separate sentences.` |
+| `malformed` | `!!!` (empty after normalization) | none |
 
-## 9. Open questions (need team decision before freeze)
+## 9. Decision log
 
-These are gaps or tensions in the plan. They are listed with a **proposed** fix but are
-**not** decided. No fixture depends on them.
+Decisions taken by the team on 2026-10-25 to close the Phase 1 open questions. They are
+applied throughout this document.
 
-- **Q1. Variable-vs-text in arithmetic positions.** Rule 3 makes any undeclared bare word
-  text. That means `set y to x plus 1` with `x` undeclared becomes `"x" + 1` (a type
-  error), so the plan's "undefined variable" diagnostic (E201) can never come from
-  English. *Proposed:* rule 3 applies to whole values. An operand of an operator word that
-  is not declared is read as an identifier and reported as E201.
-- **Q2. Typo distance for short names.** Distance <= 2 against a 1-2 letter name (`x`)
-  makes almost every short word a typo (`print a` asks about `x`). *Proposed:* distance
-  <= 1 for names of length <= 3, and <= 2 otherwise.
-- **Q3. Keyword case.** Identifiers are case-sensitive, so is `let` (lower-case) a legal
-  identifier? *Proposed:* reserve keywords case-insensitively.
-- **Q4. String escaping.** Codegen must escape strings, but the grammar does not define
-  escapes. *Proposed:* `\"` and `\\` only.
-- **Q5. Negative numbers.** No unary minus in the grammar, so `set x to -5` cannot be
-  expressed. *Proposed:* keep it out of MVP (reject with a suggestion), and document it as
-  a limitation.
-- **Q6. Block scope.** The grammar allows `LET` inside a block, but no scoping rule is
-  given. *Proposed:* one global scope; English cannot declare inside a block (Section 6.3).
-- **Q7. Comparing strings.** Types for `<`/`>` on strings, and string vs. number
-  comparisons, are undefined. *Proposed:* `==`/`!=` allowed between same-typed values;
-  ordering only on numbers; mixed comparisons are type errors.
-- **Q8. REPEAT count range.** "Invalid REPEAT count" is not defined. *Proposed:* an
-  integer literal from 1 to 1000 (1000 = the plan's V3 safety cap).
+| # | Question | Decision | Where |
+|---|---|---|---|
+| D-1 | Undeclared words in arithmetic | A word directly next to an operator word is an identifier; if undeclared, `E201`. | §4 rule 4 |
+| D-2 | Typo distance | None for 1-2 letter names; <= 1 for 3-5; <= 2 for 6+; never for common English words. | §4 rule 3, §4.1 |
+| D-3 | Typo question wording | `Did you mean the variable score?` | §7.1 |
+| D-4 | Block boundaries | MVP blocks hold exactly one statement; an `and ...` continuation is rejected with a suggestion. Block boundaries are not an N2 ambiguity source. | §6.3, §8 |
+| D-5 | Fixture location | `tests/fixtures/` is the source of truth; `examples/` holds runnable sessions from Phase 5. | TESTING.md |
+| D-6 | Keyword case | Reserved in any case. | §2 |
+| D-7 | String escapes | `\"` and `\\` only. | §2 |
+| D-8 | Negative numbers | Unary minus added: `factor := "-" factor \| ...`. | §1, §2.1, §6.1 |
+| D-9 | Block scope | `LET` inside a block is a semantic error, `E202`. | §2, §2.2 |
+| D-10 | String comparison | Strings support only `==` and `!=`. | §2 |
+| D-11 | REPEAT count | Integer literal from 1 to 1000. | §2 |
+
+Edit distance in D-2 is optimal string alignment (an adjacent swap counts as one edit), so
+the plan's demo case `print scroe` stays a typo question for the 5-letter name `score`.

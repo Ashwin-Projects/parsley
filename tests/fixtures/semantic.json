@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "category": "semantic",
+  "spec": "LANGUAGE_SPEC.md",
+  "fixtures": [
+    {"id": "M01", "rule": "S1", "given": {"symbols": {"age": "number"}, "ref_stack": ["age"]},
+     "input": "set age to x plus 1",
+     "expected_status": "ok", "expected_diagnostic_codes": ["E201"],
+     "note": "x is next to an operator word, so it is an identifier (rule 4); undeclared -> E201 (decision D-1)"},
+    {"id": "M02", "rule": "P1", "given": {"symbols": {}, "ref_stack": []},
+     "input": "print x times 2",
+     "expected_status": "ok", "expected_diagnostic_codes": ["E201"],
+     "note": "rule 4 applies even with an empty symbol table"}
+  ]
+}

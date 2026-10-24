@@ -48,11 +48,11 @@
     {"id": "V14", "intent": "print", "rule": "P1", "given": {"symbols": {}, "ref_stack": []},
      "input": "display hello world",
      "expected_minilang": "PRINT \"hello world\";", "expected_diagnostic_levels": [],
-     "note": "variable-vs-text rule 3 (default text)"},
+     "note": "variable-vs-text rule 5 (default text)"},
     {"id": "V15", "intent": "print", "rule": "P1", "given": {"symbols": {"score": "number"}, "ref_stack": ["score"]},
      "input": "print total",
      "expected_minilang": "PRINT \"total\";", "expected_diagnostic_levels": [],
-     "note": "rule 3: not declared and not within edit distance 2 of score"},
+     "note": "rule 5: not declared and not a near-miss of score"},
     {"id": "V16", "intent": "if", "rule": "IF2", "given": {"symbols": {"age": "number"}, "ref_stack": ["age"]},
      "input": "if age is greater than 17 then print adult else print minor",
      "expected_minilang": "IF age > 17 THEN { PRINT \"adult\"; } ELSE { PRINT \"minor\"; }", "expected_diagnostic_levels": []},
@@ -68,6 +68,18 @@
     {"id": "V20", "intent": "increment", "rule": "INC2", "given": {"symbols": {"score": "number"}, "ref_stack": ["score"]},
      "input": "add 5 to it",
      "expected_minilang": "score = score + 5;", "expected_diagnostic_levels": [],
-     "note": "reference: pronoun resolves to top of ref_stack"}
+     "note": "reference: pronoun resolves to top of ref_stack"},
+    {"id": "V21", "intent": "print", "rule": "P1", "given": {"symbols": {"x": "number"}, "ref_stack": ["x"]},
+     "input": "print y",
+     "expected_minilang": "PRINT \"y\";", "expected_diagnostic_levels": [],
+     "note": "typo rule 3 never checks 1-2 letter names (y is distance 1 from x); rule 5 text"},
+    {"id": "V22", "intent": "print", "rule": "P1", "given": {"symbols": {"score": "number"}, "ref_stack": ["score"]},
+     "input": "print store",
+     "expected_minilang": "PRINT \"store\";", "expected_diagnostic_levels": [],
+     "note": "store is distance 1 from score but is a common English word, so never a typo; rule 5 text"},
+    {"id": "V23", "intent": "assign", "rule": "S1", "given": {"symbols": {"x": "number"}, "ref_stack": ["x"]},
+     "input": "set x to negative 5",
+     "expected_minilang": "x = -5;", "expected_diagnostic_levels": [],
+     "note": "unary minus (LANGUAGE_SPEC.md 6.1)"}
   ]
 }

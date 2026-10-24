@@ -34,8 +34,8 @@ deterministic, use no paid API, and are built with the standard library only.
 
 | Id | Feature | Phase | Module(s) |
 |---|---|---|---|
-| **N1** | Compiler-informed interpretation (headline): variable vs. text, pronouns, implicit declaration, typo confirmation, type-aware wording | 6 (inputs from 4) | `nlp/context.py` |
-| **N2** | Ambiguity detection and clarification dialogue: accept / clarify / reject; REPL loop; diagnostics in file mode | 2 (multi-candidate output), 6 | `nlp/candidates.py`, `nlp/ambiguity.py` |
+| **N1** | Compiler-informed interpretation (headline): variable vs. text (operands of operator words are identifiers, so undeclared ones report E201), pronouns, implicit declaration, typo confirmation (length-scaled edit distance, never on common English words), type-aware wording | 6 (inputs from 4) | `nlp/context.py` |
+| **N2** | Ambiguity detection and clarification dialogue: accept / clarify / reject; REPL loop; diagnostics in file mode. Sources: missing values, alternatives, likely typos, operator scope. (`and ...` block continuations are rejected, not clarified: MVP blocks hold one statement.) | 2 (multi-candidate output), 6 | `nlp/candidates.py`, `nlp/ambiguity.py` |
 | **N3** | Two-way, three-layer verification: V1 back-translation (core), V2 structural round-trip (supporting), V3 execution equivalence (core-light) | 5 (V1), 7 (V2, V3) | `verify/` |
 | **N4** | "Did you mean" recovery: nearest supported pattern for rejected input | 6 | `nlp/suggest.py` |
 | **N5** | Measured evaluation: held-out set, metrics, ablation, failure analysis | 8 | `eval/` |
@@ -65,6 +65,8 @@ as proof** that every English interpretation is correct.
   limits paraphrase handling.
 - Any language features beyond the spec: no functions, lists or user input in MiniLang.
 - Any percentage in advance. We report the measured numbers, including failures.
+- Anything from the optional learned scorer (`parsley_ml/`). It is off by default, outside the
+  core, and not part of the contribution; all headline numbers are reported with it off.
 
 The defensible claim is the **specific combination**: a compiler symbol table feeding back
 into English interpretation, explicit ambiguity handling, and layered verification inside a

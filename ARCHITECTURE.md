@@ -112,12 +112,19 @@ describe meaning, not code:
 | `name` | `text: str` | Resolved identifier (declared variable, or assignment target). |
 | `pronoun` | `text: str` | Unresolved `it` / `that` / `the variable`. |
 | `binop` | `op: "+"\|"-"\|"*"\|"/"`, `left: Slot`, `right: Slot` | Arithmetic value. |
+| `neg` | `operand: Slot` | Unary minus (`negative 5`, `-5`). |
 | `condition` | `op: ">"\|"<"\|"=="\|">="\|"<="\|"!="`, `left: Slot`, `right: Slot` | `if` condition. |
 | `statement` | `intent: str`, `slots: dict` | Nested block body (`then`, `else`, `body`). |
 | `count` | `text: str` | `repeat` count as written. |
 
 After the context resolver runs on an accepted candidate, no `word` or `pronoun` slot
 remains.
+
+**Scoring interface.** `score` is the only field an external scorer may change. The
+optional learned scorer (`parsley_ml/`, DEVELOPMENT.md) plugs in through the scorer hook
+defined in `candidates.py` in Phase 2: it takes candidates and returns new scores, and
+never adds, removes or edits candidates. Core code never imports `parsley_ml`. The scorer
+is off by default; with it off, the rule-based score is used.
 
 ### 2.4 NLPResult
 
@@ -141,7 +148,7 @@ stage (design rule 1).
 |---|---|---|
 | `level` | `"error" \| "warning" \| "info"` | Any `error` makes the CLI exit non-zero. |
 | `stage` | `str` | One of `normalizer`, `candidates`, `context`, `ambiguity`, `ir`, `lexer`, `parser`, `semantic`, `codegen`, `verify`, `cli`. |
-| `code` | `str` | Letter (`E`/`W`/`I`, matching `level`) + 3 digits. `E201` = "used before it is created" (plan Phase 4). Number ranges per stage are assigned in Phase 4. |
+| `code` | `str` | Letter (`E`/`W`/`I`, matching `level`) + 3 digits. `E201` = used before it is created; `E202` = `LET` inside a block (LANGUAGE_SPEC.md 2.2). Other codes are assigned in Phase 4. |
 | `message` | `str` | Plain English, user-facing. |
 
 ### 2.6 Verification
@@ -169,10 +176,28 @@ Defined in `parsley/session.py`; the symbol table type lives in
 
 `Stmt` = any statement AST node: `Let | Assign | Print | If | Repeat`.
 
-### 2.8 AST node names (implemented in Phase 3)
+### 2.8 AST nodes
 
-`Program, Let, Assign, Print, If, Repeat, BinOp, Compare, Num, Str, Var`. These are frozen,
-comparable dataclasses (`eq=True, frozen=True`), so V2 is a plain equality check.
+Defined in `parsley/compiler/ast_nodes.py` (implemented; owner ASUS). Frozen, comparable
+dataclasses, so V2 is a plain equality check. Child sequences are tuples, so every tree is
+hashable.
+
+| Node | Fields |
+|---|---|
+| `Program` | `statements: tuple[Stmt, ...]` |
+| `Let`, `Assign` | `name: str`, `value: Expr` |
+| `Print` | `value: Expr` |
+| `If` | `condition: Compare`, `then_body: tuple[Stmt, ...]`, `else_body: tuple[Stmt, ...] \| None` (None = no ELSE) |
+| `Repeat` | `count: Num`, `body: tuple[Stmt, ...]` |
+| `Compare` | `op: ">"\|"<"\|"=="\|">="\|"<="\|"!="`, `left: Expr`, `right: Expr` |
+| `BinOp` | `op: "+"\|"-"\|"*"\|"/"`, `left: Expr`, `right: Expr` |
+| `Neg` | `operand: Expr` (unary minus) |
+| `Num` | `text: str` (exactly as written) |
+| `Str` | `value: str` (unescaped content) |
+| `Var` | `name: str` |
+
+`Expr = Num | Str | Var | Neg | BinOp`; `Stmt = Let | Assign | Print | If | Repeat`.
+Nodes hold no logic: type and range checks (e.g. the REPEAT count) belong to `semantic.py`.
 
 ## 3. Design rules
 
@@ -190,7 +215,7 @@ comparable dataclasses (`eq=True, frozen=True`), so V2 is a plain equality check
 
 | Boundary | Producer (owner) | Consumers (owners) |
 |---|---|---|
-| `Candidate`, `NLPResult` | NLP front end (ASUS) | IR builder (ASUS), suggest.py (MacBook), evaluation (Gaming) |
+| `Candidate`, `NLPResult` | NLP front end (ASUS) | IR builder (ASUS), suggest.py (MacBook), evaluation (Gaming), optional `parsley_ml` scorer (Gaming; may change `score` only) |
 | `Diagnostic` | all stages | CLI (ASUS), evaluation (Gaming) |
 | `Session` / symbol table | semantic.py (ASUS) | context.py (ASUS), ast_eval (Gaming), interpreter (MacBook) |
 | AST nodes | ast_nodes.py (ASUS) | parser (MacBook), codegen (ASUS), verifiers (MacBook, Gaming) |

@@ -14,10 +14,27 @@ through the plan, not left to the end. If the deadline is shorter, compress Phas
 | **Gaming** | Evaluation, ablation, AST evaluator (`ast_eval.py`), mutation tests, optional learned scorer* |
 | **MacBook** | Lexer, parser, interpreter, round-trip compare, suggestions (`suggest.py`), demo |
 
-\* The learned scorer is not part of plan v2.1. It must be standard-library only and
-deterministic, must sit behind the same `Candidate.score` interface, and must be off by
-default. It may only start after Phase 8 numbers exist, and needs team approval
-(CLAUDE.md rule 7).
+\* **Optional learned scorer** (not part of plan v2.1, and not part of the novelty claim):
+- It lives in a separate package, `parsley_ml/`, with its own `requirements-ml.txt`.
+  Third-party libraries are allowed there, and only there (CLAUDE.md rule 7).
+- Core code (`src/parsley/`) never imports it.
+- It is off by default and plugs in only through the Candidate scoring interface
+  (ARCHITECTURE.md 2.3); it may change `Candidate.score` and nothing else.
+- It may start once the Candidate contract is frozen (ARCHITECTURE.md 2.3, frozen in Phase 1).
+
+### Module ownership
+
+| Module(s) | Owner | Notes |
+|---|---|---|
+| `nlp/normalizer.py`, `patterns.py`, `candidates.py`, `context.py`, `ambiguity.py` | ASUS | |
+| `nlp/suggest.py` | MacBook | ASUS integrates it into the pipeline |
+| `compiler/ast_nodes.py`, `ir_builder.py` | ASUS | `ast_nodes.py` is implemented; it is a data contract the parser depends on |
+| `compiler/lexer.py`, `parser.py` | MacBook | |
+| `compiler/semantic.py`, `symbols.py`, `codegen.py`, `session.py`, `diagnostics.py`, `pipeline.py`, `cli.py` | ASUS | |
+| `verify/backtranslate.py` | ASUS | |
+| `verify/roundtrip.py`, `verify/interpreter.py` | MacBook | |
+| `verify/ast_eval.py`, mutation tests | Gaming | |
+| `eval/`, `tests/eval_data/`, `parsley_ml/` | Gaming | |
 
 `ast_eval.py` (Gaming) and `interpreter.py` (MacBook) have different authors on purpose,
 so V3 does not share bugs between them.
@@ -25,7 +42,8 @@ so V3 does not share bugs between them.
 ### Workflow rule
 
 **Each person works on a feature branch and merges into `main` via a pull request.** No
-direct commits to `main`. Branch names: `<phase>-<topic>`, e.g. `p3-parser`, `p6-context`.
+direct commits to `main`. Branch names: `phase-<n>[-<topic>]`, e.g. `phase-2`,
+`phase-3-parser`.
 A PR touching another owner's module, or any contract in ARCHITECTURE.md, needs that
 owner's review.
 
@@ -39,7 +57,7 @@ owner's review.
 | 3 | Week 3 | AST, IR builder, lexer, parser | Parser reused by V2/V3 | MacBook (lexer, parser); ASUS (AST, IR builder) |
 | 4 | Week 4 | Semantic analysis, symbol table, session | Symbol table exposed for N1 | ASUS |
 | 5 | Week 5 | Code generation + back-translation + end-to-end CLI | N3-V1 | ASUS |
-| 6 | Week 6 (first half) | Context resolver + ambiguity gate + suggestions | N1, N2, N4 | ASUS (context, ambiguity); MacBook (suggest.py) |
+| 6 | Week 6 (first half) | Context resolver + ambiguity gate + suggestions | N1, N2, N4 | ASUS (context, ambiguity, integration); MacBook (suggest.py) |
 | 7 | Week 6 (second half) - Week 7 | Verifier: round-trip + interpreter + execution equivalence | N3-V2, V3 | MacBook (roundtrip, interpreter); Gaming (ast_eval, mutation tests) |
 | 8 | Week 7 | Evaluation dataset, metrics, ablation | N5 | Gaming |
 | 9 | Week 8 | Hardening, docs, report, demo | Novelty demo script | All; MacBook (demo) |
@@ -73,7 +91,7 @@ the ambiguity rules; freeze the data contracts in ARCHITECTURE.md; create fixtur
 
 | Deliverable | Exit test |
 |---|---|
-| Frozen spec, contracts, 40+ fixtures, NOVELTY.md draft | Team agrees the spec is frozen (including LANGUAGE_SPEC.md Section 9 open questions); fixtures saved in `tests/fixtures` and `examples/` |
+| Frozen spec, contracts, 40+ fixtures, NOVELTY.md draft | Team agrees the spec is frozen (done 2026-10-25; LANGUAGE_SPEC.md Section 9 decision log); fixtures saved in `tests/fixtures` (the source of truth; `examples/` gets runnable sessions in Phase 5) |
 
 ## Phase 2 - NLP front end (scored candidates) (Week 2)
 
@@ -96,7 +114,8 @@ matches, with no exceptions escaping; unit tests.
 verification.
 
 Steps: frozen, comparable AST dataclasses (`Program, Let, Assign, Print, If, Repeat, BinOp,
-Compare, Num, Str, Var`); IR builder (Candidate -> AST, one function per intent); lexer with
+Compare, Num, Str, Var`, plus `Neg` for unary minus; **already implemented** in
+`ast_nodes.py` so the parser can build against it); IR builder (Candidate -> AST, one function per intent); lexer with
 line/column errors; recursive-descent parser with correct precedence; tests (every
 expected-MiniLang fixture parses; malformed MiniLang returns errors and never crashes).
 
@@ -109,8 +128,9 @@ expected-MiniLang fixture parses; malformed MiniLang returns errors and never cr
 **Goal:** Catch meaning errors and keep program state across sentences.
 
 Steps: `symbols.py` (name, inferred type, declaring statement); `semantic.py` (undefined
-variable, redeclaration warning, type mismatch, division by literal zero, invalid REPEAT
-count); plain-English diagnostics with stage and code (e.g. `E201`); `session.py` (symbol
+variable `E201`, `LET` inside a block `E202`, redeclaration warning, type mismatch including
+string operations other than `+`/`==`/`!=`, division by literal zero, REPEAT count outside
+1-1000); plain-English diagnostics with stage and code; `session.py` (symbol
 table, reference stack, history); a read-only symbol-table view for the context resolver;
 positive and negative tests.
 
@@ -136,9 +156,11 @@ sentence, file mode, `--trace`, `--output`, REPL, `--confirm`); golden tests.
 **Goal:** Implement the headline novelty N1, plus N2 and N4. Prioritize this over any extra
 language features.
 
-Steps: `context.py` (bare words vs. symbol table, pronouns via the reference stack, implicit
-LET with warning, near-miss names at edit distance <= 2 -> confirmation, type hints); context
-re-scoring; `ambiguity.py` (score-margin threshold, missing-slot checks, template questions);
+Steps: `context.py` (bare words vs. symbol table, operator operands as identifiers, pronouns
+via the reference stack, implicit LET with warning, near-miss names -> confirmation using the
+length-scaled distance and common-word list in LANGUAGE_SPEC.md §4, type hints); context
+re-scoring; `ambiguity.py` (score-margin threshold, missing-slot checks, template questions;
+`and ...` block continuations are rejected, not clarified);
 REPL clarification loop (diagnostic in file mode); `suggest.py` (token overlap + edit
 distance over the pattern templates); tests, including the `--no-context` ablation switch.
 

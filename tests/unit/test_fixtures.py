@@ -12,9 +12,10 @@ CATEGORY_KEYS = {
     "valid": {"intent", "rule", "expected_minilang", "expected_diagnostic_levels"},
     "invalid": {"expected_status", "reason"},
     "ambiguous": {"rule", "expected_status", "ambiguity", "expected_question", "options"},
+    "semantic": {"rule", "expected_status", "expected_diagnostic_codes"},
 }
-MIN_COUNTS = {"valid": 20, "invalid": 10, "ambiguous": 10}
-ID_PREFIX = {"valid": "V", "invalid": "X", "ambiguous": "A"}
+MIN_COUNTS = {"valid": 20, "invalid": 10, "ambiguous": 10, "semantic": 2}
+ID_PREFIX = {"valid": "V", "invalid": "X", "ambiguous": "A", "semantic": "M"}
 
 
 def load(category):

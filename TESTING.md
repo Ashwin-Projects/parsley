@@ -15,7 +15,8 @@ tests/
 |-- fixtures/       development fixtures (JSON), shared by all phases
 |   |-- valid.json      English + given session -> expected MiniLang
 |   |-- invalid.json    English -> expected "unsupported"
-|   `-- ambiguous.json  English + given session -> expected clarification question
+|   |-- ambiguous.json  English + given session -> expected clarification question
+|   `-- semantic.json   English + given session -> expected semantic diagnostic codes (Phase 4)
 `-- eval_data/      held-out evaluation set (Phase 8); written after Phase 7 by a teammate, frozen before running
 ```
 
@@ -39,7 +40,7 @@ All fixture files share this envelope:
 ```json
 {
   "version": 1,
-  "category": "valid | invalid | ambiguous",
+  "category": "valid | invalid | ambiguous | semantic",
   "spec": "LANGUAGE_SPEC.md",
   "fixtures": [ ... ]
 }
@@ -49,7 +50,7 @@ Every fixture has:
 
 | Key | Type | Meaning |
 |---|---|---|
-| `id` | `str` | Unique: `Vnn` valid, `Xnn` invalid, `Ann` ambiguous. Never reuse an id. |
+| `id` | `str` | Unique: `Vnn` valid, `Xnn` invalid, `Ann` ambiguous, `Mnn` semantic. Never reuse an id (retired: `A07`). |
 | `input` | `str` | One English sentence, exactly as the user types it. |
 | `given` | `object` | Session state before the input: `{"symbols": {name: "number"\|"string"}, "ref_stack": [name, ...]}`. `ref_stack` lists the most recent name last. Tests load this into a `Session`, with `declared_at` assigned in key order. |
 | `note` | `str` (optional) | Why the case exists; which spec rule it exercises. |
@@ -59,15 +60,16 @@ Per category:
 | Category | Extra keys |
 |---|---|
 | valid | `intent`, `rule` (LANGUAGE_SPEC.md rule id), `expected_minilang` (canonical format, LANGUAGE_SPEC.md 2.1), `expected_diagnostic_levels` (list of `"warning"`/`"info"`; empty when the statement is clean) |
-| invalid | `expected_status` (`"unsupported"`), `reason` (`unsupported_phrasing` \| `out_of_scope` \| `malformed`) |
-| ambiguous | `rule`, `expected_status` (`"ambiguous"`), `ambiguity` (`missing_slot` \| `alternatives` \| `typo` \| `operator_scope` \| `block_boundary`), `expected_question` (exact text from the LANGUAGE_SPEC.md 7.1 templates), `options` (list; empty for free answers) |
+| invalid | `expected_status` (`"unsupported"`), `reason` (`unsupported_phrasing` \| `out_of_scope` \| `block_continuation` \| `malformed`), optional `expected_suggestion` (exact text, where the spec fixes it) |
+| ambiguous | `rule`, `expected_status` (`"ambiguous"`), `ambiguity` (`missing_slot` \| `alternatives` \| `typo` \| `operator_scope`), `expected_question` (exact text from the LANGUAGE_SPEC.md 7.1 templates), `options` (list; empty for free answers) |
+| semantic | `rule`, `expected_status` (`"ok"`: the NLP accepts it), `expected_diagnostic_codes` (e.g. `["E201"]`) |
 
 Rules for adding fixtures:
 
 - Every fixture must follow LANGUAGE_SPEC.md exactly. A fixture that needs a new pattern means
   the spec changes first, in the same PR (CLAUDE.md rule 4).
-- Do not write fixtures that depend on the LANGUAGE_SPEC.md Section 9 open questions until
-  they are decided.
+- `tests/fixtures/` is the single source of truth for fixtures (decision D-5). `examples/`
+  holds runnable sessions built from them, from Phase 5.
 - Fixtures are for development and tuning. The Phase 8 evaluation set is separate and must
   not be copied from them.
 

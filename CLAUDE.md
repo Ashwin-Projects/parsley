@@ -1,7 +1,8 @@
 # CLAUDE.md - permanent rules for the coding agent
 
 Project: Parsley, an English-to-MiniLang compiler. The plan PDF
-(`Clarix_NL_MiniLang_Compiler_Plan_Final.pdf`, "Clarix" = Parsley) is the source of truth.
+(`docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf`, "Clarix" = Parsley) is the source of
+truth, together with the decision log in LANGUAGE_SPEC.md Section 9.
 
 ```
 1. Read README, DEVELOPMENT, LANGUAGE_SPEC, ARCHITECTURE and NOVELTY
@@ -15,6 +16,10 @@ Project: Parsley, an English-to-MiniLang compiler. The plan PDF
 6. Mutation/corruption hooks exist only under tests/; never in the runtime pipeline.
 7. Standard library only, plus pytest. No APIs, secrets or heavy
    dependencies without approval.
+   Exception: the optional learned scorer in parsley_ml/ may use the
+   third-party libraries listed in requirements-ml.txt, and only there.
+   Core code (src/parsley/) never imports parsley_ml; the scorer is off
+   by default and plugs in only through the Candidate scoring interface.
 8. Add a test for every new behaviour and bug fix. Run tests;
    report the exact command and output.
 9. Never claim tests passed unless they were run.
