@@ -59,7 +59,7 @@ Per category:
 
 | Category | Extra keys |
 |---|---|
-| valid | `intent`, `rule` (LANGUAGE_SPEC.md rule id), `expected_minilang` (canonical format, LANGUAGE_SPEC.md 2.1), `expected_diagnostic_levels` (list of `"warning"`/`"info"`; empty when the statement is clean) |
+| valid | `intent`, `rule` (LANGUAGE_SPEC.md rule id), `expected_slots` (the top candidate's slots after Phase 2, in the ARCHITECTURE.md 2.3 slot shapes; bare words stay unresolved `word`s), `expected_minilang` (canonical format, LANGUAGE_SPEC.md 2.1), `expected_diagnostic_levels` (list of `"warning"`/`"info"`; empty when the statement is clean) |
 | invalid | `expected_status` (`"unsupported"`), `reason` (`unsupported_phrasing` \| `out_of_scope` \| `block_continuation` \| `malformed`), optional `expected_suggestion` (exact text, where the spec fixes it) |
 | ambiguous | `rule`, `expected_status` (`"ambiguous"`), `ambiguity` (`missing_slot` \| `alternatives` \| `typo` \| `operator_scope`), `expected_question` (exact text from the LANGUAGE_SPEC.md 7.1 templates), `options` (list; empty for free answers) |
 | semantic | `rule`, `expected_status` (`"ok"`: the NLP accepts it), `expected_diagnostic_codes` (e.g. `["E201"]`) |
