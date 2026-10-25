@@ -1,0 +1,3 @@
+LET score = 10;
+score = score + 5;
+REPEAT 2 TIMES { PRINT score; }

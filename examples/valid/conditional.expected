@@ -1,0 +1,2 @@
+LET age = 20;
+IF age > 17 THEN { PRINT "adult"; } ELSE { PRINT "minor"; }

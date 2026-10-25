@@ -1,0 +1,2 @@
+LET greeting = "Hello";
+PRINT "Hello";

@@ -1,0 +1,3 @@
+set score to 10
+add 5 to it
+do show score 2 times

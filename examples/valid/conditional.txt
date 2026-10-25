@@ -1,0 +1,2 @@
+make a variable called age and set it to 20
+if age is greater than 17 then print adult else print minor

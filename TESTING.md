@@ -27,8 +27,8 @@ never in `src/` (CLAUDE.md rule 6).
 
 **Each owner tests their own module.** Whoever writes `parsley/x/y.py` writes
 `tests/unit/test_y.py` in the same PR, using test-driven development (CLAUDE.md). Owners are
-listed in DEVELOPMENT.md. Integration tests for the pipeline and CLI belong to ASUS (the
-integration owner). The mutation suite and evaluation tests belong to Gaming.
+listed in DEVELOPMENT.md. Integration tests for the pipeline and CLI belong to Core (the
+integration owner). The mutation suite and evaluation tests belong to Evaluation.
 
 Every new behaviour and every bug fix gets a test (CLAUDE.md rule 8). PR descriptions state
 the exact test command and paste its output (rules 8 and 9).
