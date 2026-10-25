@@ -168,7 +168,10 @@ def _decide(
 def _unsupported(reasons: Sequence[str]) -> Diagnostic:
     reason = reasons[0] if reasons else Reason.NO_MATCH
     message = _UNSUPPORTED_MESSAGES.get(reason, _UNSUPPORTED_MESSAGES[Reason.NO_MATCH])
-    return Diagnostic("error", "candidates", "E101", f"I could not understand this sentence: {message}")
+    codes = ", ".join(reasons) if reasons else Reason.NO_MATCH
+    return Diagnostic(
+        "error", "candidates", "E101", f"I could not understand this sentence: {message} ({codes})",
+    )
 
 
 def _ir_error(error: IRBuildError, candidate: Candidate, use_context: bool) -> Diagnostic:

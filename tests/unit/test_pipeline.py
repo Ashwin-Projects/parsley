@@ -392,3 +392,12 @@ def test_operator_scope_bad_answer_asks_again(reply):
     session = declared("let x be 1")
     first = run("multiply x by 2 plus 3", session)
     assert answer(first, reply, session) is first
+
+
+@pytest.mark.parametrize("text,codes", [
+    ("sort the list descending", "NO_MATCH"),
+    ("set x to 5 and set y to 6", "REJECT_AND_CONTINUATION"),
+])
+def test_unsupported_message_names_its_reason_codes(text, codes):
+    [d] = run(text, Session()).diagnostics
+    assert d.message.endswith(f"({codes})")
