@@ -65,6 +65,10 @@ the feedback paths that make N1 work.
   implementation first and update the contract afterward.
 - Python representation: frozen `@dataclass`es (standard library only). The defining module
   for each contract is listed in its section; other modules import it from there.
+- **Change log.**
+  - 2026-10-25: `NLPResult.notes` added (reason codes for `unsupported`). Additive with an
+    empty default, so existing consumers are unaffected; `Candidate` is unchanged.
+    Requested by the project lead.
 
 ### 2.2 Plan notation (verbatim)
 
@@ -138,6 +142,24 @@ pipeline, REPL/CLI, evaluation.
 | `candidates` | `list[Candidate]` | Sorted by `score`, descending. Empty iff `unsupported`. |
 | `question` | `str \| None` | Non-null iff `status == "ambiguous"`; text from LANGUAGE_SPEC.md Section 7.1. |
 | `suggestion` | `str \| None` | Only for `unsupported`; an N4 example phrasing, or `None` when nothing is close. |
+| `notes` | `list[str]` | For `unsupported`: the reason codes (below), sorted, never empty. For `ok`/`ambiguous`: empty. Defaults to empty. *Added 2026-10-25 (additive; see change log in 2.1).* |
+
+Reason codes (defined as `Reason` in `candidates.py`). Phase 6 and N4 read them instead of
+re-detecting why a sentence was rejected:
+
+| Code | Meaning |
+|---|---|
+| `NOT_TEXT` | The input is not a string. |
+| `INPUT_TOO_LONG` | More than 500 characters. |
+| `UNTERMINATED_QUOTE` | A `"` is never closed. |
+| `EMPTY_INPUT` | Nothing is left after normalization (e.g. `!!!`). |
+| `REJECT_AND_CONTINUATION` | `and <statement>` inside a value or block body: one sentence is one statement (LANGUAGE_SPEC.md 6.3). |
+| `TOO_MANY_ALTERNATIVES` | More than 4 `or` alternatives in one value. |
+| `TOO_MANY_READINGS` | More than 64 readings of one rule. |
+| `NO_MATCH` | No rule matches and none of the above applies (N4 decides between unsupported phrasing and out of scope). |
+| `INTERNAL_ERROR` | A bug was caught; the input is rejected rather than crashing. |
+
+Several codes can appear together when different rules fail for different reasons.
 
 ### 2.5 Diagnostic
 
@@ -198,6 +220,30 @@ hashable.
 
 `Expr = Num | Str | Var | Neg | BinOp`; `Stmt = Let | Assign | Print | If | Repeat`.
 Nodes hold no logic: type and range checks (e.g. the REPEAT count) belong to `semantic.py`.
+
+### 2.9 IR builder: unresolved and missing slots
+
+`parsley/compiler/ir_builder.py` (`build(candidate) -> Stmt`, owner ASUS) accepts only a
+candidate that the context resolver and ambiguity gate have finished with. **It uses a clear
+error, not a placeholder node** (a placeholder would need a new AST node, and the AST is a
+frozen contract the parser depends on):
+
+| Slot state | Result |
+|---|---|
+| `word` or `pronoun` anywhere | `UnresolvedSlotError`: the context resolver (Phase 6) must resolve it to `name` or `string` first |
+| Required slot is `None` | `MissingSlotError`: the ambiguity gate must clarify it first |
+| Unknown intent or slot kind, missing field, non-mapping slot, unknown operator, or a name that is not a legal identifier (or is a keyword in any case) | `IRBuildError` |
+
+All three are `IRBuildError` (a `ValueError`) and carry `path`, the dotted slot path
+(`value.left`, `body.value`, `condition.left`). The pipeline (Phase 5) turns them into
+`Diagnostic`s; reaching one means an earlier stage skipped its job.
+
+Mapping: `name` -> identifier (in a name position) or `Var` (in a value); `number`/`count`
+-> `Num`; `string` -> `Str`; `binop` -> `BinOp`; `neg` -> `Neg`; `condition` -> `Compare`;
+`statement` -> the nested statement; `increment`/`decrement`/`multiply`/`divide` ->
+`Assign(name, BinOp(op, Var(name), amount))`. Implicit declaration (`set x to 5` with `x`
+undeclared becoming `Let`) is decided by the context resolver, which changes the intent to
+`declare`; the IR builder does not consult the symbol table.
 
 ## 3. Design rules
 

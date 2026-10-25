@@ -32,8 +32,8 @@ Final split (Phases 0-2 were done by ASUS).
 | `nlp/context.py`, `ambiguity.py` | ASUS | Plus N1/N2 integration |
 | `nlp/suggest.py` | MacBook | ASUS integrates it into the pipeline |
 | `compiler/ast_nodes.py` | ASUS | Implemented; a data contract the parser depends on |
-| `compiler/ir_builder.py`, `compiler/keywords.py` | ASUS | `keywords.py` (new): the one shared MiniLang keyword set, used by `nlp/patterns.py` and `compiler/lexer.py` |
-| `compiler/lexer.py`, `parser.py` | MacBook | Import keywords from `compiler/keywords.py` |
+| `compiler/ir_builder.py`, `keywords.py` | ASUS | `src/parsley/keywords.py`: the one shared MiniLang keyword set (`KEYWORDS`, `is_reserved`), used by `nlp/patterns.py` and `compiler/lexer.py` |
+| `compiler/lexer.py`, `parser.py` | MacBook | Import keywords from `parsley.keywords` |
 | `compiler/symbols.py`, `semantic.py`, `session.py` | ASUS | |
 | `compiler/codegen.py`, `verify/backtranslate.py`, `pipeline.py`, `cli.py`, `diagnostics.py` | ASUS | |
 | `verify/roundtrip.py`, `verify/interpreter.py` | MacBook | ASUS integrates verification |

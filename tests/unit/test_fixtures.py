@@ -10,7 +10,7 @@ FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
 COMMON_KEYS = {"id", "input", "given"}
 CATEGORY_KEYS = {
     "valid": {"intent", "rule", "expected_slots", "expected_minilang", "expected_diagnostic_levels"},
-    "invalid": {"expected_status", "reason"},
+    "invalid": {"expected_status", "expected_reason_code", "reason"},
     "ambiguous": {"rule", "expected_status", "ambiguity", "expected_question", "options"},
     "semantic": {"rule", "expected_status", "expected_diagnostic_codes"},
 }
