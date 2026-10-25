@@ -11,14 +11,10 @@ from pathlib import Path
 import pytest
 
 from parsley.compiler.ast_nodes import Assign, BinOp, Let, Num, Var
-from parsley.pipeline import run
+from parsley.pipeline import answer, run
 from parsley.session import Session
 
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"
-
-# Alternatives and operator scope belong to the ambiguity gate (next step).
-GATE_ONLY = {"alternatives", "operator_scope"}
-
 
 def load(category):
     return json.loads((FIXTURES / f"{category}.json").read_text(encoding="utf-8"))["fixtures"]
@@ -58,10 +54,8 @@ def test_valid_fixture_gives_expected_minilang(fixture):
     assert session.history[-1] == result.trace.ast
 
 
-@pytest.mark.parametrize(
-    "fixture", [f for f in load("ambiguous") if f["ambiguity"] not in GATE_ONLY], ids=lambda f: f["id"],
-)
-def test_context_and_missing_slot_fixtures_ask_their_question(fixture):
+@pytest.mark.parametrize("fixture", load("ambiguous"), ids=lambda f: f["id"])
+def test_every_ambiguous_fixture_asks_its_question(fixture):
     session = session_from(fixture["given"])
     before = snapshot(session)
     result = run(fixture["input"], session)
@@ -237,3 +231,164 @@ def test_unsupported_input_is_rejected_cleanly_with_its_reason(bad, reason):
 
 def test_accepted_result_has_no_notes():
     assert run('print "hi"', Session()).notes == ()
+
+
+# Answering a clarification (REPL flow) and confirmation
+
+
+def declared(*sentences):
+    session = Session()
+    for sentence in sentences:
+        assert run(sentence, session).status == "ok"
+    return session
+
+
+@pytest.mark.parametrize("setup,text,reply,minilang", [
+    (["let score be 1"], "increase score", "2", "score = score + 2;"),
+    (["let score be 1"], "print scroe", "yes", "PRINT score;"),
+    (["let score be 1"], "print scroe", "no", 'PRINT "scroe";'),
+    (["let score be 1"], "set scroe to 7", "no", "LET scroe = 7;"),
+    (["let score be 1"], "set scroe to 7", "yes", "score = 7;"),
+    (["let x be 1"], "set x to 10 or 20", "20", "x = 20;"),
+    (["let x be 1"], "multiply x by 2 plus 3", "1", "x = x * 2 + 3;"),
+    (["let x be 1"], "multiply x by 2 plus 3", "2", "x = x * (2 + 3);"),
+    (["let score be 1"], "add 5 to it", None, "score = score + 5;"),
+    ([], "increase it", "x", None),
+    ([], "repeat print hello", "3", 'REPEAT 3 TIMES { PRINT "hello"; }'),
+    ([], "print", "hello", 'PRINT "hello";'),
+])
+def test_answer_is_merged_and_the_candidate_re_run(setup, text, reply, minilang):
+    session = declared(*setup)
+    result = run(text, session)
+    if reply is not None:
+        assert result.status == "needs_clarification"
+        result = answer(result, reply, session)
+    if minilang is None:
+        assert result.status != "ok"
+    else:
+        assert (result.status, result.minilang) == ("ok", minilang)
+        assert session.history[-1] == result.trace.ast
+
+
+def test_answer_keeps_context_warnings():
+    result = answer(run("set scroe to 7", declared("let score be 1")), "no", declared("let score be 1"))
+    assert [d.code for d in result.diagnostics] == ["W301"]
+
+
+def test_unclear_answer_asks_again_and_changes_nothing():
+    session = declared("let x be 1")
+    first = run("set x to 10 or 20", session)
+    before = snapshot(session)
+    again = answer(first, "30", session)
+    assert (again.status, again.question, again.options) == ("needs_clarification", first.question, first.options)
+    assert snapshot(session) == before
+
+
+def test_answer_can_lead_to_the_next_question():
+    session = declared("let x be 1", "let score be 1")
+    first = run("set x to scroe or 20", session)
+    assert first.question == "scroe or 20?"
+    second = answer(first, "scroe", session)
+    assert second.question == "Did you mean the variable score?"
+    third = answer(second, "yes", session)
+    assert (third.status, third.minilang) == ("ok", "x = score;")
+
+
+def test_answer_to_a_settled_result_is_rejected():
+    with pytest.raises(ValueError):
+        answer(run('print "hi"', Session()), "yes", Session())
+
+
+def test_needs_clarification_result_carries_the_clarification():
+    result = run("increase score", declared("let score be 1"))
+    assert result.clarification is not None and result.clarification.kind == "missing_slot"
+
+
+def test_confirmed_interpretation_is_recorded():
+    seen = []
+    session = Session()
+    result = run("let x be 1", session, confirm=lambda text: seen.append(text) or True)
+    assert seen == ["create variable x with value 1."]
+    assert result.status == "ok" and "x" in session.symbols
+
+
+def test_rejected_interpretation_is_not_recorded():
+    session = Session()
+    result = run("let x be 1", session, confirm=lambda text: False)
+    assert result.status == "error" and result.minilang is None
+    assert [(d.stage, d.code) for d in result.diagnostics] == [("ambiguity", "E103")]
+    assert snapshot(session) == ({}, [], [])
+
+
+def test_confirm_is_not_asked_when_the_statement_has_errors():
+    asked = []
+    result = run("print x times 2", Session(), confirm=lambda text: asked.append(text) or True)
+    assert asked == [] and [d.code for d in result.diagnostics] == ["E201"]
+
+
+# Review fixes: accepted names persist, operator scope after the target question, long amounts
+
+
+def test_refused_typo_stays_refused_across_later_questions():
+    session = declared("let score be 1")
+    first = run("increase scor", session)
+    assert first.question == "Did you mean the variable score?"
+    second = answer(first, "no", session)
+    assert second.question == "By how much should scor increase?"
+    third = answer(second, "5", session)
+    assert third.question is None
+    assert [d.code for d in third.diagnostics] == ["E201", "E201"]  # scor = scor + 5: two uses
+
+
+def test_refused_typo_in_assignment_then_missing_value():
+    session = declared("let score be 1")
+    second = answer(run("set scor to", session), "no", session)
+    assert second.question == "What value should scor be set to?"
+    third = answer(second, "5", session)
+    assert (third.status, third.minilang) == ("ok", "LET scor = 5;")
+
+
+@pytest.mark.parametrize("text,first_reply", [
+    ("multiply scor by 2 plus 3", "yes"),
+    ("multiply it by 2 plus 3", None),
+])
+def test_target_question_comes_before_operator_scope(text, first_reply):
+    session = declared("let score be 1")
+    result = run(text, session)
+    if first_reply is not None:
+        assert result.question == "Did you mean the variable score?"
+        result = answer(result, first_reply, session)
+    assert result.question == "Do you mean (score times 2) plus 3, or score times (2 plus 3)?"
+    done = answer(result, "1", session)
+    assert (done.status, done.minilang) == ("ok", "score = score * 2 + 3;")
+
+
+def test_typo_inside_the_amount_is_asked_before_operator_scope():
+    session = declared("let x be 1", "let score be 1")
+    result = answer(run("multiply x by scor plus 3", session), "yes", session)
+    assert result.question == "Do you mean (x times score) plus 3, or x times (score plus 3)?"
+    assert answer(result, "1", session).minilang == "x = x * score + 3;"
+
+
+@pytest.mark.parametrize("text,left,right", [
+    ("multiply x by 2 minus 3 minus 4", "x = x * 2 - 3 - 4;", "x = x * (2 - 3 - 4);"),
+    ("multiply x by 2 plus 3 plus 4", "x = x * 2 + 3 + 4;", "x = x * (2 + 3 + 4);"),
+    ("divide x by 2 times 3 plus 4", "x = x / 2 * 3 + 4;", "x = x / (2 * 3 + 4);"),
+])
+def test_longer_amounts_group_left_by_standard_precedence(text, left, right):
+    session = declared("let x be 1")
+    first = run(text, session)
+    assert answer(first, "1", declared("let x be 1")).minilang == left
+    assert answer(first, "2", declared("let x be 1")).minilang == right
+
+
+def test_longer_amount_options_show_the_grouping():
+    result = run("multiply x by 2 minus 3 minus 4", declared("let x be 1"))
+    assert result.options == ("((x times 2) minus 3) minus 4", "x times (2 minus 3 minus 4)")
+
+
+@pytest.mark.parametrize("reply", ["3", "0", "x", ""])
+def test_operator_scope_bad_answer_asks_again(reply):
+    session = declared("let x be 1")
+    first = run("multiply x by 2 plus 3", session)
+    assert answer(first, reply, session) is first

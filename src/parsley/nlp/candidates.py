@@ -116,6 +116,41 @@ def generate(text: str) -> NLPResult:
         return _unsupported({Reason.INTERNAL_ERROR})
 
 
+def parse_value(text: str) -> Slot | None:
+    """Exactly one VALUE reading of ``text`` (LANGUAGE_SPEC.md 6.1), or None.
+
+    Used to read a clarification answer ("2", "score plus 1", "hello world"). Words stay
+    unresolved ``word`` slots; alternatives (``1 or 2``) are not one value.
+    """
+    norm = _answer_text(text)
+    if norm is None:
+        return None
+    try:
+        with _recording(None):
+            readings = _values(norm, norm.tokens)
+        return readings[0] if len(readings) == 1 else None
+    except Exception:  # same contract as generate: never raise on user text
+        logger.exception("value parsing failed for %r", text)
+        return None
+
+
+def parse_count(text: str) -> Slot | None:
+    """A REPEAT count slot if ``text`` is one number, or None."""
+    norm = _answer_text(text)
+    if norm is None:
+        return None
+    readings = _counts(norm, norm.tokens)
+    return readings[0] if readings else None
+
+
+def _answer_text(text: str) -> Normalized | None:
+    """The normalized answer, or None if it breaks the input limits ``generate`` enforces."""
+    if not isinstance(text, str) or len(text) > MAX_INPUT_CHARS or not text.isprintable():
+        return None
+    norm = normalize(text)
+    return None if norm.malformed or not norm.tokens else norm
+
+
 def _unsupported(reasons: set[str]) -> NLPResult:
     return NLPResult("unsupported", [], notes=sorted(str(r) for r in reasons))
 

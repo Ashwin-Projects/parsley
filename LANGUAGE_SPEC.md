@@ -272,6 +272,18 @@ The NLP returns 0..k scored candidates. The ambiguity gate decides:
 Ambiguity sources covered: missing values, alternatives (`or`), likely typos of declared
 names, and unclear operator scope.
 
+**Score margin.** Readings are "too close" when their scores differ by less than
+`CLARIFY_MARGIN = 0.05` (`parsley/nlp/ambiguity.py`, the one place it is set). The margin
+equals the smallest context re-scoring nudge (Section 5), so a reading that type hints moved
+ahead by a full nudge is accepted. Readings with the same intent and slots count as one.
+
+**Order of checks** (the first that applies asks): alternatives (readings within the margin),
+which variable is meant (typo, pronoun with an empty reference stack), operator scope, then
+a missing slot. Alternatives come first, so a typo inside one reading is asked about only
+once that reading is chosen. Which variable comes before operator scope, because both
+groupings share the same words. A name the user confirmed as new (`no` to a typo question)
+is not asked about again later in the same sentence.
+
 ### 7.1 What clarifies, and the exact question
 
 Questions are filled from these templates. `{name}` keeps its original spelling.
@@ -291,8 +303,29 @@ Questions are filled from these templates. `{name}` keeps its original spelling.
 | `operator_scope` | MUL1/DIV1 whose `VALUE` contains `plus` or `minus` | `Do you mean ({name} {op} {a}) {op2} {b}, or {name} {op} ({a} {op2} {b})?` | the two readings |
 
 In `operator_scope`, `{op}` is `times` or `divided by` and `{op2}` is `plus` or `minus`.
-Arithmetic in other positions (e.g. `set y to x times 2 plus 3`) uses standard precedence
-and does **not** clarify.
+It applies to MUL1/DIV1 at any depth, including a block body (`repeat 2 times multiply x by
+2 plus 3`). The first reading is `NAME op VALUE` read with standard precedence, the second
+is `NAME op (VALUE)`. With a longer amount every grouping in the first option is spelled
+out: `multiply x by 2 minus 3 minus 4` asks `Do you mean ((x times 2) minus 3) minus 4, or
+x times (2 minus 3 minus 4)?`. Arithmetic in other positions (e.g. `set y to x times 2 plus 3`) uses standard
+precedence and does **not** clarify.
+
+With three or four alternatives the question lists them with commas: `1, 2 or 3?`. Quoted
+alternatives keep their quotes (`"yes" or "no"?`). If readings differ in more than one
+value, each whole reading is described (`print 1 or increase x by 1?`).
+
+**Answers** (REPL). The answer is merged into the sentence and the sentence runs again from
+the context resolver, so it can lead to a further question:
+
+| Ambiguity | Accepted answers |
+|---|---|
+| `alternatives`, `operator_scope` | An option's text (case and quotes ignored), else its number (`1`, `2`, ...). |
+| `missing_slot` | A `VALUE` (Section 6.1), or a number for a REPEAT count. |
+| `missing_slot` (pronoun) | The name of a variable. |
+| `typo` | `yes` / `y` uses the declared name. `no` / `n` keeps the word: text in a value, an identifier as an operand (rule 4), a new variable as an assignment target. |
+
+An answer that does not fit asks the same question again; an empty answer cancels the
+sentence, and nothing is recorded.
 
 ### 7.2 What auto-resolves (no question)
 
@@ -304,11 +337,13 @@ and does **not** clarify.
 ### 7.3 Modes
 
 - Interactive (REPL): the user's answer is merged into the slots and the candidate
-  re-enters the pipeline at stage [B].
-- Non-interactive (file mode): a clarification becomes a diagnostic, so batch runs never
-  hang.
-- Back-translation (`I understood: ...`) is always shown. Confirmation is requested only on
-  CLARIFY, or for every statement with `--confirm`.
+  re-enters the pipeline at the context resolver.
+- Non-interactive (a sentence argument or `--file`): a clarification becomes diagnostic
+  `E102` (stage `ambiguity`) with the question and its options, so batch runs never hang.
+- Back-translation (`I understood: ...`) is always shown. With `--confirm` (REPL only),
+  every error-free statement is shown first and recorded only after `yes`; `no` reports
+  `E103` and records nothing. Outside the REPL nobody can confirm, so `--confirm` reports
+  `E103` for every statement.
 
 ### 7.4 Canonical back-translation (V1, Phase 5)
 

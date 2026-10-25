@@ -202,6 +202,36 @@ def test_case_difference_is_a_near_miss():
     assert top("print Score", session_with(score="number")).question == "Did you mean the variable score?"
 
 
+@pytest.mark.parametrize("text,path", [
+    ("print scroe", "value"),
+    ("set score to scroe plus 1", "value.left"),
+    ("if scroe is at least 10 then print hi", "condition.left"),
+    ("repeat 2 times print scroe", "body.value"),
+    ("set scroe to 7", "name"),
+])
+def test_typo_question_records_kind_path_and_suggestion(text, path):
+    r = top(text, session_with(score="number"))
+    assert (r.kind, r.path, r.suggestion) == ("typo", path, "score")
+
+
+def test_pronoun_question_records_kind_and_path():
+    r = top("add 5 to it", Session())
+    assert (r.kind, r.path, r.suggestion) == ("pronoun", "name", None)
+
+
+def test_resolution_keeps_its_source_candidate():
+    candidates = generate("print hello").candidates
+    [r] = resolve(candidates, Session())
+    assert r.source is candidates[0]
+    assert (r.kind, r.path) == (None, "")
+
+
+def test_accepted_names_are_not_typo_checked():
+    r = resolve(generate("set scroe to 7").candidates, session_with(score="number"),
+                accepted=frozenset({"scroe"}))[0]
+    assert r.question is None and r.candidate.intent == "declare"
+
+
 def test_common_word_is_never_a_typo():
     r = top("print store", session_with(score="number"))
     assert r.question is None

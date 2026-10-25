@@ -271,3 +271,106 @@ def test_no_context_makes_unresolved_words_an_error(capsys) -> None:
 def test_no_context_still_compiles_context_free_input(capsys) -> None:
     assert cli.main(["--no-context", 'print "hello"']) == 0
     assert 'MiniLang: PRINT "hello";' in capsys.readouterr().out
+
+
+# REPL clarification and confirmation (real pipeline, mocked input)
+
+
+def _repl(monkeypatch: pytest.MonkeyPatch, lines: list, *flags: str) -> tuple[int, Mock]:
+    read = Mock(side_effect=[*lines, EOFError])
+    monkeypatch.setattr("builtins.input", read)
+    return cli.main(list(flags)), read
+
+
+def test_repl_answer_is_merged_and_compiled(monkeypatch, capsys) -> None:
+    status, read = _repl(monkeypatch, [
+        "make a variable called score and set it to 10", "increase score", "2",
+    ])
+    assert status == 0
+    assert "MiniLang: score = score + 2;" in capsys.readouterr().out
+    assert "By how much should score increase?" in read.call_args_list[2].args[0]
+
+
+def test_repl_choice_by_number(monkeypatch, capsys) -> None:
+    status, read = _repl(monkeypatch, ["let x be 1", "multiply x by 2 plus 3", "2"])
+    assert status == 0
+    assert "MiniLang: x = x * (2 + 3);" in capsys.readouterr().out
+    prompt = read.call_args_list[2].args[0]
+    assert "1) (x times 2) plus 3" in prompt and "2) x times (2 plus 3)" in prompt
+
+
+def test_repl_unclear_answer_asks_again(monkeypatch, capsys) -> None:
+    status, read = _repl(monkeypatch, ["let x be 1", "set x to 10 or 20", "30", "20"])
+    assert status == 0
+    output = capsys.readouterr()
+    assert "MiniLang: x = 20;" in output.out
+    assert "10 or 20" in output.err  # the hint lists the options
+    assert read.call_count == 5
+
+
+def test_repl_blank_answer_cancels_and_continues(monkeypatch, capsys) -> None:
+    status, _ = _repl(monkeypatch, ["increase it", "", 'print "next"'])
+    output = capsys.readouterr()
+    assert status == 1
+    assert "cancelled" in output.err.lower()
+    assert 'MiniLang: PRINT "next";' in output.out
+
+
+def test_repl_eof_while_answering_ends_cleanly(monkeypatch, capsys) -> None:
+    status, _ = _repl(monkeypatch, ["increase it"])
+    assert status == 1
+
+
+def test_file_mode_never_asks(tmp_path: Path, monkeypatch, capsys) -> None:
+    monkeypatch.setattr("builtins.input", Mock(side_effect=AssertionError("must not ask")))
+    source = tmp_path / "in.txt"
+    source.write_text("let score be 1\nincrease score\nprint score\n", encoding="utf-8")
+    assert cli.main(["--file", str(source)]) == 1
+    output = capsys.readouterr()
+    assert "ambiguity E102: By how much should score increase?" in output.err
+    assert "MiniLang: PRINT score;" in output.out
+
+
+def test_sentence_mode_question_is_a_diagnostic(monkeypatch, capsys) -> None:
+    monkeypatch.setattr("builtins.input", Mock(side_effect=AssertionError("must not ask")))
+    assert cli.main(["set x to 10 or 20"]) == 1
+    assert "ambiguity E102: 10 or 20? (10 / 20)" in capsys.readouterr().err
+
+
+def test_repl_confirm_yes_and_no(monkeypatch, capsys) -> None:
+    status, read = _repl(monkeypatch, ["let x be 1", "no", "let y be 2", "yes", "print x"], "--confirm")
+    output = capsys.readouterr()
+    assert status == 1  # x was rejected, and input ended while "print x" awaited confirmation
+    assert "ambiguity E103" in output.err
+    assert "MiniLang: LET y = 2;" in output.out
+    assert "MiniLang: LET x = 1;" not in output.out
+    assert "create variable x with value 1." in read.call_args_list[1].args[0]
+
+
+def test_repl_confirm_reasks_until_yes_or_no(monkeypatch, capsys) -> None:
+    status, read = _repl(monkeypatch, ["let x be 1", "maybe", "y"], "--confirm")
+    assert status == 0 and read.call_count == 4
+    assert "MiniLang: LET x = 1;" in capsys.readouterr().out
+
+
+def test_confirm_outside_the_repl_records_nothing(tmp_path: Path, monkeypatch, capsys) -> None:
+    monkeypatch.setattr("builtins.input", Mock(side_effect=AssertionError("must not ask")))
+    source = tmp_path / "in.txt"
+    source.write_text("let x be 1\n", encoding="utf-8")
+    assert cli.main(["--file", str(source), "--confirm"]) == 1
+    output = capsys.readouterr()
+    assert "ambiguity E103" in output.err and "REPL" in output.err
+    assert "MiniLang" not in output.out
+
+
+def test_repl_blank_confirm_reply_means_no(monkeypatch, capsys) -> None:
+    status, _ = _repl(monkeypatch, ["let x be 1", ""], "--confirm")
+    assert status == 1
+    assert "ambiguity E103" in capsys.readouterr().err
+
+
+def test_repl_clarification_then_confirm(monkeypatch, capsys) -> None:
+    status, read = _repl(monkeypatch, ["let x be 1", "yes", "set x to 10 or 20", "20", "yes"], "--confirm")
+    assert status == 0
+    assert "MiniLang: x = 20;" in capsys.readouterr().out
+    assert "set x to 20." in read.call_args_list[4].args[0]

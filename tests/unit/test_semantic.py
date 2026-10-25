@@ -361,3 +361,12 @@ def test_valid_fixture_produces_no_semantic_diagnostics(fixture):
     session = _session_from(fixture["given"])
     stmt = _english_to_stmt(fixture, session)
     assert analyze(stmt, session) == []
+
+
+def test_check_only_mode_reports_but_records_nothing():
+    session = session_with(n="number")
+    before = (dict(session.symbols), list(session.ref_stack), list(session.history))
+    assert analyze(Let("x", Num("1")), session, record=False) == []
+    assert [d.code for d in analyze(Let("n", Num("2")), session, record=False)] == ["W208"]
+    assert (dict(session.symbols), session.ref_stack, session.history) == before
+    assert analyze(Let("x", Num("1")), session) == [] and "x" in session.symbols

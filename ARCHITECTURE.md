@@ -170,7 +170,7 @@ stage (design rule 1).
 |---|---|---|
 | `level` | `"error" \| "warning" \| "info"` | Any `error` makes the CLI exit non-zero. |
 | `stage` | `str` | One of `normalizer`, `candidates`, `context`, `ambiguity`, `ir`, `lexer`, `parser`, `semantic`, `codegen`, `verify`, `cli`. |
-| `code` | `str` | Letter (`E`/`W`/`I`, matching `level`) + 3 digits. Semantic codes `E201`-`E207`, `W208` and `E209` are listed in LANGUAGE_SPEC.md 2.2. Pipeline codes: `E101` (`candidates`: unsupported sentence), `W301` (`context`: implicit declaration), `E401` (`ir`: unresolved slot, e.g. with `--no-context`, or no valid statement). |
+| `code` | `str` | Letter (`E`/`W`/`I`, matching `level`) + 3 digits. Semantic codes `E201`-`E207`, `W208` and `E209` are listed in LANGUAGE_SPEC.md 2.2. Pipeline codes: `E101` (`candidates`: unsupported sentence), `W301` (`context`: implicit declaration), `E401` (`ir`: unresolved slot, e.g. with `--no-context`, or no valid statement), `E102` (`ambiguity`: a question outside the REPL), `E103` (`ambiguity`: interpretation not confirmed under `--confirm`). |
 | `message` | `str` | Plain English, user-facing. |
 
 ### 2.6 Verification
@@ -251,12 +251,16 @@ undeclared becoming `Let`) is decided by the context resolver, which changes the
 
 ### 2.10 Pipeline result
 
-`parsley/pipeline.py`: `run(text, session, *, use_context=True) -> PipelineResult`. Consumers:
-CLI, evaluation, `tests/integration`.
+`parsley/pipeline.py`: `run(text, session, *, use_context=True, confirm=None) -> PipelineResult`
+and `answer(result, reply, session, *, use_context=True, confirm=None) -> PipelineResult`
+(merges the reply to `result`'s question and re-runs; an answer that does not fit returns
+`result` unchanged). `confirm(back_translation) -> bool` is the `--confirm` hook: the
+statement is recorded only if it returns true. Consumers: CLI, evaluation, `tests/integration`.
 
 | Field | Type | Semantics |
 |---|---|---|
-| `status` | `"ok" \| "needs_clarification" \| "unsupported" \| "error"` | `ok`: code produced and the statement recorded. `needs_clarification`: missing slot, typo or empty-stack pronoun. `unsupported`: no pattern matched. `error`: unresolved slot or semantic error. |
+| `status` | `"ok" \| "needs_clarification" \| "unsupported" \| "error"` | `ok`: code produced and the statement recorded. `needs_clarification`: the ambiguity gate's question (alternatives, operator scope, typo, empty-stack pronoun, missing slot). `unsupported`: no pattern matched. `error`: unresolved slot, semantic error, or not confirmed (`E103`). |
+| `clarification` | `Clarification \| None` | The open question for `answer` (`kind`, readings or the slot path the answer fills); set only for `needs_clarification`. |
 | `minilang`, `back_translation` | `str \| None` | Set only for `ok`. |
 | `diagnostics` | `tuple[Diagnostic, ...]` | Context warnings, IR/semantic diagnostics, or `E101`. |
 | `question`, `options` | `str \| None`, `tuple[str, ...]` | Set only for `needs_clarification` (LANGUAGE_SPEC.md 7.1 wording). |

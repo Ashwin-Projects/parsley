@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
-from typing import Any
+from typing import Any, Literal
 
 from parsley.diagnostics import Diagnostic
 from parsley.nlp.candidates import Candidate
@@ -41,14 +41,23 @@ class Resolution:
     question: str | None = None
     options: tuple[str, ...] = ()
     diagnostics: tuple[Diagnostic, ...] = ()
+    source: Candidate | None = None  # the candidate as it came in, before resolution
+    kind: Literal["typo", "pronoun"] | None = None  # what ``question`` asks about
+    path: str = ""  # dotted slot path of the word or pronoun asked about (``value.left``)
+    suggestion: str | None = None  # typo: the declared name it is close to
 
 
-def resolve(candidates: Sequence[Candidate], session: Session) -> list[Resolution]:
-    """Resolve and re-score every candidate; best score first (ties keep their order)."""
+def resolve(
+    candidates: Sequence[Candidate], session: Session, *, accepted: frozenset[str] = frozenset(),
+) -> list[Resolution]:
+    """Resolve and re-score every candidate; best score first (ties keep their order).
+
+    ``accepted`` names were confirmed by the user as new names, so they are not typo-checked.
+    """
     symbols = session.symbols
     names = [s.name for s in sorted(symbols.values(), key=lambda s: s.declared_at)]
     resolutions = [
-        _Resolver(symbols, names, tuple(session.ref_stack)).resolve(c) for c in candidates
+        _Resolver(symbols, names, tuple(session.ref_stack), accepted).resolve(c) for c in candidates
     ]
     resolutions.sort(key=lambda r: r.candidate.score, reverse=True)
     return resolutions
@@ -96,16 +105,22 @@ def _typo_limit(length: int) -> int:
 class _Resolver:
     """Resolves one candidate; records the first question and counts undeclared operands."""
 
-    def __init__(self, symbols: Mapping[str, Any], names: list[str], ref_stack: tuple[str, ...]) -> None:
+    def __init__(
+        self, symbols: Mapping[str, Any], names: list[str], ref_stack: tuple[str, ...], accepted: frozenset[str],
+    ) -> None:
         self._known = symbols
         self._names = names
         self._ref_stack = ref_stack
+        self._accepted = accepted
         self._question: str | None = None
         self._options: tuple[str, ...] = ()
+        self._kind: Literal["typo", "pronoun"] | None = None
+        self._path = ""
+        self._suggestion: str | None = None
         self._undeclared = 0
 
     def resolve(self, candidate: Candidate) -> Resolution:
-        slots = self._slots(candidate.intent, candidate.slots)
+        slots = self._slots(candidate.intent, candidate.slots, "")
         intent, notes, diagnostics = candidate.intent, list(candidate.notes), ()
         target = slots.get("name")
         if (
@@ -121,69 +136,93 @@ class _Resolver:
             diagnostics = (Diagnostic("warning", STAGE, "W301", f"{name} was not created yet, so this creates it"),)
         score = self._rescore(intent, slots, candidate.score)
         resolved = replace(candidate, intent=intent, slots=slots, score=score, notes=notes)
-        return Resolution(resolved, self._question, self._options, diagnostics)
+        return Resolution(
+            resolved, self._question, self._options, diagnostics,
+            source=candidate, kind=self._kind, path=self._path, suggestion=self._suggestion,
+        )
 
-    def _ask(self, question: str, options: tuple[str, ...] = ()) -> None:
+    def _ask_typo(self, match: str, path: str) -> None:
         if self._question is None:
-            self._question, self._options = question, options
+            self._question, self._options = f"Did you mean the variable {match}?", TYPO_OPTIONS
+            self._kind, self._path, self._suggestion = "typo", path, match
+
+    def _ask_pronoun(self, pronoun: str, path: str) -> None:
+        if self._question is None:
+            self._question = f'Which variable does "{pronoun}" refer to?'
+            self._kind, self._path = "pronoun", path
 
     # Slots
 
-    def _slots(self, intent: str, raw: Mapping[str, Slot | None]) -> dict[str, Slot | None]:
-        return {
-            key: self._target(slot, intent) if key == "name" else self._value(slot) for key, slot in raw.items()
-        }
+    def _slots(self, intent: str, raw: Mapping[str, Slot | None], prefix: str) -> dict[str, Slot | None]:
+        out: dict[str, Slot | None] = {}
+        for key, slot in raw.items():
+            path = f"{prefix}.{key}" if prefix else key
+            out[key] = self._target(slot, intent, path) if key == "name" else self._value(slot, path)
+        return out
 
-    def _target(self, slot: Slot | None, intent: str) -> Slot | None:
+    def _target(self, slot: Slot | None, intent: str, path: str) -> Slot | None:
         """A NAME position: a pronoun resolves through the reference stack; outside an
         explicit declaration, an undeclared near-miss of a declared name asks (decision D-12)."""
         if slot is None:
             return None
         if slot.get("kind") == "pronoun":
-            return self._pronoun(slot)
+            return self._pronoun(slot, path)
         text = slot.get("text", "")
-        if intent != "declare" and slot.get("kind") == "name" and text not in self._known:
+        if (
+            intent != "declare"
+            and slot.get("kind") == "name"
+            and text not in self._known
+            and text not in self._accepted
+        ):
             match = near_miss(text, self._names)
             if match is not None:
-                self._ask(f"Did you mean the variable {match}?", TYPO_OPTIONS)
+                self._ask_typo(match, path)
         return dict(slot)
 
-    def _value(self, slot: Slot | None, operand: bool = False) -> Slot | None:
+    def _value(self, slot: Slot | None, path: str, operand: bool = False) -> Slot | None:
         if slot is None:
             return None
         kind = slot.get("kind")
         if kind == "word":
-            return self._word(slot, operand)
+            return self._word(slot, path, operand)
         if kind == "pronoun":
-            return self._pronoun(slot)
+            return self._pronoun(slot, path)
         if kind == "binop":
-            return {**slot, "left": self._value(slot["left"], True), "right": self._value(slot["right"], True)}
+            return {
+                **slot,
+                "left": self._value(slot["left"], f"{path}.left", True),
+                "right": self._value(slot["right"], f"{path}.right", True),
+            }
         if kind == "neg":
-            return {**slot, "operand": self._value(slot["operand"], True)}
+            return {**slot, "operand": self._value(slot["operand"], f"{path}.operand", True)}
         if kind == "condition":
-            return {**slot, "left": self._value(slot["left"]), "right": self._value(slot["right"])}
+            return {
+                **slot,
+                "left": self._value(slot["left"], f"{path}.left"),
+                "right": self._value(slot["right"], f"{path}.right"),
+            }
         if kind == "statement":
-            return {**slot, "slots": self._slots(slot["intent"], slot["slots"])}
+            return {**slot, "slots": self._slots(slot["intent"], slot["slots"], path)}
         return dict(slot)
 
-    def _word(self, slot: Slot, operand: bool) -> Slot:
+    def _word(self, slot: Slot, path: str, operand: bool) -> Slot:
         """LANGUAGE_SPEC.md 4: declared name, near miss (ask), operand, else text."""
         text = slot["text"]
         if text in self._known:
             return {"kind": "name", "text": text}
         match = near_miss(text, self._names)
         if match is not None:
-            self._ask(f"Did you mean the variable {match}?", TYPO_OPTIONS)
+            self._ask_typo(match, path)
             return dict(slot)
         if operand:
             self._undeclared += 1
             return {"kind": "name", "text": text}
         return {"kind": "string", "text": text, "quoted": False}
 
-    def _pronoun(self, slot: Slot) -> Slot:
+    def _pronoun(self, slot: Slot, path: str) -> Slot:
         if self._ref_stack:
             return {"kind": "name", "text": self._ref_stack[-1]}
-        self._ask(f'Which variable does "{slot["text"]}" refer to?')
+        self._ask_pronoun(slot["text"], path)
         return dict(slot)
 
     # Type hints

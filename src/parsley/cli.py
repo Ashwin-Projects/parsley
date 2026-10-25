@@ -17,21 +17,35 @@ def run_sentence(text: str, options: argparse.Namespace) -> int:
 
     The same options object is used throughout one CLI invocation; its session is
     created on the first call and shared by later sentences. Only the pipeline
-    changes the session. Diagnostics and questions go to stderr; the
-    back-translation, MiniLang and trace go to stdout. With ``--output``, the
-    whole program so far is written after every successful sentence.
+    changes the session. Diagnostics go to stderr; the back-translation, MiniLang
+    and trace go to stdout, as do REPL prompts (written by ``input``). With
+    ``--output``, the whole program so far is written after every successful sentence.
+
+    Only the REPL asks questions. Elsewhere a clarification becomes diagnostic E102
+    and ``--confirm`` cannot be answered (E103), so file mode never waits for input.
+    An end of input while answering propagates as EOFError to end the REPL.
     """
     if options.session is None:
         options.session = Session()
-    result = pipeline.run(text, options.session, use_context=not options.no_context)
+    use_context = not options.no_context
+    confirm = _confirmer(options)
+    result = pipeline.run(text, options.session, use_context=use_context, confirm=confirm)
+    while result.status == "needs_clarification":
+        if not options.interactive:
+            print(f"ambiguity E102: {result.question}{_choices(result.options)}", file=sys.stderr)
+            return 1
+        reply = input(_question_prompt(result))
+        if not reply.strip():
+            print("clarify: cancelled; nothing was recorded", file=sys.stderr)
+            return 1
+        answered = pipeline.answer(result, reply, options.session, use_context=use_context, confirm=confirm)
+        if answered is result:
+            print(f"clarify: I did not understand that answer to: {result.question}", file=sys.stderr)
+        result = answered
     if options.trace:
         _print_trace(result.trace)
     for diagnostic in result.diagnostics:
         print(f"{diagnostic.stage} {diagnostic.code}: {diagnostic.message}", file=sys.stderr)
-    if result.status == "needs_clarification":
-        choices = f" ({' / '.join(result.options)})" if result.options else ""
-        print(f"clarify: {result.question}{choices}", file=sys.stderr)
-        return 1
     if result.status != "ok":
         return 1
     print(f"I understood: {result.back_translation}")
@@ -40,6 +54,42 @@ def run_sentence(text: str, options: argparse.Namespace) -> int:
         program = codegen.generate(Program(tuple(options.session.history)))
         options.output.write_text(program + "\n", encoding="utf-8")
     return 0
+
+
+def _choices(options: tuple[str, ...]) -> str:
+    return f" ({' / '.join(options)})" if options else ""
+
+
+def _question_prompt(result: pipeline.PipelineResult) -> str:
+    """Numbered options for a choice between readings; inline options for yes/no."""
+    clarification = result.clarification
+    if clarification is not None and clarification.kind in ("alternatives", "operator_scope"):
+        listed = "".join(f"\n  {i}) {option}" for i, option in enumerate(result.options, 1))
+        return f"{result.question}{listed}\n> "
+    return f"{result.question}{_choices(result.options)} "
+
+
+def _confirmer(options: argparse.Namespace) -> pipeline.Confirm | None:
+    """The --confirm callback: ask in the REPL; elsewhere refuse, since nobody can answer."""
+    if not options.confirm:
+        return None
+    if not options.interactive:
+        def refuse(back_translation: str) -> bool:
+            print("cli W506: --confirm asks only in the REPL (run parsley with no sentence or file)",
+                  file=sys.stderr)
+            return False
+        return refuse
+
+    def ask(back_translation: str) -> bool:
+        """Re-asks until yes or no; an empty reply means no, as an empty answer cancels."""
+        while True:
+            reply = input(f"I understood: {back_translation} Is that right? (yes / no) ")
+            word = reply.strip().lower().rstrip(".!?")
+            if word in ("yes", "y"):
+                return True
+            if word in ("no", "n", ""):
+                return False
+    return ask
 
 
 def _print_trace(trace: pipeline.Trace) -> None:
@@ -63,6 +113,8 @@ def _print_trace(trace: pipeline.Trace) -> None:
 def _process(text: str, options: argparse.Namespace) -> int:
     try:
         return 0 if run_sentence(text, options) == 0 else 1
+    except EOFError:
+        raise  # input ended while answering a question: the REPL stops
     except Exception as error:
         # Last-resort CLI boundary: a pipeline failure must never mean success.
         print(
@@ -95,7 +147,10 @@ def _repl(options: argparse.Namespace) -> int:
         except EOFError:
             return status
         if text.strip():
-            status = max(status, _process(text, options))
+            try:
+                status = max(status, _process(text, options))
+            except EOFError:
+                return max(status, 1)  # the open question was never answered
 
 
 def main(argv: list[str] | None = None) -> int:

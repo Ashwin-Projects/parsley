@@ -17,15 +17,15 @@ next step; until then the top-ranked candidate is taken.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
-from typing import Any, Literal
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, replace
+from typing import Literal
 
 from parsley.compiler import codegen, semantic
 from parsley.compiler.ast_nodes import Stmt
 from parsley.compiler.ir_builder import IRBuildError, UnresolvedSlotError, build
 from parsley.diagnostics import Diagnostic, has_errors
-from parsley.nlp.ambiguity import missing_slot_question
+from parsley.nlp.ambiguity import Clarification, apply_answer, gate, slot_at
 from parsley.nlp.candidates import Candidate, Reason, generate
 from parsley.nlp.context import Resolution, resolve
 from parsley.nlp.normalizer import normalize
@@ -74,10 +74,20 @@ class PipelineResult:
     question: str | None = None
     options: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()  # reason codes, only for "unsupported"
+    clarification: Clarification | None = None  # the open question, for ``answer``
 
 
-def run(text: str, session: Session, *, use_context: bool = True) -> PipelineResult:
-    """Compile one sentence; ``use_context=False`` skips N1 (the ablation switch)."""
+Confirm = Callable[[str], bool]
+
+
+def run(
+    text: str, session: Session, *, use_context: bool = True, confirm: Confirm | None = None,
+) -> PipelineResult:
+    """Compile one sentence; ``use_context=False`` skips N1 (the ablation switch).
+
+    ``confirm`` (strict mode, ``--confirm``) gets the back-translation of an error-free
+    statement and returns whether the user agrees; the statement is recorded only if so.
+    """
     normalized = normalize(text).text if isinstance(text, str) else ""
     nlp = generate(text)
     candidates = tuple(nlp.candidates)
@@ -86,32 +96,73 @@ def run(text: str, session: Session, *, use_context: bool = True) -> PipelineRes
         return PipelineResult(
             "unsupported", trace, diagnostics=(_unsupported(nlp.notes),), notes=tuple(nlp.notes),
         )
+    resolutions = _resolve(candidates, session, use_context, frozenset())
+    base = Trace(text, normalized, candidates, (), "ACCEPT")
+    return _decide(base, resolutions, session, use_context, confirm, frozenset())
 
-    resolutions = resolve(candidates, session) if use_context else [Resolution(c) for c in candidates]
-    best = resolutions[0]
+
+def answer(
+    result: PipelineResult, reply: str, session: Session, *,
+    use_context: bool = True, confirm: Confirm | None = None,
+) -> PipelineResult:
+    """Merge the user's reply to ``result``'s question and re-run the candidate.
+
+    An answer that does not fit the question returns ``result`` unchanged (ask again).
+    Raises ValueError if ``result`` has no open question.
+    """
+    if result.status != "needs_clarification" or result.clarification is None:
+        raise ValueError("this result has no open question to answer")
+    merged = apply_answer(result.clarification, reply)
+    if merged is None:
+        return result
+    resolutions = _resolve((merged.candidate,), session, use_context, merged.accepted)
+    return _decide(result.trace, resolutions, session, use_context, confirm, merged.accepted)
+
+
+def _resolve(
+    candidates: Sequence[Candidate], session: Session, use_context: bool, accepted: frozenset[str],
+) -> list[Resolution]:
+    if use_context:
+        return resolve(candidates, session, accepted=accepted)
+    return [Resolution(c, source=c) for c in candidates]
+
+
+def _decide(
+    base: Trace, resolutions: list[Resolution], session: Session, use_context: bool,
+    confirm: Confirm | None, accepted: frozenset[str],
+) -> PipelineResult:
+    """Gate -> IR -> semantic check -> (confirm) -> record -> codegen + back-translation."""
     ranked = tuple(r.candidate for r in resolutions)
-
-    # Which variable is meant (typo, empty pronoun stack) comes before what is missing.
-    question, options = best.question, best.options
-    if question is None:
-        question, options = missing_slot_question(best.candidate), ()
-    if question is not None:
-        trace = Trace(text, normalized, candidates, ranked, "CLARIFY", best.candidate)
-        return PipelineResult("needs_clarification", trace, question=question, options=options)
-
+    decision = gate(resolutions, accepted)
+    if decision.clarification is not None:
+        clarification = decision.clarification
+        trace = replace(base, ranked=ranked, decision="CLARIFY", chosen=resolutions[0].candidate)
+        return PipelineResult(
+            "needs_clarification", trace, question=clarification.question,
+            options=clarification.options, clarification=clarification,
+        )
+    best = decision.resolution
+    assert best is not None
     diagnostics = list(best.diagnostics)
     try:
         stmt = build(best.candidate)
     except IRBuildError as error:
         diagnostics.append(_ir_error(error, best.candidate, use_context))
-        trace = Trace(text, normalized, candidates, ranked, "ACCEPT", best.candidate)
+        trace = replace(base, ranked=ranked, decision="ACCEPT", chosen=best.candidate)
         return PipelineResult("error", trace, diagnostics=tuple(diagnostics))
 
-    trace = Trace(text, normalized, candidates, ranked, "ACCEPT", best.candidate, stmt)
-    diagnostics.extend(semantic.analyze(stmt, session))
-    if has_errors(diagnostics):
+    trace = replace(base, ranked=ranked, decision="ACCEPT", chosen=best.candidate, ast=stmt)
+    checked = semantic.analyze(stmt, session, record=False)
+    if has_errors(checked):
+        return PipelineResult("error", trace, diagnostics=tuple(diagnostics + checked))
+    back_translation = backtranslate(stmt)
+    if confirm is not None and not confirm(back_translation):
+        diagnostics.append(Diagnostic(
+            "error", "ambiguity", "E103", "the interpretation was not confirmed, so nothing was recorded",
+        ))
         return PipelineResult("error", trace, diagnostics=tuple(diagnostics))
-    return PipelineResult("ok", trace, codegen.generate(stmt), backtranslate(stmt), tuple(diagnostics))
+    diagnostics.extend(semantic.analyze(stmt, session))
+    return PipelineResult("ok", trace, codegen.generate(stmt), back_translation, tuple(diagnostics))
 
 
 def _unsupported(reasons: Sequence[str]) -> Diagnostic:
@@ -122,19 +173,9 @@ def _unsupported(reasons: Sequence[str]) -> Diagnostic:
 
 def _ir_error(error: IRBuildError, candidate: Candidate, use_context: bool) -> Diagnostic:
     if isinstance(error, UnresolvedSlotError):
-        slot = _slot_at(candidate.slots, error.path)
+        slot = slot_at(candidate.slots, error.path)
         text = slot.get("text", "?") if isinstance(slot, Mapping) else "?"
         why = "context resolution is off" if not use_context else "the context resolver left it unresolved"
         return Diagnostic("error", "ir", "E401", f'"{text}" is not a known variable or text, because {why}')
     return Diagnostic("error", "ir", "E401", f"this sentence does not form a valid statement ({error})")
 
-
-def _slot_at(slots: Mapping[str, Any], path: str) -> Any:
-    """The slot at a dotted IR path (``value.left``, ``then.value``), or None."""
-    current: Any = {"slots": slots, "kind": "statement"}
-    for key in path.split("."):
-        if not isinstance(current, Mapping):
-            return None
-        container = current["slots"] if current.get("kind") == "statement" else current
-        current = container.get(key) if isinstance(container, Mapping) else None
-    return current

@@ -38,14 +38,15 @@ _WHOLE_NUMBER = re.compile(r"[0-9]+")
 _LITERAL_ZERO = re.compile(r"0+(\.0+)?")
 
 
-def analyze(stmt: Stmt, session: Session) -> list[Diagnostic]:
-    """Check one statement; if it has no errors, record it in the session.
+def analyze(stmt: Stmt, session: Session, *, record: bool = True) -> list[Diagnostic]:
+    """Check one statement; if it has no errors and ``record`` is true, record it in the session.
 
+    ``record=False`` only checks (used before the user confirms an interpretation).
     Raises TypeError for anything that is not a statement node.
     """
     checker = _Checker(session.symbols)
     checker.statement(stmt, in_block=False)
-    if not has_errors(checker.diagnostics):
+    if record and not has_errors(checker.diagnostics):
         _record(stmt, session, checker.declared_type)
     return checker.diagnostics
 
