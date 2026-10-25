@@ -21,8 +21,12 @@ programming language, and checks its own output instead of asking you to trust i
 It is deterministic and runs offline. It uses only the Python standard library, with no
 LLMs and no external APIs.
 
-> **Status:** the CLI compiles shared sessions with interactive clarification and
-> confirmation. V1 back-translation is available; V2/V3 verification is pending.
+> **Status:** in active development. The compiler works end to end: English sentences,
+> files and an interactive REPL compile to MiniLang, with compiler-informed
+> interpretation, clarification questions, `--confirm` and back-translation. The
+> round-trip and execution-equivalence checks, the MiniLang parser and the
+> "Try: ..." suggestions for unsupported sentences are wired in but report
+> `skipped` until their modules are finished. The evaluation has not been run yet.
 
 ---
 
@@ -55,7 +59,8 @@ a single guess. A decision rule then picks one of three outcomes:
 - **Clarify**: two plausible readings, or something is missing, so Parsley asks a
   targeted question. Examples: `increase x` → "By how much?", and `set x to 10 or 20` →
   "10 or 20?"
-- **Reject**: nothing supported matches, so Parsley suggests a phrasing that works.
+- **Reject**: nothing supported matches, so Parsley explains why and, once the
+  suggestion module is finished, suggests a phrasing that works.
   Example: `store 50 in bonus` → "Try: set bonus to 50".
 
 In file mode a clarification becomes a diagnostic, so batch runs never hang.
@@ -172,7 +177,7 @@ Run the CLI:
 
 ```
 parsley "set age to 21"
-python -m parsley.cli "set age to 21"
+python -m parsley "set age to 21"
 parsley --file examples/valid/age.txt --output program.mini
 parsley --confirm
 ```
@@ -184,13 +189,17 @@ asks before recording each error-free statement: `yes` accepts, `no` (or empty)
 rejects with `E103`. File mode shares one session, never prompts, and reports
 clarifications as `ambiguity E102`; `--confirm` outside the REPL reports `E103`.
 
-`--trace` shows candidates, the decision and AST; `--output PATH` writes the
-accepted program; `--no-context` disables context resolution. Pipeline statuses
-are `ok`, `needs_clarification`, `unsupported` and `error`. The CLI exits 0 on
-success and 1 on a processing error (2 for invalid arguments, 130 on interruption).
-Verification summary format: `V1: back-translation | V2: skipped | V3: skipped`.
-The CLI summary output hook is still pending; V2/V3 stay `skipped` until the
-teammates' verifier modules are integrated.
+`--trace` shows candidates, the decision, the AST and the verification details;
+`--output PATH` writes the accepted program; `--no-context` disables context
+resolution. Pipeline statuses are `ok`, `needs_clarification`, `unsupported` and
+`error`. The CLI exits 0 on success and 1 on a processing error (2 for invalid
+arguments, 130 on interruption).
+
+Each accepted statement ends with a verification summary such as
+`V1 ok | V2 skipped | V3 skipped`. A layer reports `skipped` while its module is not
+finished, and never stops compilation. An unsupported sentence reports its reason
+(e.g. `candidates E101: ... (NO_MATCH)`), followed by `Try: ...` when a supported
+phrasing is close.
 
 ---
 
@@ -243,18 +252,7 @@ examples/       valid/  invalid/  ambiguous/
 |---|---|
 | [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) | Problem, goals, non-goals, success criteria |
 | [LANGUAGE_SPEC.md](LANGUAGE_SPEC.md) | Grammar, types, English patterns, ambiguity rules |
-<<<<<<< HEAD
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Pipeline and frozen data contracts |
-| [NOVELTY.md](NOVELTY.md) | N1-N5, non-claims, metrics, related work |
-| [DEVELOPMENT.md](DEVELOPMENT.md) | Phases 0-9, exit tests, team, branch/PR workflow |
-| [TESTING.md](TESTING.md) | Test layout, ownership, fixture format |
-| [CLAUDE.md](CLAUDE.md) | Rules for the coding agent |
-| [docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf](docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf) | The original plan (v2.1); "Clarix" = Parsley |
-
-Each person works on a feature branch and merges via pull request (see DEVELOPMENT.md).
-=======
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Pipeline and data contracts |
 | [NOVELTY.md](NOVELTY.md) | Contributions, what is not claimed, metrics, related work |
 | [TESTING.md](TESTING.md) | Test layout and fixture format |
-| [DEVELOPMENT.md](DEVELOPMENT.md) | Contributor workflow |
->>>>>>> phase-4
+| [DEVELOPMENT.md](DEVELOPMENT.md) | Contributor workflow and current progress |
