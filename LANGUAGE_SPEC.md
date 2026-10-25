@@ -281,6 +281,37 @@ and does **not** clarify.
 - Back-translation (`I understood: ...`) is always shown. Confirmation is requested only on
   CLARIFY, or for every statement with `--confirm`.
 
+### 7.4 Canonical back-translation (V1, Phase 5)
+
+These are output descriptions of the AST, not additional accepted input patterns.
+Identifiers and number spellings are preserved. Strings are always double-quoted,
+escaping only quotes and backslashes as in Section 2.1, so text cannot be mistaken
+for a variable or a command. Expression and comparison nodes render fragments;
+a statement or nonempty program ends in one period. An empty program renders empty
+text. Program statements are joined with `; ` within one sentence.
+
+| Node | Canonical template (children rendered recursively) |
+|---|---|
+| `Program` | statements joined with `; ` |
+| `Let` | `create variable NAME with value VALUE` |
+| `Assign` | `set NAME to VALUE` |
+| `Print` | `print VALUE` |
+| `If` | `if CONDITION then begin THEN_BODY end` optionally followed by ` else begin ELSE_BODY end` |
+| `Repeat` | `repeat COUNT times begin BODY end` |
+| `Compare` | `LEFT COMPARISON RIGHT`; comparisons use `is greater than`, `is less than`, `is equal to`, `is not equal to`, `is greater than or equal to`, `is less than or equal to` |
+| `BinOp` | `(LEFT OPERATOR RIGHT)`; operators use `plus`, `minus`, `times`, `divided by` |
+| `Neg` | `negative (OPERAND)` |
+| `Num` | original number text |
+| `Str` | quoted, escaped string content |
+| `Var` | original variable name |
+
+An assignment whose value is exactly `NAME OP AMOUNT` uses the update template:
+`increase NAME by AMOUNT`, `decrease NAME by AMOUNT`, `multiply NAME by AMOUNT`,
+or `divide NAME by AMOUNT`, respectively. All other assignments use `set`.
+Every binary expression is parenthesized and every unary operand is enclosed in
+parentheses, so operator scope is explicit. Blocks use `begin ... end`, joining
+their statements with `; `, with no internal sentence-ending periods.
+
 ## 8. Rejected English patterns
 
 Rejected input returns `unsupported` with an N4 suggestion where one is close enough.
