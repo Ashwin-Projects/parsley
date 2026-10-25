@@ -41,6 +41,13 @@ the input and expected files against them:
 | `ambiguous/missing-increase` | V06 (`x = 5` becomes `score = 10`), A01 |
 | `ambiguous/empty-reference` | A02 |
 | `ambiguous/typo` | V06 (`x = 5` becomes `score = 10`), A04 |
+| `ambiguous/a12-three-alternatives` | A12 |
+| `ambiguous/a13-assignment-alternatives` | V06, A13 |
+| `ambiguous/a14-quoted-alternatives` | A14 |
+| `ambiguous/a15-division-scope` | V06 (`x = 5` becomes `total = 10`), A15 |
+| `ambiguous/a16-block-scope` | V06, A16 |
+| `ambiguous/a17-assignment-typo` | V06 (`x = 5` becomes `score = 10`), A17 |
+| `ambiguous/a18-pronoun-before-amount` | A18 |
 
 Run the integration checks from the repository root:
 
@@ -55,13 +62,14 @@ TODO for the pipeline owner's final entry point and result shape. Only an empty
 or docstring-only pipeline module skips; an incompatible API or runtime failure
 fails visibly instead of silently skipping.
 
-Once pipeline/CLI integration is connected, run a session with:
+Run a session with:
 
 ```text
 python -m parsley.cli --file examples/valid/age.txt
 ```
 
 Ambiguous sessions stop at a question for a user in interactive mode. In batch
-mode, the question must be reported as a diagnostic without waiting for input.
-Until integration is connected, the CLI reports that its pipeline is not connected
-and exits nonzero. The files do not imply that compilation already works.
+mode, the question is reported as diagnostic `E102` without waiting for input.
+The `.expected` file keeps only the exact question, excluding that CLI wrapper
+and any listed options. To answer questions interactively, start the CLI without
+`--file` and enter the example sentences in order.

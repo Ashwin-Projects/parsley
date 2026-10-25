@@ -53,6 +53,17 @@ SOURCES: dict[str, tuple[Step, ...]] = {
     "ambiguous/typo": (
         ("V06", {"x": "score", "5": "10"}), ("A04", {}),
     ),
+    "ambiguous/a12-three-alternatives": (("A12", {}),),
+    "ambiguous/a13-assignment-alternatives": (("V06", {}), ("A13", {})),
+    "ambiguous/a14-quoted-alternatives": (("A14", {}),),
+    "ambiguous/a15-division-scope": (
+        ("V06", {"x": "total", "5": "10"}), ("A15", {}),
+    ),
+    "ambiguous/a16-block-scope": (("V06", {}), ("A16", {})),
+    "ambiguous/a17-assignment-typo": (
+        ("V06", {"x": "score", "5": "10"}), ("A17", {}),
+    ),
+    "ambiguous/a18-pronoun-before-amount": (("A18", {}),),
 }
 ERRORS = {
     "M02": "semantic E201: x is used before it is created",

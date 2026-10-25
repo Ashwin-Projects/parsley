@@ -1,0 +1,2 @@
+set x to 5
+repeat 2 times multiply x by 2 plus 3

@@ -21,8 +21,8 @@ programming language, and checks its own output instead of asking you to trust i
 It is deterministic and runs offline. It uses only the Python standard library, with no
 LLMs and no external APIs.
 
-> **Status:** in active development. The language, data contracts and NLP front end are
-> in place; the end-to-end CLI is not wired up yet (it currently echoes its input).
+> **Status:** the CLI compiles shared sessions with interactive clarification and
+> confirmation. V1 back-translation is available; V2/V3 verification is pending.
 
 ---
 
@@ -173,12 +173,24 @@ Run the CLI:
 ```
 parsley "set age to 21"
 python -m parsley.cli "set age to 21"
+parsley --file examples/valid/age.txt --output program.mini
+parsley --confirm
 ```
 
-The finished CLI will support single sentences, file mode (one sentence per line, sharing
-one session), an interactive REPL with clarification questions, and these flags:
-`--trace` (full pipeline trace), `--output`, `--confirm` (confirm every back-translation),
-and `--no-context` (turns off compiler-informed interpretation for the ablation).
+With no sentence or file, the CLI starts a REPL. Answer clarification questions
+with a value/name, an option's text or number, or `yes`/`no` for a typo. Invalid
+answers repeat the question; an empty answer cancels the sentence. `--confirm`
+asks before recording each error-free statement: `yes` accepts, `no` (or empty)
+rejects with `E103`. File mode shares one session, never prompts, and reports
+clarifications as `ambiguity E102`; `--confirm` outside the REPL reports `E103`.
+
+`--trace` shows candidates, the decision and AST; `--output PATH` writes the
+accepted program; `--no-context` disables context resolution. Pipeline statuses
+are `ok`, `needs_clarification`, `unsupported` and `error`. The CLI exits 0 on
+success and 1 on a processing error (2 for invalid arguments, 130 on interruption).
+Verification summary format: `V1: back-translation | V2: skipped | V3: skipped`.
+The CLI summary output hook is still pending; V2/V3 stay `skipped` until the
+teammates' verifier modules are integrated.
 
 ---
 
