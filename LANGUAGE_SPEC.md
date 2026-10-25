@@ -376,7 +376,7 @@ applied throughout this document.
 | D-9 | Block scope | `LET` inside a block is a semantic error, `E202`. | §2, §2.2 |
 | D-10 | String comparison | Strings support only `==` and `!=`. | §2 |
 | D-11 | REPEAT count | Integer literal from 1 to 1000. | §2 |
-| D-12 | Typo in an assignment/update target | Asks the rule 3 typo question instead of an implicit `LET`; explicit declarations do not ask. *Proposed 2026-10-25, pending team approval.* | §4 |
+| D-12 | Typo in an assignment/update target | Asks the rule 3 typo question instead of an implicit `LET`; explicit declarations do not ask. *Accepted 2026-10-25.* | §4 |
 
 Edit distance in D-2 is optimal string alignment (an adjacent swap counts as one edit), so
 the plan's demo case `print scroe` stays a typo question for the 5-letter name `score`.

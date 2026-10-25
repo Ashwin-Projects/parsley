@@ -23,8 +23,10 @@ truth, together with the decision log in LANGUAGE_SPEC.md Section 9.
 8. Add a test for every new behaviour and bug fix. Run tests;
    report the exact command and output.
 9. Never claim tests passed unless they were run.
-10. Never run git commit, git push, git merge or any history-changing git command.
-    Prepare the changes and stop; the user commits and pushes manually.
+10. Both tools (Claude and Codex) may run git add, with explicit file paths only,
+    and git commit. Never git push, merge, rebase, reset or force anything.
+    Another tool also commits in this repo: stage only files you changed, and if
+    git reports index.lock, wait and retry.
 ```
 
 Use /superpowers:test-driven-development for every code phase and /ecc:python-review before finishing a phase.
