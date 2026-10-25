@@ -67,12 +67,4 @@ Apart from the AST node dataclasses, no compiler logic exists yet; the other mod
 | [CLAUDE.md](CLAUDE.md) | Rules for the coding agent |
 | [docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf](docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf) | The original plan (v2.1); "Clarix" = Parsley |
 
-## Team
-
-| Member | Responsibility |
-|---|---|
-| ASUS | Core + integration (Phases 0, 1, 2, 4, 5, 6) |
-| Gaming | Evaluation, ablation, AST evaluator, mutation tests, optional learned scorer (separate `parsley_ml/` package, off by default) |
-| MacBook | Lexer, parser, interpreter, round-trip compare, suggestions, demo |
-
 Each person works on a feature branch and merges via pull request (see DEVELOPMENT.md).
