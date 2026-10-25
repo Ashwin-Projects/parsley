@@ -17,6 +17,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from parsley.keywords import KEYWORDS as MINILANG_KEYWORDS  # noqa: F401  (re-exported with the pattern data)
+
 # Vocabulary (LANGUAGE_SPEC.md 6, 6.1, 6.2)
 
 SYNONYMS: dict[str, tuple[str, ...]] = {
@@ -65,9 +67,9 @@ ELSE_WORD = "else"  # never part of a block body; it belongs to IF2
 
 BLOCK_BODY_INTENTS = frozenset({"print", "assign", "increment", "decrement", "multiply", "divide"})
 
-# MiniLang lexical rules (LANGUAGE_SPEC.md 2) used to validate NAME slots.
+# MiniLang identifier rule (LANGUAGE_SPEC.md 2) used to validate NAME slots; keywords come
+# from parsley.keywords (imported above as MINILANG_KEYWORDS).
 IDENTIFIER = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
-MINILANG_KEYWORDS = frozenset({"LET", "PRINT", "IF", "THEN", "ELSE", "REPEAT", "TIMES"})
 
 # Placeholder -> slot extractor kind (implemented in candidates.py).
 EXTRACTORS: dict[str, str] = {

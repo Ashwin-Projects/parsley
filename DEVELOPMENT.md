@@ -8,11 +8,13 @@ through the plan, not left to the end. If the deadline is shorter, compress Phas
 
 ## Team
 
+Final split (Phases 0-2 were done by ASUS).
+
 | Member | Responsibility |
 |---|---|
-| **ASUS** | Core + integration (Phases 0, 1, 2, 4, 5, 6) |
-| **Gaming** | Evaluation, ablation, AST evaluator (`ast_eval.py`), mutation tests, optional learned scorer* |
-| **MacBook** | Lexer, parser, interpreter, round-trip compare, suggestions (`suggest.py`), demo |
+| **ASUS** | Merge `phase-2`; `ir_builder.py`, `keywords.py`; `symbols.py`, `semantic.py`, `session.py`; `codegen.py`, `backtranslate.py`, `pipeline.py`, `cli.py`; `context.py`, `ambiguity.py`, N1/N2 integration; verification integration; final integration and release |
+| **Gaming** | `ast_eval.py` (starts now); optional `parsley_ml`* (starts now, off the critical path); `metrics.py`, `run_eval.py`; mutation tests; ablation and results tables; results section of the report |
+| **MacBook** | `lexer.py`, `parser.py`; `suggest.py`; `roundtrip.py`, `interpreter.py`; held-out paraphrase set (written blind, without looking at the pattern table); demo script |
 
 \* **Optional learned scorer** (not part of plan v2.1, and not part of the novelty claim):
 - It lives in a separate package, `parsley_ml/`, with its own `requirements-ml.txt`.
@@ -26,15 +28,21 @@ through the plan, not left to the end. If the deadline is shorter, compress Phas
 
 | Module(s) | Owner | Notes |
 |---|---|---|
-| `nlp/normalizer.py`, `patterns.py`, `candidates.py`, `context.py`, `ambiguity.py` | ASUS | |
+| `nlp/normalizer.py`, `patterns.py`, `candidates.py` | ASUS | Done (Phase 2, branch `phase-2`) |
+| `nlp/context.py`, `ambiguity.py` | ASUS | Plus N1/N2 integration |
 | `nlp/suggest.py` | MacBook | ASUS integrates it into the pipeline |
-| `compiler/ast_nodes.py`, `ir_builder.py` | ASUS | `ast_nodes.py` is implemented; it is a data contract the parser depends on |
-| `compiler/lexer.py`, `parser.py` | MacBook | |
-| `compiler/semantic.py`, `symbols.py`, `codegen.py`, `session.py`, `diagnostics.py`, `pipeline.py`, `cli.py` | ASUS | |
-| `verify/backtranslate.py` | ASUS | |
-| `verify/roundtrip.py`, `verify/interpreter.py` | MacBook | |
-| `verify/ast_eval.py`, mutation tests | Gaming | |
-| `eval/`, `tests/eval_data/`, `parsley_ml/` | Gaming | |
+| `compiler/ast_nodes.py` | ASUS | Implemented; a data contract the parser depends on |
+| `compiler/ir_builder.py`, `keywords.py` | ASUS | `src/parsley/keywords.py`: the one shared MiniLang keyword set (`KEYWORDS`, `is_reserved`), used by `nlp/patterns.py` and `compiler/lexer.py` |
+| `compiler/lexer.py`, `parser.py` | MacBook | Import keywords from `parsley.keywords` |
+| `compiler/symbols.py`, `semantic.py`, `session.py` | ASUS | |
+| `compiler/codegen.py`, `verify/backtranslate.py`, `pipeline.py`, `cli.py`, `diagnostics.py` | ASUS | |
+| `verify/roundtrip.py`, `verify/interpreter.py` | MacBook | ASUS integrates verification |
+| `verify/ast_eval.py`, mutation tests (under `tests/`) | Gaming | `ast_eval.py` starts now |
+| `eval/metrics.py`, `eval/run_eval.py`, ablation and results tables | Gaming | |
+| `tests/eval_data/` paraphrase set | MacBook | Written blind, without looking at the pattern table |
+| `parsley_ml/` | Gaming | Optional; starts now, off the critical path |
+| Demo script | MacBook | |
+| Final integration and release | ASUS | |
 
 `ast_eval.py` (Gaming) and `interpreter.py` (MacBook) have different authors on purpose,
 so V3 does not share bugs between them.
@@ -54,13 +62,13 @@ owner's review.
 | 0 | Days 1-2 | Setup, repo, docs skeleton | - | ASUS |
 | 1 | Week 1 | Language spec, data contracts, fixtures, related work | Ambiguous fixtures; NOVELTY.md | ASUS |
 | 2 | Week 2 | NLP front end with scored candidates | Multi-candidate output (enables N2) | ASUS |
-| 3 | Week 3 | AST, IR builder, lexer, parser | Parser reused by V2/V3 | MacBook (lexer, parser); ASUS (AST, IR builder) |
+| 3 | Week 3 | AST, IR builder, lexer, parser | Parser reused by V2/V3 | MacBook (lexer, parser); ASUS (AST, IR builder, keywords) |
 | 4 | Week 4 | Semantic analysis, symbol table, session | Symbol table exposed for N1 | ASUS |
 | 5 | Week 5 | Code generation + back-translation + end-to-end CLI | N3-V1 | ASUS |
-| 6 | Week 6 (first half) | Context resolver + ambiguity gate + suggestions | N1, N2, N4 | ASUS (context, ambiguity, integration); MacBook (suggest.py) |
-| 7 | Week 6 (second half) - Week 7 | Verifier: round-trip + interpreter + execution equivalence | N3-V2, V3 | MacBook (roundtrip, interpreter); Gaming (ast_eval, mutation tests) |
-| 8 | Week 7 | Evaluation dataset, metrics, ablation | N5 | Gaming |
-| 9 | Week 8 | Hardening, docs, report, demo | Novelty demo script | All; MacBook (demo) |
+| 6 | Week 6 (first half) | Context resolver + ambiguity gate + suggestions | N1, N2, N4 | ASUS (context, ambiguity, N1/N2 integration); MacBook (suggest.py) |
+| 7 | Week 6 (second half) - Week 7 | Verifier: round-trip + interpreter + execution equivalence | N3-V2, V3 | MacBook (roundtrip, interpreter); Gaming (ast_eval, starts now; mutation tests); ASUS (verification integration) |
+| 8 | Week 7 | Evaluation dataset, metrics, ablation | N5 | Gaming (metrics, run_eval, ablation, results tables); MacBook (blind paraphrase set) |
+| 9 | Week 8 | Hardening, docs, report, demo | Novelty demo script | ASUS (final integration, release); Gaming (results section); MacBook (demo script) |
 
 ---
 

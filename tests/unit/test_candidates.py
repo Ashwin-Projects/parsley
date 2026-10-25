@@ -42,6 +42,7 @@ def test_invalid_fixture_is_unsupported(fx):
     result = generate(fx["input"])
     assert result.status == "unsupported"
     assert result.candidates == []
+    assert result.notes == [fx["expected_reason_code"]]
 
 
 # The other fixture sets: Phase 2 must already produce the right rule for Phase 4/6
@@ -62,7 +63,8 @@ def test_candidate_fields_match_the_frozen_contract():
 
 
 def test_nlp_result_fields_match_the_frozen_contract():
-    assert [f.name for f in dataclasses.fields(NLPResult)] == ["status", "candidates", "question", "suggestion"]
+    fields = [f.name for f in dataclasses.fields(NLPResult)]
+    assert fields == ["status", "candidates", "question", "suggestion", "notes"]
 
 
 @pytest.mark.parametrize("text", [f["input"] for f in fixtures("valid") + fixtures("ambiguous")])
@@ -240,4 +242,47 @@ def test_internal_errors_are_contained(monkeypatch):
         raise RuntimeError("bug")
 
     monkeypatch.setattr(candidates, "_match", boom)
-    assert generate("print age") == NLPResult("unsupported", [], None, None)
+    assert generate("print age") == NLPResult("unsupported", [], None, None, ["INTERNAL_ERROR"])
+
+
+# Reason codes: Phase 6 / N4 read them instead of re-detecting (ARCHITECTURE.md 2.4)
+
+
+@pytest.mark.parametrize(
+    "text, code",
+    [
+        (None, "NOT_TEXT"),
+        ("print " + "a " * 300, "INPUT_TOO_LONG"),
+        ('print "unterminated', "UNTERMINATED_QUOTE"),
+        ("!!!", "EMPTY_INPUT"),
+        ("", "EMPTY_INPUT"),
+        ("store 50 in bonus", "NO_MATCH"),
+        ("set x to 5 and set y to 6", "REJECT_AND_CONTINUATION"),
+        ("if count is greater than 5 then print big and print done", "REJECT_AND_CONTINUATION"),
+        ("set x to 0 or 1 or 2 or 3 or 4", "TOO_MANY_ALTERNATIVES"),
+        ("if a or b or c or d equals a or b or c or d then print a or b or c or d else print a or b or c or d",
+         "TOO_MANY_READINGS"),
+    ],
+)
+def test_unsupported_result_carries_its_reason_code(text, code):
+    result = generate(text)
+    assert result.status == "unsupported"
+    assert result.notes == [code]
+
+
+def test_reason_codes_are_plain_strings():
+    assert all(type(note) is str for note in generate("store 50 in bonus").notes)
+
+
+@pytest.mark.parametrize("text", ["print age", "set x to 10 or 20", "increase score"])
+def test_matched_results_have_no_reason_notes(text):
+    assert generate(text).notes == []
+
+
+def test_reasons_do_not_leak_between_calls():
+    assert generate("print x and print y").notes == ["REJECT_AND_CONTINUATION"]
+    assert generate("foo bar").notes == ["NO_MATCH"]
+
+
+def test_continuation_wins_over_alternatives_in_the_trailing_statement():
+    assert generate("print a and set x to 1 or 2").notes == ["REJECT_AND_CONTINUATION"]

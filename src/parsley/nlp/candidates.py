@@ -30,10 +30,14 @@ import copy
 import functools
 import itertools
 import logging
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import Any, Literal, NamedTuple
 
+from parsley.keywords import is_reserved
 from parsley.nlp import patterns
 from parsley.nlp.normalizer import Normalized, Token, normalize
 
@@ -45,6 +49,20 @@ Status = Literal["ok", "ambiguous", "unsupported"]
 MAX_INPUT_CHARS = 500
 MAX_ALTERNATIVES = 4
 MAX_READINGS = 64
+
+
+class Reason(StrEnum):
+    """Why a sentence is unsupported; stored in ``NLPResult.notes`` (ARCHITECTURE.md 2.4)."""
+
+    NOT_TEXT = "NOT_TEXT"
+    INPUT_TOO_LONG = "INPUT_TOO_LONG"
+    UNTERMINATED_QUOTE = "UNTERMINATED_QUOTE"
+    EMPTY_INPUT = "EMPTY_INPUT"
+    REJECT_AND_CONTINUATION = "REJECT_AND_CONTINUATION"
+    TOO_MANY_ALTERNATIVES = "TOO_MANY_ALTERNATIVES"
+    TOO_MANY_READINGS = "TOO_MANY_READINGS"
+    NO_MATCH = "NO_MATCH"
+    INTERNAL_ERROR = "INTERNAL_ERROR"
 
 
 @dataclass(frozen=True)
@@ -66,28 +84,56 @@ class NLPResult:
     candidates: list[Candidate]
     question: str | None = None
     suggestion: str | None = None
+    notes: list[str] = field(default_factory=list)  # reason codes when unsupported
+
+
+# Reasons recorded while matching the current sentence; None = not recording.
+_rejections: ContextVar[set[str] | None] = ContextVar("_rejections", default=None)
 
 
 def generate(text: str) -> NLPResult:
     """Return every candidate interpretation of ``text``, best score first."""
     try:
-        if not isinstance(text, str) or len(text) > MAX_INPUT_CHARS:
-            return _unsupported()
+        if not isinstance(text, str):
+            return _unsupported({Reason.NOT_TEXT})
+        if len(text) > MAX_INPUT_CHARS:
+            return _unsupported({Reason.INPUT_TOO_LONG})
         norm = normalize(text)
-        if norm.malformed or not norm.tokens:
-            return _unsupported()
+        if norm.malformed:
+            return _unsupported({Reason.UNTERMINATED_QUOTE})
+        if not norm.tokens:
+            return _unsupported({Reason.EMPTY_INPUT})
         found: list[Candidate] = []
-        for pattern in patterns.PATTERNS:
-            found.extend(_match(pattern, norm, 0, len(norm.text)))
+        with _recording(set()) as rejections:
+            for pattern in patterns.PATTERNS:
+                found.extend(_match(pattern, norm, 0, len(norm.text)))
+        if not found:
+            return _unsupported(rejections or {Reason.NO_MATCH})
         found.sort(key=lambda c: c.score, reverse=True)  # stable: ties keep table order
-        return NLPResult("ok" if found else "unsupported", found)
+        return NLPResult("ok", found)
     except Exception:  # contract: no exception escapes the NLP front end
         logger.exception("candidate generation failed for %r", text)
-        return _unsupported()
+        return _unsupported({Reason.INTERNAL_ERROR})
 
 
-def _unsupported() -> NLPResult:
-    return NLPResult("unsupported", [])
+def _unsupported(reasons: set[str]) -> NLPResult:
+    return NLPResult("unsupported", [], notes=sorted(str(r) for r in reasons))
+
+
+@contextmanager
+def _recording(target: set[str] | None) -> Iterator[set[str] | None]:
+    """Record rejection reasons into ``target`` (None suspends recording) for the block."""
+    token = _rejections.set(target)
+    try:
+        yield target
+    finally:
+        _rejections.reset(token)
+
+
+def _reject(reason: Reason) -> None:
+    recorded = _rejections.get()
+    if recorded is not None:
+        recorded.add(str(reason))
 
 
 def _match(pattern: patterns.Pattern, norm: Normalized, start: int, end: int) -> list[Candidate]:
@@ -121,6 +167,7 @@ def _match(pattern: patterns.Pattern, norm: Normalized, start: int, end: int) ->
     for slot_options in options:
         reading_count *= len(slot_options)
     if reading_count > MAX_READINGS:
+        _reject(Reason.TOO_MANY_READINGS)
         return []
 
     # Specificity: the share of tokens matched by the rule's own command words.
@@ -161,7 +208,7 @@ def _names(norm: Normalized, toks: Sequence[Token]) -> list[Slot]:
         len(toks) == 1
         and toks[0].kind == "word"
         and patterns.IDENTIFIER.fullmatch(text)
-        and text.upper() not in patterns.MINILANG_KEYWORDS
+        and not is_reserved(text)
     ):
         return [{"kind": "name", "text": text}]
     return []
@@ -179,9 +226,11 @@ def _values(norm: Normalized, toks: Sequence[Token]) -> list[Slot]:
     for k in range(1, len(toks) - 1):
         is_and = toks[k].kind == "word" and toks[k].lower == patterns.CONTINUATION_WORD
         if is_and and _is_statement(norm, toks[k + 1].start, end):
+            _reject(Reason.REJECT_AND_CONTINUATION)
             return []
     parts = _split(toks, patterns.ALTERNATIVE_WORD)
     if len(parts) > MAX_ALTERNATIVES:
+        _reject(Reason.TOO_MANY_ALTERNATIVES)
         return []
     readings: list[Slot] = []
     for part in parts:
@@ -194,8 +243,12 @@ def _values(norm: Normalized, toks: Sequence[Token]) -> list[Slot]:
 
 @functools.lru_cache(maxsize=4096)
 def _is_statement(norm: Normalized, start: int, end: int) -> bool:
-    """Whether ``norm.text[start:end]`` is a whole statement; memoized so nested ``and``s stay polynomial."""
-    return any(_match(p, norm, start, end) for p in patterns.PATTERNS)
+    """Whether ``norm.text[start:end]`` is a whole statement; memoized so nested ``and``s stay polynomial.
+
+    Failures inside this probe are not reasons for the sentence, so recording is suspended.
+    """
+    with _recording(None):
+        return any(_match(p, norm, start, end) for p in patterns.PATTERNS)
 
 
 def _conditions(norm: Normalized, toks: Sequence[Token]) -> list[Slot]:
