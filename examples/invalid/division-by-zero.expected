@@ -1,0 +1,2 @@
+LET total = 10;
+semantic E206: cannot divide by zero

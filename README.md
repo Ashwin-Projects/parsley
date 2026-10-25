@@ -1,24 +1,156 @@
 # Parsley
 
-A context-aware, self-verifying compiler from constrained English to **MiniLang**, a small,
-formally specified language. Python 3.11+, standard library only (pytest for tests).
+**A context-aware, self-verifying compiler from constrained English to MiniLang.**
 
-## Goal
+Parsley turns plain English instructions into MiniLang, a small, formally specified
+programming language, and checks its own output instead of asking you to trust it.
 
-Translate English such as `make a variable called score and set it to 10` into MiniLang
-(`LET score = 10;`) in a way that is checked rather than trusted. Three ideas carry this:
+```
+> make a variable called score and set it to 10
+  I understood: create variable score with value 10.
+  MiniLang:     LET score = 10;
 
-- **Compiler-informed interpretation (N1).** The compiler's symbol table feeds back into
-  the English stage: `print age` prints the variable `age` only if it was declared;
-  `add 5 to it` resolves `it`; `print scroe` asks `Did you mean the variable score?`.
-- **Explicit ambiguity handling (N2).** Ranked candidates, then accept / clarify / reject.
-  Rejected input gets a supported phrasing as a suggestion (N4).
-- **Layered verification (N3).** Back-translation to English, AST round-trip, and execution
-  equivalence with two independent evaluators. Evaluated with metrics and an ablation (N5).
+> add 5 to it
+  I understood: increase score by 5.
+  MiniLang:     score = score + 5;
 
-See [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) and [NOVELTY.md](NOVELTY.md).
+> print scroe
+  Did you mean the variable score?
+```
 
-## Setup
+It is deterministic and runs offline. It uses only the Python standard library, with no
+LLMs and no external APIs.
+
+> **Status:** in active development. The language, data contracts and NLP front end are
+> in place; the end-to-end CLI is not wired up yet (it currently echoes its input).
+
+---
+
+## Why Parsley is different
+
+Translating English into code is an established area, so Parsley doesn't claim to be the
+first such system. What it adds is a specific combination of three ideas inside a formally
+specified language, measured with an evaluation and an ablation.
+
+### 1. Compiler-informed interpretation
+
+In a normal pipeline, information only flows one way: English, then the compiler. In
+Parsley, the compiler's **symbol table and statement history flow back** into the English
+stage to settle what the sentence leaves open.
+
+| English problem | How Parsley resolves it | Example |
+|---|---|---|
+| Variable or text? | A declared name is a variable; quoted text is always a string; anything else is text | after `LET age = 20;`, `print age` → `PRINT age;`, `print total` → `PRINT "total";` |
+| Pronouns | `it`, `that` and `the variable` refer to the most recently used variable | `set score to 10. add 5 to it.` → `score = score + 5;` |
+| Implicit declaration | Assigning to an undeclared name declares it, with a warning | `set x to 5` → `LET x = 5;` |
+| Typos | A near miss of a declared name triggers a question. Parsley never corrects silently | `print scroe` → "Did you mean the variable score?" |
+| Types | Inferred types are tracked and mismatches are explained in plain English | `add 5 to name` (a string) → type error |
+
+### 2. Explicit ambiguity handling
+
+The front end returns **ranked candidate interpretations**, each with a score, instead of
+a single guess. A decision rule then picks one of three outcomes:
+
+- **Accept**: one clear winner, with no missing information. Example: `set age to 21`.
+- **Clarify**: two plausible readings, or something is missing, so Parsley asks a
+  targeted question. Examples: `increase x` → "By how much?", and `set x to 10 or 20` →
+  "10 or 20?"
+- **Reject**: nothing supported matches, so Parsley suggests a phrasing that works.
+  Example: `store 50 in bonus` → "Try: set bonus to 50".
+
+In file mode a clarification becomes a diagnostic, so batch runs never hang.
+
+### 3. Layered verification
+
+Every accepted statement is checked in three ways. Each check catches a different kind of
+error.
+
+| Layer | What it does | Catches |
+|---|---|---|
+| **Back-translation** | Turns the AST back into canonical English ("I understood: …") | The NLP misunderstanding the sentence |
+| **Structural round-trip** | Re-parses the generated MiniLang and compares the ASTs | Code-generator and grammar bugs |
+| **Execution equivalence** | Runs the program through two independent evaluators and compares state and output | Code that parses but means something else |
+
+These layers verify output against defined checks. They do not prove that every English
+interpretation is correct.
+
+---
+
+## How it works
+
+```
+English sentence
+   │
+   ▼
+Normalizer ─────────────── lowercases command words; keeps identifier case
+   │
+   ▼
+Candidate generator ◄───── context resolver (symbol table + reference stack)
+   │
+   ▼
+Ambiguity gate ─────────── accept │ clarify (ask) │ reject (suggest)
+   │
+   ▼
+IR / AST builder
+   │
+   ▼
+Semantic analyzer + symbol table ──► feeds the context resolver
+   │
+   ▼
+Code generator ─────────── AST → MiniLang text
+   │
+   ▼
+Verifier ───────────────── back-translation │ round-trip │ execution equivalence
+   │
+   ▼
+Trace / output
+```
+
+The design follows a few strict rules:
+
+- No stage silently guesses. Each one returns a testable result or a diagnostic.
+- The NLP never writes MiniLang. It produces candidates, and only the code generator
+  writes code.
+- The symbol table has one owner, the semantic analyzer. The context resolver only
+  reads it.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full data contracts.
+
+---
+
+## MiniLang
+
+A deliberately small language with numbers, strings, variables, `PRINT`, `IF` / `ELSE`
+and `REPEAT`.
+
+```
+LET age = 20;
+age = age + 1;
+IF age > 17 THEN { PRINT "adult"; } ELSE { PRINT "minor"; }
+REPEAT 3 TIMES { PRINT "hello"; }
+```
+
+### Supported English
+
+| Intent | English | MiniLang |
+|---|---|---|
+| Declare | `make a variable called age and set it to 20` | `LET age = 20;` |
+| Assign | `set age to age plus 1` / `change age to 30` | `age = age + 1;` |
+| Increment / decrement | `increase count by 2` / `decrease count by 1` | `count = count + 2;` |
+| Arithmetic assign | `multiply total by 3` / `divide total by 2` | `total = total * 3;` |
+| Print | `print age` / `show "Hello"` / `display hello world` | `PRINT age;` / `PRINT "hello world";` |
+| If | `if age is greater than 17 then print adult else print minor` | `IF age > 17 THEN { ... } ELSE { ... }` |
+| Repeat | `repeat 3 times print hello` | `REPEAT 3 TIMES { PRINT "hello"; }` |
+| Reference | `add 5 to it` | `score = score + 5;` |
+
+The full grammar, type rules, accepted phrasings and rejected patterns are in
+[LANGUAGE_SPEC.md](LANGUAGE_SPEC.md).
+
+---
+
+## Getting started
+
+Requires Python 3.11 or newer.
 
 ```
 git clone https://github.com/Ashwin-Projects/parsley.git
@@ -30,29 +162,68 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-## Run
+Run the tests:
 
 ```
-python -m pytest -q                       # run the test suite
-python -m parsley.cli "set age to 21"     # CLI (Phase 0 placeholder: echoes its input)
-parsley "set age to 21"                   # same, via the installed entry point
+python -m pytest -q
 ```
 
-The full CLI (file mode, `--trace`, `--output`, REPL, `--confirm`, `--no-context`) arrives
-in Phases 5-6.
+Run the CLI:
 
-## Status
+```
+parsley "set age to 21"
+python -m parsley.cli "set age to 21"
+```
 
-| Phase | State |
-|---|---|
-| 0 - Setup | Done: skeleton, packaging, placeholder CLI, smoke test |
-| 1 - Spec, contracts, fixtures, related work | Done; spec frozen 2026-10-25 (decision log: LANGUAGE_SPEC.md Section 9) |
-| 2 - NLP front end | Next (branch `phase-2`, ASUS) |
-| 3 - AST, IR builder, lexer, parser | `ast_nodes.py` implemented as a data contract; parser next (branch `phase-3-parser`, MacBook) |
-| 4-9 | Not started |
+The finished CLI will support single sentences, file mode (one sentence per line, sharing
+one session), an interactive REPL with clarification questions, and these flags:
+`--trace` (full pipeline trace), `--output`, `--confirm` (confirm every back-translation),
+and `--no-context` (turns off compiler-informed interpretation for the ablation).
 
-Apart from the AST node dataclasses, no compiler logic exists yet; the other modules under
-`src/parsley/` are docstring-only stubs.
+---
+
+## Evaluation
+
+Parsley is evaluated on a held-out set of about 150 inputs, kept separate from the
+development fixtures. The set covers valid statements, blind-written paraphrases,
+multi-sentence sessions, ambiguous input and unsupported input. The metrics are:
+
+- exact-match accuracy and paraphrase consistency
+- ambiguity precision and recall, and the rate of unnecessary questions
+- context-resolution accuracy and safe-rejection rate
+- suggestion usefulness
+- mutation detection per verification layer
+- ablation: accuracy with context on vs off, and wrong-code rate with clarification on vs
+  off
+
+Results will be reported as measured, failures included.
+
+---
+
+## Project layout
+
+```
+src/parsley/
+├── cli.py  pipeline.py  session.py  diagnostics.py  keywords.py
+├── nlp/        normalizer, pattern table, candidates, context, ambiguity, suggestions
+├── compiler/   AST nodes, IR builder, lexer, parser, semantic analysis, symbols, codegen
+├── verify/     back-translation, round-trip, AST evaluator, interpreter
+└── eval/       dataset, metrics, evaluation runner
+tests/          unit/  integration/  fixtures/  eval_data/
+examples/       valid/  invalid/  ambiguous/
+```
+
+---
+
+## Limitations
+
+- Only constrained English is supported; paraphrase coverage is limited by the pattern
+  table.
+- MiniLang has no functions, lists or user input.
+- Verification checks the output against defined checks; it is not a proof of
+  correctness.
+
+---
 
 ## Documentation
 
@@ -60,6 +231,7 @@ Apart from the AST node dataclasses, no compiler logic exists yet; the other mod
 |---|---|
 | [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) | Problem, goals, non-goals, success criteria |
 | [LANGUAGE_SPEC.md](LANGUAGE_SPEC.md) | Grammar, types, English patterns, ambiguity rules |
+<<<<<<< HEAD
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Pipeline and frozen data contracts |
 | [NOVELTY.md](NOVELTY.md) | N1-N5, non-claims, metrics, related work |
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Phases 0-9, exit tests, team, branch/PR workflow |
@@ -68,3 +240,9 @@ Apart from the AST node dataclasses, no compiler logic exists yet; the other mod
 | [docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf](docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf) | The original plan (v2.1); "Clarix" = Parsley |
 
 Each person works on a feature branch and merges via pull request (see DEVELOPMENT.md).
+=======
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Pipeline and data contracts |
+| [NOVELTY.md](NOVELTY.md) | Contributions, what is not claimed, metrics, related work |
+| [TESTING.md](TESTING.md) | Test layout and fixture format |
+| [DEVELOPMENT.md](DEVELOPMENT.md) | Contributor workflow |
+>>>>>>> phase-4

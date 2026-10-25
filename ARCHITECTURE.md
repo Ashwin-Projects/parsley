@@ -170,7 +170,7 @@ stage (design rule 1).
 |---|---|---|
 | `level` | `"error" \| "warning" \| "info"` | Any `error` makes the CLI exit non-zero. |
 | `stage` | `str` | One of `normalizer`, `candidates`, `context`, `ambiguity`, `ir`, `lexer`, `parser`, `semantic`, `codegen`, `verify`, `cli`. |
-| `code` | `str` | Letter (`E`/`W`/`I`, matching `level`) + 3 digits. `E201` = used before it is created; `E202` = `LET` inside a block (LANGUAGE_SPEC.md 2.2). Other codes are assigned in Phase 4. |
+| `code` | `str` | Letter (`E`/`W`/`I`, matching `level`) + 3 digits. Semantic codes `E201`-`E207`, `W208` and `E209` are listed in LANGUAGE_SPEC.md 2.2. Pipeline codes: `E101` (`candidates`: unsupported sentence), `W301` (`context`: implicit declaration), `E401` (`ir`: unresolved slot, e.g. with `--no-context`, or no valid statement). |
 | `message` | `str` | Plain English, user-facing. |
 
 ### 2.6 Verification
@@ -193,14 +193,18 @@ Defined in `parsley/session.py`; the symbol table type lives in
 | Field | Type | Semantics |
 |---|---|---|
 | `symbol_table` | `dict[str, {type: "number"\|"string", declared_at: int}]` | `declared_at` = index into `history` of the declaring statement. **Written only by `semantic.py`.** |
-| `ref_stack` | `list[str]` | Most recently assigned or referenced variable **last**. Read by the context resolver. |
+| `ref_stack` | `list[str]` | Most recently assigned or referenced variable **last**, no duplicates. Read by the context resolver. |
 | `history` | `list[Stmt]` | Accepted statements in order. |
+
+`semantic.analyze(stmt, session)` is the only writer of all three fields, and only for a
+statement with no errors. Readers use `Session.symbols`, a live read-only
+`Mapping[str, Symbol]` (`Symbol(name, type, declared_at)`).
 
 `Stmt` = any statement AST node: `Let | Assign | Print | If | Repeat`.
 
 ### 2.8 AST nodes
 
-Defined in `parsley/compiler/ast_nodes.py` (implemented; owner ASUS). Frozen, comparable
+Defined in `parsley/compiler/ast_nodes.py` (implemented; owner Core). Frozen, comparable
 dataclasses, so V2 is a plain equality check. Child sequences are tuples, so every tree is
 hashable.
 
@@ -223,7 +227,7 @@ Nodes hold no logic: type and range checks (e.g. the REPEAT count) belong to `se
 
 ### 2.9 IR builder: unresolved and missing slots
 
-`parsley/compiler/ir_builder.py` (`build(candidate) -> Stmt`, owner ASUS) accepts only a
+`parsley/compiler/ir_builder.py` (`build(candidate) -> Stmt`, owner Core) accepts only a
 candidate that the context resolver and ambiguity gate have finished with. **It uses a clear
 error, not a placeholder node** (a placeholder would need a new AST node, and the AST is a
 frozen contract the parser depends on):
@@ -245,6 +249,20 @@ Mapping: `name` -> identifier (in a name position) or `Var` (in a value); `numbe
 undeclared becoming `Let`) is decided by the context resolver, which changes the intent to
 `declare`; the IR builder does not consult the symbol table.
 
+### 2.10 Pipeline result
+
+`parsley/pipeline.py`: `run(text, session, *, use_context=True) -> PipelineResult`. Consumers:
+CLI, evaluation, `tests/integration`.
+
+| Field | Type | Semantics |
+|---|---|---|
+| `status` | `"ok" \| "needs_clarification" \| "unsupported" \| "error"` | `ok`: code produced and the statement recorded. `needs_clarification`: missing slot, typo or empty-stack pronoun. `unsupported`: no pattern matched. `error`: unresolved slot or semantic error. |
+| `minilang`, `back_translation` | `str \| None` | Set only for `ok`. |
+| `diagnostics` | `tuple[Diagnostic, ...]` | Context warnings, IR/semantic diagnostics, or `E101`. |
+| `question`, `options` | `str \| None`, `tuple[str, ...]` | Set only for `needs_clarification` (LANGUAGE_SPEC.md 7.1 wording). |
+| `notes` | `tuple[str, ...]` | `NLPResult` reason codes (2.4); only for `unsupported`. |
+| `trace` | `Trace` | `input`, `normalized`, `candidates` (as generated), `ranked` (after context), `decision` (`ACCEPT`/`CLARIFY`/`REJECT`), `chosen`, `ast`. |
+
 ## 3. Design rules
 
 - No stage silently guesses. It returns a testable result or a diagnostic.
@@ -261,10 +279,10 @@ undeclared becoming `Let`) is decided by the context resolver, which changes the
 
 | Boundary | Producer (owner) | Consumers (owners) |
 |---|---|---|
-| `Candidate`, `NLPResult` | NLP front end (ASUS) | IR builder (ASUS), suggest.py (MacBook), evaluation (Gaming), optional `parsley_ml` scorer (Gaming; may change `score` only) |
-| `Diagnostic` | all stages | CLI (ASUS), evaluation (Gaming) |
-| `Session` / symbol table | semantic.py (ASUS) | context.py (ASUS), ast_eval (Gaming), interpreter (MacBook) |
-| AST nodes | ast_nodes.py (ASUS) | parser (MacBook), codegen (ASUS), verifiers (MacBook, Gaming) |
-| `Verification` | verify/ (MacBook V2, Gaming/MacBook V3) | trace (ASUS), evaluation (Gaming) |
+| `Candidate`, `NLPResult` | NLP front end (Core) | IR builder (Core), suggest.py (Parser/Verifier), evaluation (Evaluation), optional `parsley_ml` scorer (Evaluation; may change `score` only) |
+| `Diagnostic` | all stages | CLI (Core), evaluation (Evaluation) |
+| `Session` / symbol table | semantic.py (Core) | context.py (Core), ast_eval (Evaluation), interpreter (Parser/Verifier) |
+| AST nodes | ast_nodes.py (Core) | parser (Parser/Verifier), codegen (Core), verifiers (Parser/Verifier, Evaluation) |
+| `Verification` | verify/ (Parser/Verifier V2, Evaluation/Parser/Verifier V3) | trace (Core), evaluation (Evaluation) |
 
 Contract changes need approval from every owner in the row (Section 2.1).

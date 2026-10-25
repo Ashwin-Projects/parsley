@@ -64,13 +64,29 @@ compare text. The form follows the examples in plan Section 4:
 
 | Code | Condition | Example message |
 |---|---|---|
-| `E201` | Variable used before it is created | `score is used before it is created` |
+| `E201` | Variable used (or assigned) before it is created | `score is used before it is created` |
 | `E202` | `LET` inside an `IF` or `REPEAT` block | `variables must be created outside IF and REPEAT blocks` |
+| `E203` | `-`, `*`, `/` or unary `-` on text | `name is text, and text cannot be multiplied` |
+| `E204` | Text mixed with a number in `+` or a comparison | `cannot add text and a number: name is text and 5 is a number` |
+| `E205` | Text compared with anything other than `==` / `!=` | `text can only be compared with 'is equal to' or 'is not equal to', not 'is greater than'` |
+| `E206` | Division by a literal zero (`0`, `0.0`, `-0`) | `cannot divide by zero` |
+| `E207` | REPEAT count that is not a whole number from 1 to 1000 | `REPEAT needs a whole number of times from 1 to 1000, not 0` |
+| `W208` | Redeclaration (warning; the new `LET` replaces the old type) | `age already exists, so creating it again replaces it` |
+| `E209` | Assignment that would change a variable's type | `x is a number, so it cannot be set to text` |
 
-Phase 4 assigns codes for the remaining checks: redeclaration (warning), type mismatch
-(Section 2), division by literal zero, and REPEAT count outside 1-1000. Diagnostics are
-plain English with a stage and a code (see ARCHITECTURE.md, `Diagnostic`). Errors exit
-non-zero and never print fake success.
+All of these have stage `semantic`. Diagnostics are plain English with a stage and a code
+(see ARCHITECTURE.md, `Diagnostic`). Errors exit non-zero and never print fake success.
+
+Type rules used by these checks:
+
+- An expression with an unknown type (an undefined name, or a sub-expression that already
+  failed) is not type-checked against its neighbours, so a failure does not cascade into
+  further type errors.
+- A variable keeps the type it was created with. Only a new top-level `LET` (W208) can
+  change it; an assignment of the other type is `E209`. Because `LET` is not allowed in
+  blocks, a type never changes on a branch that might not run.
+- A statement with any error is not recorded: the symbol table, reference stack and
+  history are unchanged. Warnings do not block recording.
 
 ## 3. Normalization and case
 
@@ -105,6 +121,14 @@ When an English operand is a bare word, it is resolved by the first rule that ap
 
 Only rule 3 asks a question. Other kinds of ambiguity (Section 7) still clarify.
 
+Rule 3 also covers the target (`NAME`) of an assignment or update: `set scroe to 7` or
+`increase scroe by 1` with `score` declared asks `Did you mean the variable score?` instead
+of silently creating `scroe` (decision D-12). An explicit declaration (`let scroe be 7`,
+`make a variable called scroe ...`) creates the name without asking.
+
+If rule 4 makes an identifier that is not a legal one (`print hello world plus 1`), the
+sentence fails with `E401` (stage `ir`); nothing is guessed.
+
 Examples, after `LET age = 20;` and `LET score = 10;`:
 
 | English | Result | Rule |
@@ -135,9 +159,14 @@ Adding a word is a spec change: update this list and the tests together.
 |---|---|
 | Pronouns | `it`, `that`, `the variable` in a variable position resolve to the most recently assigned or referenced variable (top of the reference stack). |
 | Empty reference stack | The pronoun is an unfilled required slot, so it clarifies (Section 7). |
-| Implicit declaration | Assignment intents (`set`, `change`, `update`, `assign`) to an undeclared name generate `LET` instead of assignment, with a warning diagnostic, rather than failing. |
-| Typos | Section 4 rule 3: confirmation question, never silent auto-correction. |
+| Implicit declaration | Assignment intents (`set`, `change`, `update`, `assign`) to an undeclared name generate `LET` instead of assignment, with warning `W301` (stage `context`: `x was not created yet, so this creates it`), rather than failing. Only at the top level: inside a block the assignment stays an assignment (and reports `E201`). |
+| Typos | Section 4 rule 3: confirmation question, never silent auto-correction. When several declared names are close, the closest wins; on a tie, the first declared. |
 | Type-aware wording | The symbol table stores inferred types. Arithmetic on a string variable (`add 5 to name`) gets a plain-English type error. |
+| Type-hint re-scoring | After resolution each candidate's score is nudged, then candidates are re-ranked: -0.1 if rule 4 made an undeclared identifier; for increase/decrease/multiply/divide, -0.1 if the target is text, +0.05 if the target and the amount are numbers. Scores stay in [0, 1]. |
+
+With context resolution off (`--no-context`, the N1 ablation), none of the above applies:
+bare words and pronouns stay unresolved and the sentence fails with `E401` (stage `ir`),
+and assignment to an undeclared name reports `E201`.
 
 The `and set it to` inside pattern D1 is part of the pattern, not a context pronoun.
 
@@ -281,6 +310,37 @@ and does **not** clarify.
 - Back-translation (`I understood: ...`) is always shown. Confirmation is requested only on
   CLARIFY, or for every statement with `--confirm`.
 
+### 7.4 Canonical back-translation (V1, Phase 5)
+
+These are output descriptions of the AST, not additional accepted input patterns.
+Identifiers and number spellings are preserved. Strings are always double-quoted,
+escaping only quotes and backslashes as in Section 2.1, so text cannot be mistaken
+for a variable or a command. Expression and comparison nodes render fragments;
+a statement or nonempty program ends in one period. An empty program renders empty
+text. Program statements are joined with `; ` within one sentence.
+
+| Node | Canonical template (children rendered recursively) |
+|---|---|
+| `Program` | statements joined with `; ` |
+| `Let` | `create variable NAME with value VALUE` |
+| `Assign` | `set NAME to VALUE` |
+| `Print` | `print VALUE` |
+| `If` | `if CONDITION then begin THEN_BODY end` optionally followed by ` else begin ELSE_BODY end` |
+| `Repeat` | `repeat COUNT times begin BODY end` |
+| `Compare` | `LEFT COMPARISON RIGHT`; comparisons use `is greater than`, `is less than`, `is equal to`, `is not equal to`, `is greater than or equal to`, `is less than or equal to` |
+| `BinOp` | `(LEFT OPERATOR RIGHT)`; operators use `plus`, `minus`, `times`, `divided by` |
+| `Neg` | `negative (OPERAND)` |
+| `Num` | original number text |
+| `Str` | quoted, escaped string content |
+| `Var` | original variable name |
+
+An assignment whose value is exactly `NAME OP AMOUNT` uses the update template:
+`increase NAME by AMOUNT`, `decrease NAME by AMOUNT`, `multiply NAME by AMOUNT`,
+or `divide NAME by AMOUNT`, respectively. All other assignments use `set`.
+Every binary expression is parenthesized and every unary operand is enclosed in
+parentheses, so operator scope is explicit. Blocks use `begin ... end`, joining
+their statements with `; `, with no internal sentence-ending periods.
+
 ## 8. Rejected English patterns
 
 Rejected input returns `unsupported` with an N4 suggestion where one is close enough.
@@ -316,6 +376,7 @@ applied throughout this document.
 | D-9 | Block scope | `LET` inside a block is a semantic error, `E202`. | §2, §2.2 |
 | D-10 | String comparison | Strings support only `==` and `!=`. | §2 |
 | D-11 | REPEAT count | Integer literal from 1 to 1000. | §2 |
+| D-12 | Typo in an assignment/update target | Asks the rule 3 typo question instead of an implicit `LET`; explicit declarations do not ask. *Proposed 2026-10-25, pending team approval.* | §4 |
 
 Edit distance in D-2 is optimal string alignment (an adjacent swap counts as one edit), so
 the plan's demo case `print scroe` stays a typo question for the 5-letter name `score`.
