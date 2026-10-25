@@ -462,7 +462,7 @@ def _fake_evaluators(monkeypatch, ast_result, interp_result, seen):
 
 def test_v3_runs_both_evaluators_on_the_whole_session_program(monkeypatch):
     seen = []
-    _fake_evaluators(monkeypatch, ({"x": 1}, ["hi"]), ({"x": 1}, ["hi"]), seen)
+    _fake_evaluators(monkeypatch, ({"x": 1}, ["hi"], []), ({"x": 1}, ["hi"], []), seen)
     session = Session()
     run("let x be 1", session)
     seen.clear()
@@ -473,14 +473,14 @@ def test_v3_runs_both_evaluators_on_the_whole_session_program(monkeypatch):
 
 
 def test_v3_fail_when_the_evaluators_disagree(monkeypatch):
-    _fake_evaluators(monkeypatch, ({"x": 1}, []), ({"x": 2}, []), [])
+    _fake_evaluators(monkeypatch, ({"x": 1}, [], []), ({"x": 2}, [], []), [])
     v = run("let x be 1", Session()).verification
     assert v.v3_match is False
     assert any("V3 failed" in d and "{'x': 1}" in d and "{'x': 2}" in d for d in v.details)
 
 
 def test_v3_skipped_when_only_one_evaluator_exists(monkeypatch):
-    monkeypatch.setattr(ast_eval, "run", lambda program: ({}, []), raising=False)
+    monkeypatch.setattr(ast_eval, "run", lambda program: ({}, [], []), raising=False)
     assert run("let x be 1", Session()).verification.v3_match is None
 
 
@@ -488,7 +488,7 @@ def test_v3_evaluator_crash_is_a_failure_not_a_crash(monkeypatch):
     def boom(program):
         raise ZeroDivisionError("division by zero")
     monkeypatch.setattr(ast_eval, "run", boom, raising=False)
-    monkeypatch.setattr(interpreter, "run", lambda source: ({}, []), raising=False)
+    monkeypatch.setattr(interpreter, "run", lambda source: ({}, [], []), raising=False)
     result = run("let x be 1", Session())
     assert result.status == "ok" and result.verification.v3_match is False
 
@@ -500,7 +500,7 @@ def test_no_verification_without_accepted_code(text):
 
 
 def test_verification_never_changes_the_session(monkeypatch):
-    _fake_evaluators(monkeypatch, ({}, []), ({}, []), [])
+    _fake_evaluators(monkeypatch, ({}, [], []), ({}, [], []), [])
     monkeypatch.setattr(roundtrip, "check", lambda source, expected: None, raising=False)
     session = Session()
     run("let x be 1", session)
@@ -546,7 +546,7 @@ def test_exception_whose_text_raises_is_still_reported(monkeypatch):
 
 
 def test_huge_results_are_truncated_in_details(monkeypatch):
-    _fake_evaluators(monkeypatch, ({"x": "a" * 10_000}, []), ({}, []), [])
+    _fake_evaluators(monkeypatch, ({"x": "a" * 10_000}, [], []), ({}, [], []), [])
     v = run("let x be 1", Session()).verification
     assert v.v3_match is False and all(len(d) < 600 for d in v.details)
 
@@ -569,7 +569,7 @@ def test_v3_skips_before_generating_the_session_program(monkeypatch):
 
 def test_declined_confirmation_never_runs_the_layers(monkeypatch):
     seen = []
-    _fake_evaluators(monkeypatch, ({}, []), ({}, []), seen)
+    _fake_evaluators(monkeypatch, ({}, [], []), ({}, [], []), seen)
     monkeypatch.setattr(roundtrip, "check", lambda source, expected: seen.append("V2"), raising=False)
     result = run("let x be 1", Session(), confirm=lambda text: False)
     assert result.verification is None and seen == []
@@ -580,3 +580,125 @@ def test_verification_after_an_answered_question(monkeypatch):
     session = declared("let x be 1")
     done = answer(run("set x to 10 or 20", session), "20", session)
     assert done.verification is not None and done.verification.v2_match is True
+
+
+# V3 compares (variables, output, errors)
+
+
+@pytest.mark.parametrize("ast_result,interp_result,expected", [
+    (({"x": 1}, ["1"], []), ({"x": 1}, ["1"], []), True),
+    (({"x": 1}, ["1"], []), ({"x": 1}, ["2"], []), False),          # output differs
+    (({"x": 1}, [], []), ({"x": 1}, [], ["division by zero"]), False),  # errors differ
+    (({"x": 1}, [], ["E"]), ({"x": 1}, [], ["E"]), True),            # same run-time error
+])
+def test_v3_passes_only_if_variables_output_and_errors_match(monkeypatch, ast_result, interp_result, expected):
+    _fake_evaluators(monkeypatch, ast_result, interp_result, [])
+    assert run("let x be 1", Session()).verification.v3_match is expected
+
+
+@pytest.mark.parametrize("bad", [({"x": 1}, []), "nonsense", None])
+def test_v3_result_outside_the_contract_is_a_reported_failure(monkeypatch, bad):
+    _fake_evaluators(monkeypatch, bad, bad, [])
+    v = run("let x be 1", Session()).verification
+    assert v.v3_match is False
+    assert any("(variables, output, errors)" in d for d in v.details)
+
+
+# N4 suggestion hook (parsley.nlp.suggest is a teammate's module; these tests use fakes)
+
+from parsley.nlp import suggest as suggest_module  # noqa: E402
+
+
+def test_suggestion_is_none_while_suggest_is_not_implemented():
+    result = run("store 50 in bonus", Session())
+    assert result.status == "unsupported" and result.suggestion is None
+
+
+def test_suggestion_from_suggest_with_text_and_reason_code(monkeypatch):
+    calls = []
+    def fake(text, reason_code):
+        calls.append((text, reason_code))
+        return "set bonus to 50"
+    monkeypatch.setattr(suggest_module, "suggest", fake, raising=False)
+    result = run("store 50 in bonus", Session())
+    assert result.suggestion == "set bonus to 50"
+    assert calls == [("store 50 in bonus", "NO_MATCH")]
+
+
+def test_suggest_gets_the_specific_reason_code(monkeypatch):
+    calls = []
+    monkeypatch.setattr(suggest_module, "suggest", lambda text, code: calls.append(code), raising=False)
+    run("set x to 5 and set y to 6", Session())
+    assert calls == ["REJECT_AND_CONTINUATION"]
+
+
+@pytest.mark.parametrize("behaviour", [
+    lambda text, code: None,
+    lambda text, code: 42,
+    lambda text, code: "   ",
+])
+def test_suggest_without_a_usable_answer_gives_none(monkeypatch, behaviour):
+    monkeypatch.setattr(suggest_module, "suggest", behaviour, raising=False)
+    assert run("store 50 in bonus", Session()).suggestion is None
+
+
+@pytest.mark.parametrize("error", [NotImplementedError(), ValueError("boom"), SystemExit(2)])
+def test_suggest_errors_never_break_the_pipeline(monkeypatch, error):
+    def fake(text, code):
+        raise error
+    monkeypatch.setattr(suggest_module, "suggest", fake, raising=False)
+    result = run("store 50 in bonus", Session())
+    assert result.status == "unsupported" and result.suggestion is None
+
+
+@pytest.mark.parametrize("text", ['print "hi"', "print x times 2", "increase score"])
+def test_suggest_is_only_asked_for_unsupported_input(monkeypatch, text):
+    calls = []
+    monkeypatch.setattr(suggest_module, "suggest", lambda t, c: calls.append(t), raising=False)
+    result = run(text, Session())
+    assert calls == [] and result.suggestion is None
+
+
+# N4 / V3 review fixes
+
+from parsley import pipeline as pipeline_module  # noqa: E402
+from parsley.nlp.candidates import NLPResult  # noqa: E402
+
+
+def _unsupported_with(monkeypatch, notes):
+    monkeypatch.setattr(pipeline_module, "generate", lambda text: NLPResult("unsupported", [], notes=list(notes)))
+
+
+@pytest.mark.parametrize("notes,primary", [
+    (["NO_MATCH"], "NO_MATCH"),
+    (["NO_MATCH", "REJECT_AND_CONTINUATION"], "REJECT_AND_CONTINUATION"),
+    (["TOO_MANY_ALTERNATIVES", "TOO_MANY_READINGS"], "TOO_MANY_ALTERNATIVES"),
+])
+def test_message_and_suggest_use_the_same_primary_reason(monkeypatch, notes, primary):
+    _unsupported_with(monkeypatch, notes)
+    calls = []
+    monkeypatch.setattr(suggest_module, "suggest", lambda text, code: calls.append(code), raising=False)
+    result = run("anything", Session())
+    assert calls == [primary]
+    assert pipeline_module._UNSUPPORTED_MESSAGES[primary] in result.diagnostics[0].message
+    assert result.notes == tuple(notes)
+
+
+def test_internal_error_gets_no_suggestion(monkeypatch):
+    _unsupported_with(monkeypatch, ["INTERNAL_ERROR"])
+    calls = []
+    monkeypatch.setattr(suggest_module, "suggest", lambda text, code: calls.append(code) or "x", raising=False)
+    assert run("anything", Session()).suggestion is None and calls == []
+
+
+class _BadEq:
+    def __eq__(self, other):
+        raise RuntimeError("cannot compare")
+
+    __hash__ = None
+
+
+def test_v3_part_whose_equality_raises_is_a_reported_failure(monkeypatch):
+    _fake_evaluators(monkeypatch, (_BadEq(), [], []), ({}, [], []), [])
+    result = run("let x be 1", Session())
+    assert result.status == "ok" and result.verification.v3_match is False

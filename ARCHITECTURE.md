@@ -195,8 +195,8 @@ evaluation.
 | Layer | Function | Contract |
 |---|---|---|
 | V2 | `parsley.verify.roundtrip.check(source: str, expected: Program) -> str \| None` | Parse `source` (the statement's generated MiniLang) with the Phase 3 parser and compare with `expected`. `None` = equal; otherwise a description of the first differing node. |
-| V3 | `parsley.verify.ast_eval.run(program: Program) -> (variables, output)` | Evaluate the AST directly. `variables: dict[str, int \| float \| str]` (final values), `output: list[str]` (printed lines). |
-| V3 | `parsley.verify.interpreter.run(source: str) -> (variables, output)` | Parse and run MiniLang; same result shape. V3 passes when both results are equal. |
+| V3 | `parsley.verify.ast_eval.run(program: Program) -> (variables, output, errors)` | Evaluate the AST directly. `variables: dict[str, int \| float \| str]` (final values), `output: list[str]` (printed lines), `errors: list[str]` (run-time errors, e.g. division by a variable that is zero; empty when the run finished cleanly). |
+| V3 | `parsley.verify.interpreter.run(source: str) -> (variables, output, errors)` | Parse and run MiniLang; same result shape. V3 passes only when all three parts are equal; the failure detail names the parts that differ. A result that is not a 3-tuple/list is a reported failure. |
 
 V2 runs on the accepted statement; V3 runs on the whole session program (all accepted
 statements, and its generated MiniLang). A layer whose function is missing, or raises
@@ -207,9 +207,12 @@ never changes the session; it runs only for `ok` results, after any `--confirm`.
 
 V3 runs in-process with no timeout, once per accepted sentence, so **both evaluators must
 enforce the REPEAT safety cap** (LANGUAGE_SPEC.md 2: at most 1000 iterations per REPEAT;
-nested REPEATs multiply). Re-running the whole session costs O(n^2) over a session; and a
-run-time failure in an earlier statement (e.g. division by a variable that is zero) makes
-every later V3 report a failure until the session ends.
+nested REPEATs multiply). The whole session is re-run for now, because sessions are short;
+it costs O(n^2) over a session. A run-time error in an earlier statement appears in both
+evaluators' `errors`, so V3 still passes when they agree about it.
+
+*Future work:* incremental V3 (keep each evaluator's state after the last accepted
+statement and run only the new one), once both evaluators can resume from a saved state.
 
 ### 2.7 Session
 
@@ -291,8 +294,21 @@ statement is recorded only if it returns true. Consumers: CLI, evaluation, `test
 | `diagnostics` | `tuple[Diagnostic, ...]` | Context warnings, IR/semantic diagnostics, or `E101`. |
 | `question`, `options` | `str \| None`, `tuple[str, ...]` | Set only for `needs_clarification` (LANGUAGE_SPEC.md 7.1 wording). |
 | `notes` | `tuple[str, ...]` | `NLPResult` reason codes (2.4); only for `unsupported`. |
+| `suggestion` | `str \| None` | N4 phrasing to try instead; only for `unsupported`. The CLI prints `Try: ...` after the E101 diagnostic. |
 | `verification` | `Verification \| None` | V1/V2/V3 results (2.6); set only for `ok`. The CLI prints `V1 ok \| V2 skipped \| V3 skipped`; `--trace` prints the details. |
 | `trace` | `Trace` | `input`, `normalized`, `candidates` (as generated), `ranked` (after context), `decision` (`ACCEPT`/`CLARIFY`/`REJECT`), `chosen`, `ast`, `verification`. |
+
+**N4 suggestion interface** (the owner of `parsley/nlp/suggest.py` implements it):
+
+| Function | Contract |
+|---|---|
+| `parsley.nlp.suggest.suggest(text: str, reason_code: str) -> str \| None` | `text` is the sentence as typed; `reason_code` is the primary `NLPResult` reason code (2.4), the same one the E101 message explains: the first code other than `NO_MATCH`, or `NO_MATCH` when it is the only one. Return a supported phrasing to try (e.g. `set bonus to 50` for `store 50 in bonus`), or `None` when nothing is close. Must not emit MiniLang. |
+
+The pipeline calls it only for `unsupported` results, and never for `INTERNAL_ERROR` (a
+bug, not a phrasing problem). A missing function or `NotImplementedError` gives
+`suggestion = None`; any other error (even `SystemExit`) is logged at debug level and also
+gives `None`, as does a return value that is not a non-empty string. A suggestion never
+changes the status, the session or the CLI's stderr.
 
 ## 3. Design rules
 

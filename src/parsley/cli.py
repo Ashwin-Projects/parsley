@@ -47,6 +47,8 @@ def run_sentence(text: str, options: argparse.Namespace) -> int:
         _print_trace(result.trace)
     for diagnostic in result.diagnostics:
         print(f"{diagnostic.stage} {diagnostic.code}: {diagnostic.message}", file=sys.stderr)
+    if result.suggestion is not None:
+        print(f"Try: {result.suggestion}", file=sys.stderr)
     if result.status != "ok":
         return 1
     print(f"I understood: {result.back_translation}")

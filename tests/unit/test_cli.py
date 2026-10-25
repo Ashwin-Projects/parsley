@@ -387,8 +387,8 @@ def test_cli_shows_verification_summary(capsys) -> None:
 def test_cli_summary_with_passing_and_failing_layers(monkeypatch, capsys) -> None:
     from parsley.verify import ast_eval, interpreter, roundtrip
     monkeypatch.setattr(roundtrip, "check", lambda source, expected: None, raising=False)
-    monkeypatch.setattr(ast_eval, "run", lambda program: ({"x": 1}, []), raising=False)
-    monkeypatch.setattr(interpreter, "run", lambda source: ({"x": 2}, []), raising=False)
+    monkeypatch.setattr(ast_eval, "run", lambda program: ({"x": 1}, [], []), raising=False)
+    monkeypatch.setattr(interpreter, "run", lambda source: ({"x": 2}, [], []), raising=False)
     assert cli.main(["let x be 1"]) == 0
     assert "V1 ok | V2 ok | V3 failed" in capsys.readouterr().out
 
@@ -408,3 +408,36 @@ def test_failing_layer_keeps_stderr_clean_and_exit_zero(monkeypatch, capsys) -> 
     output = capsys.readouterr()
     assert output.err == ""
     assert "V1 ok | V2 failed | V3 skipped" in output.out
+
+
+# N4 "Try: ..." line
+
+
+def test_cli_shows_the_suggestion(monkeypatch, capsys) -> None:
+    from parsley.nlp import suggest
+    monkeypatch.setattr(suggest, "suggest", lambda text, code: "set bonus to 50", raising=False)
+    assert cli.main(["store 50 in bonus"]) == 1
+    err = capsys.readouterr().err
+    assert "candidates E101" in err and "Try: set bonus to 50" in err
+
+
+def test_cli_without_suggestion_has_no_try_line(capsys) -> None:
+    assert cli.main(["store 50 in bonus"]) == 1
+    assert "Try:" not in capsys.readouterr().err
+
+
+def test_crashing_suggest_leaves_stderr_with_only_the_diagnostic(monkeypatch, capsys, caplog) -> None:
+    import logging
+
+    from parsley.nlp import suggest
+
+    def broken(text, code):
+        raise ValueError("boom")
+
+    monkeypatch.setattr(suggest, "suggest", broken, raising=False)
+    caplog.set_level(logging.DEBUG)
+    assert cli.main(["store 50 in bonus"]) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("candidates E101") and "boom" not in err and "Try:" not in err
+    # Without a configured handler, WARNING+ records would reach stderr via logging's last resort.
+    assert all(record.levelno < logging.WARNING for record in caplog.records)
