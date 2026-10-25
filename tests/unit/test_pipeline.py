@@ -401,3 +401,182 @@ def test_operator_scope_bad_answer_asks_again(reply):
 def test_unsupported_message_names_its_reason_codes(text, codes):
     [d] = run(text, Session()).diagnostics
     assert d.message.endswith(f"({codes})")
+
+
+# Phase 7 verification integration (V1 back-translation, V2 round-trip, V3 execution
+# equivalence). The real V2/V3 modules are teammates' work; these tests use fakes.
+
+from parsley.compiler.ast_nodes import Print, Program, Str  # noqa: E402
+from parsley.verify import Verification, ast_eval, interpreter, roundtrip  # noqa: E402
+
+
+def test_unavailable_layers_are_skipped_and_never_fail():
+    result = run("make a variable called age and set it to 20", Session())
+    assert result.status == "ok"
+    v = result.verification
+    assert isinstance(v, Verification)
+    assert (v.back_translation, v.v2_match, v.v3_match) == ("create variable age with value 20.", None, None)
+    assert "V2 skipped: not available" in "\n".join(v.details)
+    assert "V3 skipped: not available" in "\n".join(v.details)
+    assert result.trace.verification == v
+
+
+def test_v2_pass_calls_roundtrip_with_the_statement(monkeypatch):
+    calls = []
+    monkeypatch.setattr(roundtrip, "check", lambda source, expected: calls.append((source, expected)), raising=False)
+    v = run("let age be 20", Session()).verification
+    assert v.v2_match is True
+    assert calls == [("LET age = 20;", Program((Let("age", Num("20")),)))]
+
+
+def test_v2_fail_reports_the_first_difference(monkeypatch):
+    monkeypatch.setattr(roundtrip, "check", lambda source, expected: "value: Num('20') != Num('21')", raising=False)
+    result = run("let age be 20", Session())
+    assert result.status == "ok" and result.verification.v2_match is False
+    assert any("Num('20') != Num('21')" in d for d in result.verification.details)
+
+
+@pytest.mark.parametrize("error,expected", [(NotImplementedError(), None), (ValueError("boom"), False)])
+def test_v2_exception_is_skip_or_failure_never_a_crash(monkeypatch, error, expected):
+    def check(source, expected_program):
+        raise error
+    monkeypatch.setattr(roundtrip, "check", check, raising=False)
+    result = run("let age be 20", Session())
+    assert result.status == "ok" and result.verification.v2_match is expected
+    if expected is False:
+        assert any("boom" in d for d in result.verification.details)
+
+
+def _fake_evaluators(monkeypatch, ast_result, interp_result, seen):
+    def evaluate(program):
+        seen.append(("ast_eval", program))
+        return ast_result
+
+    def interpret(source):
+        seen.append(("interpreter", source))
+        return interp_result
+
+    monkeypatch.setattr(ast_eval, "run", evaluate, raising=False)
+    monkeypatch.setattr(interpreter, "run", interpret, raising=False)
+
+
+def test_v3_runs_both_evaluators_on_the_whole_session_program(monkeypatch):
+    seen = []
+    _fake_evaluators(monkeypatch, ({"x": 1}, ["hi"]), ({"x": 1}, ["hi"]), seen)
+    session = Session()
+    run("let x be 1", session)
+    seen.clear()
+    v = run('print "hi"', session).verification
+    assert v.v3_match is True
+    program = Program((Let("x", Num("1")), Print(Str("hi"))))
+    assert seen == [("ast_eval", program), ("interpreter", 'LET x = 1;\nPRINT "hi";')]
+
+
+def test_v3_fail_when_the_evaluators_disagree(monkeypatch):
+    _fake_evaluators(monkeypatch, ({"x": 1}, []), ({"x": 2}, []), [])
+    v = run("let x be 1", Session()).verification
+    assert v.v3_match is False
+    assert any("V3 failed" in d and "{'x': 1}" in d and "{'x': 2}" in d for d in v.details)
+
+
+def test_v3_skipped_when_only_one_evaluator_exists(monkeypatch):
+    monkeypatch.setattr(ast_eval, "run", lambda program: ({}, []), raising=False)
+    assert run("let x be 1", Session()).verification.v3_match is None
+
+
+def test_v3_evaluator_crash_is_a_failure_not_a_crash(monkeypatch):
+    def boom(program):
+        raise ZeroDivisionError("division by zero")
+    monkeypatch.setattr(ast_eval, "run", boom, raising=False)
+    monkeypatch.setattr(interpreter, "run", lambda source: ({}, []), raising=False)
+    result = run("let x be 1", Session())
+    assert result.status == "ok" and result.verification.v3_match is False
+
+
+@pytest.mark.parametrize("text", ["print x times 2", "sort the list descending", "increase score"])
+def test_no_verification_without_accepted_code(text):
+    result = run(text, Session())
+    assert result.verification is None and result.trace.verification is None
+
+
+def test_verification_never_changes_the_session(monkeypatch):
+    _fake_evaluators(monkeypatch, ({}, []), ({}, []), [])
+    monkeypatch.setattr(roundtrip, "check", lambda source, expected: None, raising=False)
+    session = Session()
+    run("let x be 1", session)
+    assert session.history == [Let("x", Num("1"))]
+
+
+# Verification review fixes
+
+
+def test_details_are_immutable():
+    v = run("let x be 1", Session()).verification
+    assert isinstance(v.details, tuple)
+    hash(v)
+
+
+def test_layer_calling_sys_exit_does_not_escape(monkeypatch):
+    def check(source, expected):
+        raise SystemExit(3)
+    monkeypatch.setattr(roundtrip, "check", check, raising=False)
+    result = run("let x be 1", Session())
+    assert result.status == "ok" and result.verification.v2_match is False
+
+
+def test_keyboard_interrupt_still_reaches_the_user(monkeypatch):
+    def check(source, expected):
+        raise KeyboardInterrupt
+    monkeypatch.setattr(roundtrip, "check", check, raising=False)
+    with pytest.raises(KeyboardInterrupt):
+        run("let x be 1", Session())
+
+
+class _Nasty(Exception):
+    def __str__(self):
+        raise RuntimeError("no str for you")
+
+
+def test_exception_whose_text_raises_is_still_reported(monkeypatch):
+    def check(source, expected):
+        raise _Nasty()
+    monkeypatch.setattr(roundtrip, "check", check, raising=False)
+    v = run("let x be 1", Session()).verification
+    assert v.v2_match is False and any("_Nasty" in d for d in v.details)
+
+
+def test_huge_results_are_truncated_in_details(monkeypatch):
+    _fake_evaluators(monkeypatch, ({"x": "a" * 10_000}, []), ({}, []), [])
+    v = run("let x be 1", Session()).verification
+    assert v.v3_match is False and all(len(d) < 600 for d in v.details)
+
+
+@pytest.mark.parametrize("returned", [False, 0, ["diff"]])
+def test_roundtrip_result_outside_the_contract_is_a_reported_failure(monkeypatch, returned):
+    monkeypatch.setattr(roundtrip, "check", lambda source, expected: returned, raising=False)
+    v = run("let x be 1", Session()).verification
+    assert v.v2_match is False and any("str or None" in d for d in v.details)
+
+
+def test_v3_skips_before_generating_the_session_program(monkeypatch):
+    from parsley import pipeline as pipeline_module
+    calls = []
+    real = pipeline_module.codegen.generate
+    monkeypatch.setattr(pipeline_module.codegen, "generate", lambda node: calls.append(node) or real(node))
+    run("let x be 1", Session())
+    assert all(not isinstance(node, Program) for node in calls)
+
+
+def test_declined_confirmation_never_runs_the_layers(monkeypatch):
+    seen = []
+    _fake_evaluators(monkeypatch, ({}, []), ({}, []), seen)
+    monkeypatch.setattr(roundtrip, "check", lambda source, expected: seen.append("V2"), raising=False)
+    result = run("let x be 1", Session(), confirm=lambda text: False)
+    assert result.verification is None and seen == []
+
+
+def test_verification_after_an_answered_question(monkeypatch):
+    monkeypatch.setattr(roundtrip, "check", lambda source, expected: None, raising=False)
+    session = declared("let x be 1")
+    done = answer(run("set x to 10 or 20", session), "20", session)
+    assert done.verification is not None and done.verification.v2_match is True

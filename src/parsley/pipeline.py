@@ -11,8 +11,12 @@ back-translation (V1). It never guesses and never raises for bad input:
   NLPResult reason codes (ARCHITECTURE.md 2.4) and ``diagnostics`` an E101.
 - ``error``: an unresolved slot or a semantic error; see ``diagnostics``.
 
-Only the semantic analyzer changes the session. The score-margin ambiguity gate (N2) is the
-next step; until then the top-ranked candidate is taken.
+Only the semantic analyzer changes the session. Every ``ok`` result carries a
+``Verification`` (N3): V1 back-translation, V2 round-trip and V3 execution equivalence.
+V2 and V3 call the teammates' modules ``parsley.verify.roundtrip``, ``ast_eval`` and
+``interpreter`` through the interface in ARCHITECTURE.md 2.6; a layer whose module is
+not implemented yet is reported as skipped, and a verification layer never makes the
+pipeline fail or raise.
 """
 
 from __future__ import annotations
@@ -22,7 +26,7 @@ from dataclasses import dataclass, replace
 from typing import Literal
 
 from parsley.compiler import codegen, semantic
-from parsley.compiler.ast_nodes import Stmt
+from parsley.compiler.ast_nodes import Program, Stmt
 from parsley.compiler.ir_builder import IRBuildError, UnresolvedSlotError, build
 from parsley.diagnostics import Diagnostic, has_errors
 from parsley.nlp.ambiguity import Clarification, apply_answer, gate, slot_at
@@ -30,6 +34,7 @@ from parsley.nlp.candidates import Candidate, Reason, generate
 from parsley.nlp.context import Resolution, resolve
 from parsley.nlp.normalizer import normalize
 from parsley.session import Session
+from parsley.verify import Verification, ast_eval, interpreter, roundtrip
 from parsley.verify.backtranslate import backtranslate
 
 Status = Literal["ok", "error", "needs_clarification", "unsupported"]
@@ -60,6 +65,7 @@ class Trace:
     decision: Decision
     chosen: Candidate | None = None
     ast: Stmt | None = None
+    verification: Verification | None = None
 
 
 @dataclass(frozen=True)
@@ -75,6 +81,7 @@ class PipelineResult:
     options: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()  # reason codes, only for "unsupported"
     clarification: Clarification | None = None  # the open question, for ``answer``
+    verification: Verification | None = None  # set only for "ok"
 
 
 Confirm = Callable[[str], bool]
@@ -162,7 +169,85 @@ def _decide(
         ))
         return PipelineResult("error", trace, diagnostics=tuple(diagnostics))
     diagnostics.extend(semantic.analyze(stmt, session))
-    return PipelineResult("ok", trace, codegen.generate(stmt), back_translation, tuple(diagnostics))
+    minilang = codegen.generate(stmt)
+    verification = _verify(stmt, minilang, back_translation, session)
+    return PipelineResult(
+        "ok", replace(trace, verification=verification), minilang, back_translation,
+        tuple(diagnostics), verification=verification,
+    )
+
+
+# Verification (N3)
+
+
+MAX_DETAIL_CHARS = 200  # longer layer results are cut in the details
+
+
+class _Unavailable(Exception):
+    """A verification layer's module does not provide its function yet."""
+
+
+def _verify(stmt: Stmt, minilang: str, back_translation: str, session: Session) -> Verification:
+    """V2 on this statement; V3 on the whole session program (plan Phase 7)."""
+    details = [f"V1: {back_translation}"]
+    v2 = _layer("V2", details, lambda: _round_trip(minilang, Program((stmt,))))
+    v3 = _layer("V3", details, lambda: _equivalence(Program(tuple(session.history))))
+    return Verification(back_translation, v2, v3, tuple(details))
+
+
+def _layer(name: str, details: list[str], check: Callable[[], tuple[bool, str]]) -> bool | None:
+    """Run one layer: True/False with a detail line, or None when it is not available.
+
+    A layer's own failure, even ``SystemExit``, is reported and never raised; only a
+    KeyboardInterrupt (the user's Ctrl-C) goes through.
+    """
+    try:
+        passed, detail = check()
+    except (_Unavailable, NotImplementedError) as missing:
+        what = _text(missing)
+        details.append(f"{name} skipped: not available" + (f" ({what})" if what else ""))
+        return None
+    except (Exception, SystemExit) as error:
+        details.append(f"{name} failed: {type(error).__name__}: {_text(error)}")
+        return False
+    details.append(f"{name} {'ok' if passed else 'failed'}: {detail}")
+    return passed
+
+
+def _text(value: object, *, as_repr: bool = False) -> str:
+    """``str``/``repr`` of a layer's value, cut to MAX_DETAIL_CHARS; never raises."""
+    try:
+        text = repr(value) if as_repr else str(value)
+    except Exception:
+        text = f"<{type(value).__name__} that cannot be shown>"
+    return text if len(text) <= MAX_DETAIL_CHARS else text[:MAX_DETAIL_CHARS] + "..."
+
+
+def _function(module: object, name: str) -> Callable[..., object]:
+    function = getattr(module, name, None)
+    if not callable(function):
+        raise _Unavailable(f"{getattr(module, '__name__', module)}.{name}")
+    return function
+
+
+def _round_trip(source: str, expected: Program) -> tuple[bool, str]:
+    difference = _function(roundtrip, "check")(source, expected)
+    if difference is None:
+        return True, "the re-parsed MiniLang gives the same AST"
+    if not isinstance(difference, str):
+        return False, f"roundtrip.check returned {_text(difference, as_repr=True)}, expected str or None"
+    return False, _text(difference) or "the re-parsed AST differs"
+
+
+def _equivalence(program: Program) -> tuple[bool, str]:
+    evaluate, interpret = _function(ast_eval, "run"), _function(interpreter, "run")
+    from_ast, from_source = evaluate(program), interpret(codegen.generate(program))
+    if from_ast == from_source:
+        return True, "the AST evaluator and the interpreter agree on variables and output"
+    return False, (
+        f"the AST evaluator gave {_text(from_ast, as_repr=True)} "
+        f"but the interpreter gave {_text(from_source, as_repr=True)}"
+    )
 
 
 def _unsupported(reasons: Sequence[str]) -> Diagnostic:

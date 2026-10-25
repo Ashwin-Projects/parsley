@@ -10,6 +10,7 @@ from parsley import pipeline
 from parsley.compiler import codegen
 from parsley.compiler.ast_nodes import Program
 from parsley.session import Session
+from parsley.verify import Verification
 
 
 def run_sentence(text: str, options: argparse.Namespace) -> int:
@@ -50,10 +51,21 @@ def run_sentence(text: str, options: argparse.Namespace) -> int:
         return 1
     print(f"I understood: {result.back_translation}")
     print(f"MiniLang: {result.minilang}")
+    if result.verification is not None:
+        print(_verification_summary(result.verification))
     if options.output is not None:
         program = codegen.generate(Program(tuple(options.session.history)))
         options.output.write_text(program + "\n", encoding="utf-8")
     return 0
+
+
+def _verification_summary(verification: Verification) -> str:
+    """``V1 ok | V2 skipped | V3 failed``: one word per layer."""
+    def word(match: bool | None) -> str:
+        return "skipped" if match is None else "ok" if match else "failed"
+
+    v1 = "ok" if verification.back_translation else "failed"
+    return f"V1 {v1} | V2 {word(verification.v2_match)} | V3 {word(verification.v3_match)}"
 
 
 def _choices(options: tuple[str, ...]) -> str:
@@ -108,6 +120,10 @@ def _print_trace(trace: pipeline.Trace) -> None:
         print(f"chosen: {trace.chosen.rule_id} {trace.chosen.intent}{notes}")
     if trace.ast is not None:
         print(f"AST: {trace.ast!r}")
+    if trace.verification is not None:
+        print("verification:")
+        for detail in trace.verification.details:
+            print(f"  {detail}")
 
 
 def _process(text: str, options: argparse.Namespace) -> int:

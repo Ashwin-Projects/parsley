@@ -374,3 +374,37 @@ def test_repl_clarification_then_confirm(monkeypatch, capsys) -> None:
     assert status == 0
     assert "MiniLang: x = 20;" in capsys.readouterr().out
     assert "set x to 20." in read.call_args_list[4].args[0]
+
+
+# Verification summary
+
+
+def test_cli_shows_verification_summary(capsys) -> None:
+    assert cli.main(["let x be 1"]) == 0
+    assert "V1 ok | V2 skipped | V3 skipped" in capsys.readouterr().out
+
+
+def test_cli_summary_with_passing_and_failing_layers(monkeypatch, capsys) -> None:
+    from parsley.verify import ast_eval, interpreter, roundtrip
+    monkeypatch.setattr(roundtrip, "check", lambda source, expected: None, raising=False)
+    monkeypatch.setattr(ast_eval, "run", lambda program: ({"x": 1}, []), raising=False)
+    monkeypatch.setattr(interpreter, "run", lambda source: ({"x": 2}, []), raising=False)
+    assert cli.main(["let x be 1"]) == 0
+    assert "V1 ok | V2 ok | V3 failed" in capsys.readouterr().out
+
+
+def test_trace_shows_verification_details(capsys) -> None:
+    assert cli.main(["--trace", "let x be 1"]) == 0
+    out = capsys.readouterr().out
+    assert "verification:" in out
+    assert "  V1: create variable x with value 1." in out
+    assert "  V2 skipped: not available" in out
+
+
+def test_failing_layer_keeps_stderr_clean_and_exit_zero(monkeypatch, capsys) -> None:
+    from parsley.verify import roundtrip
+    monkeypatch.setattr(roundtrip, "check", lambda source, expected: "differs", raising=False)
+    assert cli.main(["let x be 1"]) == 0
+    output = capsys.readouterr()
+    assert output.err == ""
+    assert "V1 ok | V2 failed | V3 skipped" in output.out

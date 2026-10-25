@@ -69,6 +69,11 @@ the feedback paths that make N1 work.
   - 2026-10-25: `NLPResult.notes` added (reason codes for `unsupported`). Additive with an
     empty default, so existing consumers are unaffected; `Candidate` is unchanged.
     Requested by the project lead.
+  - 2026-10-25: `Verification.v2_match` widened from `bool` to `bool | None` (`None` = V2
+    not run), so a layer whose module is not implemented yet can be reported as skipped,
+    as `v3_match` already could. The V2/V3 layer interface (2.6) is proposed for the
+    owners of `roundtrip.py`, `ast_eval.py` and `interpreter.py` to approve. Requested by
+    the project lead.
 
 ### 2.2 Plan notation (verbatim)
 
@@ -181,9 +186,30 @@ evaluation.
 | Field | Type | Semantics |
 |---|---|---|
 | `back_translation` | `str` | V1 canonical English, e.g. `create variable age with value 20.` Always present for accepted statements. |
-| `v2_match` | `bool` | V2: re-parsed AST equals the original AST (dataclass equality). |
+| `v2_match` | `bool \| None` | V2: re-parsed AST equals the original AST (dataclass equality). `None` = V2 not run (module not available). *Was `bool`; see change log.* |
 | `v3_match` | `bool \| None` | V3: final variable state and printed output agree. `None` = V3 not run. |
-| `details` | `list[str]` | Human-readable notes, e.g. the first differing node on a V2 mismatch. |
+| `details` | `tuple[str, ...]` | Human-readable notes (a tuple, so a frozen `Verification` stays immutable), one line per layer, each layer result cut to 200 characters: `V1: ...`, then `V2 ok: ...` / `V2 failed: ...` / `V2 skipped: not available (...)`, the same for V3. |
+
+**Layer interface** (what `pipeline.py` calls; the owners implement these functions):
+
+| Layer | Function | Contract |
+|---|---|---|
+| V2 | `parsley.verify.roundtrip.check(source: str, expected: Program) -> str \| None` | Parse `source` (the statement's generated MiniLang) with the Phase 3 parser and compare with `expected`. `None` = equal; otherwise a description of the first differing node. |
+| V3 | `parsley.verify.ast_eval.run(program: Program) -> (variables, output)` | Evaluate the AST directly. `variables: dict[str, int \| float \| str]` (final values), `output: list[str]` (printed lines). |
+| V3 | `parsley.verify.interpreter.run(source: str) -> (variables, output)` | Parse and run MiniLang; same result shape. V3 passes when both results are equal. |
+
+V2 runs on the accepted statement; V3 runs on the whole session program (all accepted
+statements, and its generated MiniLang). A layer whose function is missing, or raises
+`NotImplementedError`, is skipped (`None`). Any other exception in a layer, including
+`SystemExit`, is reported as a failure (`False`) with the error in `details`; only a
+KeyboardInterrupt passes through. Verification never makes the pipeline fail or raise, and
+never changes the session; it runs only for `ok` results, after any `--confirm`.
+
+V3 runs in-process with no timeout, once per accepted sentence, so **both evaluators must
+enforce the REPEAT safety cap** (LANGUAGE_SPEC.md 2: at most 1000 iterations per REPEAT;
+nested REPEATs multiply). Re-running the whole session costs O(n^2) over a session; and a
+run-time failure in an earlier statement (e.g. division by a variable that is zero) makes
+every later V3 report a failure until the session ends.
 
 ### 2.7 Session
 
@@ -265,7 +291,8 @@ statement is recorded only if it returns true. Consumers: CLI, evaluation, `test
 | `diagnostics` | `tuple[Diagnostic, ...]` | Context warnings, IR/semantic diagnostics, or `E101`. |
 | `question`, `options` | `str \| None`, `tuple[str, ...]` | Set only for `needs_clarification` (LANGUAGE_SPEC.md 7.1 wording). |
 | `notes` | `tuple[str, ...]` | `NLPResult` reason codes (2.4); only for `unsupported`. |
-| `trace` | `Trace` | `input`, `normalized`, `candidates` (as generated), `ranked` (after context), `decision` (`ACCEPT`/`CLARIFY`/`REJECT`), `chosen`, `ast`. |
+| `verification` | `Verification \| None` | V1/V2/V3 results (2.6); set only for `ok`. The CLI prints `V1 ok \| V2 skipped \| V3 skipped`; `--trace` prints the details. |
+| `trace` | `Trace` | `input`, `normalized`, `candidates` (as generated), `ranked` (after context), `decision` (`ACCEPT`/`CLARIFY`/`REJECT`), `chosen`, `ast`, `verification`. |
 
 ## 3. Design rules
 
