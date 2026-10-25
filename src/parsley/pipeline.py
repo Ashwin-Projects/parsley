@@ -21,6 +21,7 @@ pipeline fail or raise.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Literal
@@ -32,10 +33,13 @@ from parsley.diagnostics import Diagnostic, has_errors
 from parsley.nlp.ambiguity import Clarification, apply_answer, gate, slot_at
 from parsley.nlp.candidates import Candidate, Reason, generate
 from parsley.nlp.context import Resolution, resolve
+from parsley.nlp import suggest
 from parsley.nlp.normalizer import normalize
 from parsley.session import Session
 from parsley.verify import Verification, ast_eval, interpreter, roundtrip
 from parsley.verify.backtranslate import backtranslate
+
+logger = logging.getLogger(__name__)
 
 Status = Literal["ok", "error", "needs_clarification", "unsupported"]
 Decision = Literal["ACCEPT", "CLARIFY", "REJECT"]
@@ -82,6 +86,7 @@ class PipelineResult:
     notes: tuple[str, ...] = ()  # reason codes, only for "unsupported"
     clarification: Clarification | None = None  # the open question, for ``answer``
     verification: Verification | None = None  # set only for "ok"
+    suggestion: str | None = None  # N4 "Try: ..." phrasing; only for "unsupported"
 
 
 Confirm = Callable[[str], bool]
@@ -102,6 +107,7 @@ def run(
         trace = Trace(str(text), normalized, (), (), "REJECT")
         return PipelineResult(
             "unsupported", trace, diagnostics=(_unsupported(nlp.notes),), notes=tuple(nlp.notes),
+            suggestion=_suggestion(str(text), nlp.notes),
         )
     resolutions = _resolve(candidates, session, use_context, frozenset())
     base = Trace(text, normalized, candidates, (), "ACCEPT")
@@ -239,19 +245,58 @@ def _round_trip(source: str, expected: Program) -> tuple[bool, str]:
     return False, _text(difference) or "the re-parsed AST differs"
 
 
+_V3_PARTS = ("variables", "output", "errors")
+
+
 def _equivalence(program: Program) -> tuple[bool, str]:
+    """V3: both evaluators return (variables, output, errors); all three must match."""
     evaluate, interpret = _function(ast_eval, "run"), _function(interpreter, "run")
-    from_ast, from_source = evaluate(program), interpret(codegen.generate(program))
-    if from_ast == from_source:
-        return True, "the AST evaluator and the interpreter agree on variables and output"
+    results = {"ast_eval.run": evaluate(program), "interpreter.run": interpret(codegen.generate(program))}
+    for name, result in results.items():
+        if not isinstance(result, (tuple, list)) or len(result) != len(_V3_PARTS):
+            return False, f"{name} returned {_text(result, as_repr=True)}, expected (variables, output, errors)"
+    from_ast, from_source = results.values()
+    differing = [part for part, a, b in zip(_V3_PARTS, from_ast, from_source, strict=True) if a != b]
+    if not differing:
+        return True, "the AST evaluator and the interpreter agree on variables, output and errors"
     return False, (
-        f"the AST evaluator gave {_text(from_ast, as_repr=True)} "
-        f"but the interpreter gave {_text(from_source, as_repr=True)}"
+        f"{' and '.join(differing)} differ: the AST evaluator gave {_text(tuple(from_ast), as_repr=True)} "
+        f"but the interpreter gave {_text(tuple(from_source), as_repr=True)}"
     )
 
 
+# N4 suggestion hook
+
+
+def _suggestion(text: str, reasons: Sequence[str]) -> str | None:
+    """``parsley.nlp.suggest.suggest(text, reason_code)`` (ARCHITECTURE.md 2.10), or None.
+
+    It gets the same primary reason code as the E101 message. ``INTERNAL_ERROR`` is a bug,
+    not a phrasing problem, so it gets no suggestion. A missing function, an error inside
+    it, or an answer that is not a non-empty string all give None: the suggestion is help,
+    never a reason to fail. Errors are logged at debug level only, so the CLI's stderr
+    (which has no logging handler) stays clean.
+    """
+    reason = _primary_reason(reasons)
+    if reason == Reason.INTERNAL_ERROR:
+        return None
+    try:
+        answer = _function(suggest, "suggest")(text, reason)
+    except (Exception, SystemExit) as error:
+        if not isinstance(error, (_Unavailable, NotImplementedError)):
+            logger.debug("suggest.suggest failed for %s: %s", _text(text, as_repr=True), _text(error))
+        return None
+    return answer.strip() if isinstance(answer, str) and answer.strip() else None
+
+
+def _primary_reason(reasons: Sequence[str]) -> str:
+    """The reason code to explain: the first specific one, ``NO_MATCH`` only if alone."""
+    specific = [r for r in reasons if r != Reason.NO_MATCH]
+    return str(specific[0] if specific else Reason.NO_MATCH)
+
+
 def _unsupported(reasons: Sequence[str]) -> Diagnostic:
-    reason = reasons[0] if reasons else Reason.NO_MATCH
+    reason = _primary_reason(reasons)
     message = _UNSUPPORTED_MESSAGES.get(reason, _UNSUPPORTED_MESSAGES[Reason.NO_MATCH])
     codes = ", ".join(reasons) if reasons else Reason.NO_MATCH
     return Diagnostic(
