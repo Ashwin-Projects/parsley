@@ -20,6 +20,9 @@ htmlcov/
 # Evaluation outputs (regenerate with run_eval.py)
 results/
 
+# Claude Code local settings
+.claude/
+
 # Editors / OS
 .vscode/
 .idea/
