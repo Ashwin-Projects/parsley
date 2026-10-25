@@ -154,9 +154,9 @@ traces, `Candidate.rule_id` and N4 suggestions.
 | declare | D1 | `(make\|create\|declare) a [new] variable (called\|named) NAME and set it to VALUE` | make a variable called age and set it to 20 | `LET age = 20;` |
 | declare | D2 | `(make\|create\|declare) a [new] variable (called\|named) NAME (with value\|equal to) VALUE` | create a variable named totalAmount with value 0 | `LET totalAmount = 0;` |
 | declare | D3 | `let NAME be VALUE` | let greeting be "Hello" | `LET greeting = "Hello";` |
-| assign | S1 | `set NAME to VALUE` | set age to age plus 1 | `age = age + 1;` |
-| assign | S2 | `change NAME to VALUE` | change age to 30 | `age = 30;` |
-| assign | S3 | `update NAME to VALUE` | update score to 0 | `score = 0;` |
+| assign | S1 | `set NAME to [VALUE]` | set age to age plus 1 | `age = age + 1;` |
+| assign | S2 | `change NAME to [VALUE]` | change age to 30 | `age = 30;` |
+| assign | S3 | `update NAME to [VALUE]` | update score to 0 | `score = 0;` |
 | assign | S4 | `assign VALUE to NAME` | assign 5 to score | `score = 5;` |
 | increment | INC1 | `(increase\|increment\|raise) NAME [by VALUE]` | increase count by 2 | `count = count + 2;` |
 | increment | INC2 | `add VALUE to NAME` | add 5 to score | `score = score + 5;` |
@@ -171,6 +171,9 @@ traces, `Candidate.rule_id` and N4 suggestions.
 | repeat | REP2 | `repeat STMT N times` | repeat show score 2 times | `REPEAT 2 TIMES { PRINT score; }` |
 | repeat | REP3 | `do STMT N times` | do print hello 3 times | `REPEAT 3 TIMES { PRINT "hello"; }` |
 | reference | (any NAME) | pronoun in a `NAME` position | add 5 to it (after a statement using score) | `score = score + 5;` |
+
+The templates in this table are compiled directly into the pattern table
+(`parsley/nlp/patterns.py`), so the table is the only place English phrasings live.
 
 Bracketed optional slots (`[by VALUE]`, `[VALUE]`, `[N times]`) are **required** slots
 that may be missing from the English. A missing one leads to a clarification question,
@@ -223,6 +226,9 @@ input matches no pattern and is rejected.
 
 An `and ...` continuation after an `IF`/`REPEAT` body (`if x is greater than 5 then print
 big and print done`) is **rejected** with a suggestion to split the sentence (Section 8).
+The same holds for any value in any sentence: one sentence is one statement, so
+`set x to 5 and set y to 6` is rejected. `and` followed by something that is not a whole
+statement is ordinary text (`print salt and pepper` prints `"salt and pepper"`).
 
 ## 7. Accept / clarify / reject rules (N2)
 
@@ -251,7 +257,7 @@ Questions are filled from these templates. `{name}` keeps its original spelling.
 | `missing_slot` | P1 with no `VALUE` | `What should be printed?` | free answer |
 | `missing_slot` | REP1 with no `N times` | `How many times should it repeat?` | free answer |
 | `missing_slot` | pronoun with an empty reference stack | `Which variable does "{pronoun}" refer to?` | free answer |
-| `alternatives` | `VALUE or VALUE` in a value position | `{a} or {b}?` | `[a, b]` |
+| `alternatives` | `VALUE or VALUE` in a value position (at most 4 alternatives; more is unsupported) | `{a} or {b}?` | `[a, b]` |
 | `typo` | Section 4 rule 3 | `Did you mean the variable {name}?` | `["yes", "no"]` |
 | `operator_scope` | MUL1/DIV1 whose `VALUE` contains `plus` or `minus` | `Do you mean ({name} {op} {a}) {op2} {b}, or {name} {op} ({a} {op2} {b})?` | the two readings |
 
@@ -289,8 +295,8 @@ It never crashes and never produces code.
 | `out_of_scope`: library maths | `calculate the square root of 16` | none, or nearest pattern |
 | `out_of_scope`: files / I/O / jumps | `open the file data.txt`, `go to line 10` | none, or nearest pattern |
 | `unsupported_phrasing` | `store 50 in bonus` | nearest pattern, e.g. `set bonus to 50` |
-| `block_continuation` | `if count is greater than 5 then print big and print done` | `Blocks hold one statement. Try: "{sentence before and}" and then "{clause}" as separate sentences.` |
-| `malformed` | `!!!` (empty after normalization) | none |
+| `block_continuation` | `if count is greater than 5 then print big and print done`, `set x to 5 and set y to 6` | `Blocks hold one statement. Try: "{sentence before and}" and then "{clause}" as separate sentences.` |
+| `malformed` | `!!!` (empty after normalization), an unterminated quote, input longer than 500 characters, or more than 64 readings of one rule | none |
 
 ## 9. Decision log
 
