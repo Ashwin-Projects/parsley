@@ -38,7 +38,7 @@ presentation time is short or typing is unreliable.
 | 4:00 | `set score to missingValue plus 1` | E201 demonstrates an undeclared arithmetic operand. Failed input does not alter the accepted program. |
 | 4:20 | Automatic script's strict-confirmation and context-ablation sections | E103 records nothing after rejection. The same pronoun example succeeds with context on and fails with it off. This is a demo case, not the full held-out ablation. |
 | 4:50 | Mutation rows from `--with-mutations` | Explain which checks catch which generation errors; equivalent behavior can evade V3. |
-| 5:30 | Frozen dataset and validation result | Show 15 groups / 60 inputs. State that full N5 metrics and clarification ablation are still the Evaluation owner's task. |
+| 5:30 | `python -m parsley.eval.run_eval` and `results/summary.md` | N5 evaluation and N1/N2 ablations are complete. Show measured results and limitations in [NOVELTY.md](../NOVELTY.md#results-2026-10-27). |
 
 ## Precise claims for the viva
 
@@ -52,8 +52,9 @@ presentation time is short or typing is unreliable.
   identical behavior in the tested run, and one harmless whitespace control. V2 catches the
   eight structural changes; V3 catches the six behavior-changing ones. These are curated
   tests, not general detection-rate guarantees.
-- The full evaluation modules are unfinished. Do not present the small demo ablation or
-  schema/gold validation as the project's full evaluation results.
+- The full evaluation and N1/N2 ablations are complete; see [NOVELTY.md](../NOVELTY.md#results-2026-10-27)
+  for measured results and limitations. The small demo ablation and schema/gold validation
+  remain distinct from the full evaluation.
 
 ## Expected final demonstration state
 
