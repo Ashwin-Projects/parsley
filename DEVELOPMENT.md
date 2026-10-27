@@ -35,7 +35,7 @@ Final split. Current progress is in [Status](#status-2026-10-27).
 | `compiler/codegen.py`, `verify/backtranslate.py`, `pipeline.py`, CLI, session | Core | Existing implementation, unchanged |
 | `verify/roundtrip.py`, `verify/interpreter.py` | Parser/Verifier | Implemented, tested and hardened; V2/V3 active |
 | `verify/ast_eval.py` | Evaluation | Existing implementation inherited from `phase-7-verifier`, unchanged |
-| `eval/metrics.py`, `eval/run_eval.py`, remaining evaluation subsets and results | Evaluation | Still unfinished; no complete evaluation results claimed |
+| `eval/metrics.py`, `eval/run_eval.py`, ablation, remaining evaluation subsets and results | Evaluation | **Remaining work**; no evaluation results claimed yet |
 | `tests/eval_data/paraphrases.json` | Parser/Verifier | 15 groups / 60 inputs, frozen; gold validation passes |
 | `scripts/demo.py`, `docs/DEMO.md` | Parser/Verifier | Runnable presentation, failure checks and actual transcript |
 | Optional `parsley_ml/` | Evaluation | Not started; outside this contribution |
@@ -68,18 +68,29 @@ owner's review.
 
 ## Status (2026-10-27)
 
+**Only `eval/` remains: `metrics.py`, `run_eval.py` and the N1/N2 ablation, owned by
+Evaluation.** Every other module is implemented and integrated on the `integration` branch.
+
 | Phase | State |
 |---|---|
-| 0-2, 4-5 | Existing Core work; preserved. |
-| 3 | Lexer/parser validated against every development golden fixture, precedence, all comparisons, nested blocks and malformed-input checks. |
-| 6 | Core N1/N2 preserved; N4 implemented with conservative, ranked supported rewrites and block-splitting guidance. |
-| 7 | Real V2/V3 pass all valid fixtures. Independent evaluators preserved. Test-only mutations expose both detections and equivalent-behavior limitations. |
-| 8 | Assigned paraphrase preparation complete: 60 inputs with gold programs and SHA-256 freeze. Full evaluation remains the Evaluation owner's work. |
-| 9 | Assigned demonstration prepared and rehearsed automatically. Guide and captured transcript supplied; final report/release and a video recording remain team tasks. |
+| 0-2, 4-5 | Done. |
+| 3 | Done. Lexer/parser checked against every valid fixture, precedence, all comparisons, nested blocks and malformed input. |
+| 6 | Done. N1, N2 and N4 suggestions (ranked supported rewrites, block-splitting guidance). |
+| 7 | Done. Real V2/V3 active in the pipeline; `ast_eval.py` and `interpreter.py` stay independent; test-only mutation tests. |
+| 8 | Held-out set done: 60 paraphrase inputs with gold programs, SHA-256 frozen. **Remaining: `eval/` metrics, runner, ablation (Evaluation).** |
+| 9 | Demo script and transcript done. Final report and video remain. |
 
-Branch base: `phase-7-verifier` at `1c2de76`, which already contained `main` at
-`c47d4dd`. This contribution changes neither existing branch. Details, exact checks,
-limitations and the complete changed-file list are in `docs/ASSIGNED_PHASES.md`.
+Known contract mismatches, reported to the module owners (not fixed in their modules):
+
+- V3 false failure: `interpreter.py` adds a 100,000-step budget that `ast_eval.py` and
+  ARCHITECTURE.md 2.6 do not have. V3 re-runs the whole session, so the 20th
+  `repeat 1000 times add 1 to x` in one session fails V3 although both evaluators are correct.
+- V3 false failure on negative zero: `print negative 0.0` gives `-0.0` from `ast_eval.py`
+  (`-x`) but `0.0` from `interpreter.py` (`0 - x`).
+- N4: for `REJECT_AND_CONTINUATION`, `suggest()` returns a guidance sentence rather than a
+  phrasing (ARCHITECTURE.md 2.10), so the CLI prints `Try: Blocks hold one statement. Try: ...`.
+
+Details of the parser/verifier hand-off are in `docs/ASSIGNED_PHASES.md`.
 
 ---
 

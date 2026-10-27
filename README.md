@@ -25,7 +25,7 @@ LLMs and no external APIs.
 > N4 rewrite suggestions, V2 structural comparison and V3 execution checks are working.
 > Run `python scripts/demo.py --with-mutations` for the checked presentation and
 > `python scripts/validate_paraphrases.py` to validate 60 frozen paraphrase inputs.
-> The full evaluation runner and metrics are still assigned to the Evaluation owner.
+> The evaluation runner, metrics and ablation (`eval/`) are not written yet.
 
 ---
 
@@ -204,7 +204,7 @@ phrasing is close.
 
 ## Evaluation
 
-The Parser/Verifier contribution includes **15 frozen paraphrase groups / 60 English
+The held-out set has **15 frozen paraphrase groups / 60 English
 inputs**, with setup sessions and expected MiniLang. They were written before looking at
 the implementation pattern table and include plausible out-of-coverage wording. Their
 AI-assisted provenance and limits are recorded in `tests/eval_data/README.md`.
@@ -218,7 +218,7 @@ python scripts/demo.py --with-mutations
 The validator checks the digest, schema, separation from development fixtures and the
 syntax/semantics/execution of gold programs. It does **not** assert NLP accuracy on held-out
 inputs. Do not tune on these inputs. Full metrics, the remaining evaluation subsets and
-N1/N2 ablation tables belong to the Evaluation owner; `eval/` is still unfinished.
+N1/N2 ablation tables are not written yet (`eval/` is unfinished).
 See [the demo guide](docs/DEMO.md) and [the phase handoff](docs/ASSIGNED_PHASES.md).
 
 ---
