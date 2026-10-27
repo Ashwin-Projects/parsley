@@ -4,7 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
 
 from parsley.compiler import semantic
 from parsley.compiler.codegen import generate
@@ -12,7 +16,6 @@ from parsley.compiler.parser import parse
 from parsley.session import Session
 from parsley.verify.interpreter import run
 
-ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / 'tests/eval_data/paraphrases.json'
 
 

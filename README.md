@@ -165,6 +165,8 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+The demo and paraphrase validation scripts run from the repo root with no install needed.
+
 Run the tests:
 
 ```

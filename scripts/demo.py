@@ -7,14 +7,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
 from parsley.compiler.ast_nodes import Program
 from parsley.compiler.codegen import generate
 from parsley.pipeline import PipelineResult, answer, run
 from parsley.session import Session
 from parsley.verify.interpreter import run as interpret
 from parsley.verify.summary import summarize
-
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def require(condition: bool, message: str) -> None:
