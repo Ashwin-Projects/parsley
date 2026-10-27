@@ -1,3 +1,4 @@
 ambiguous.json -text
 unsupported.json -text
 sessions.json -text
+synthetic_blind.json -text

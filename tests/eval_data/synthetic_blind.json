@@ -1,0 +1,272 @@
+{
+ "version": 1,
+ "category": "synthetic_blind",
+ "provenance": "Synthetic: written by the AI coding agent that helped build this system; not independently human-authored.",
+ "spec": "LANGUAGE_SPEC.md (every expected output derived from it; patterns.py not opened)",
+ "cases": [
+  {
+   "id": "SB01",
+   "category": "declaration",
+   "setup": [],
+   "setup_minilang": "",
+   "input": "make a variable called orchardRows and set it to 14",
+   "expected_status": "ok",
+   "expected_minilang": "LET orchardRows = 14;"
+  },
+  {
+   "id": "SB02",
+   "category": "declaration",
+   "setup": [],
+   "setup_minilang": "",
+   "input": "create a new variable named pilotName with value \"Mira\"",
+   "expected_status": "ok",
+   "expected_minilang": "LET pilotName = \"Mira\";"
+  },
+  {
+   "id": "SB03",
+   "category": "declaration",
+   "setup": [],
+   "setup_minilang": "",
+   "input": "let tideLevel be 2.5",
+   "expected_status": "ok",
+   "expected_minilang": "LET tideLevel = 2.5;"
+  },
+  {
+   "id": "SB04",
+   "category": "assignment",
+   "setup": [
+    "let kiteCount be 3"
+   ],
+   "setup_minilang": "LET kiteCount = 3;",
+   "input": "change kiteCount to 9",
+   "expected_status": "ok",
+   "expected_minilang": "kiteCount = 9;"
+  },
+  {
+   "id": "SB05",
+   "category": "assignment",
+   "setup": [
+    "let ferryFare be 12"
+   ],
+   "setup_minilang": "LET ferryFare = 12;",
+   "input": "update ferryFare to 15",
+   "expected_status": "ok",
+   "expected_minilang": "ferryFare = 15;"
+  },
+  {
+   "id": "SB06",
+   "category": "assignment",
+   "setup": [
+    "let ovenTemp be 180"
+   ],
+   "setup_minilang": "LET ovenTemp = 180;",
+   "input": "assign 200 to ovenTemp",
+   "expected_status": "ok",
+   "expected_minilang": "ovenTemp = 200;"
+  },
+  {
+   "id": "SB07",
+   "category": "arithmetic",
+   "setup": [
+    "let pebbleTotal be 40"
+   ],
+   "setup_minilang": "LET pebbleTotal = 40;",
+   "input": "subtract 6 from pebbleTotal",
+   "expected_status": "ok",
+   "expected_minilang": "pebbleTotal = pebbleTotal - 6;"
+  },
+  {
+   "id": "SB08",
+   "category": "arithmetic",
+   "setup": [
+    "let crateWeight be 5"
+   ],
+   "setup_minilang": "LET crateWeight = 5;",
+   "input": "multiply crateWeight by 4",
+   "expected_status": "ok",
+   "expected_minilang": "crateWeight = crateWeight * 4;"
+  },
+  {
+   "id": "SB09",
+   "category": "arithmetic",
+   "setup": [
+    "let width be 3",
+    "let height be 7"
+   ],
+   "setup_minilang": "LET width = 3;\nLET height = 7;",
+   "input": "set area to width times height plus 2",
+   "expected_status": "ok",
+   "expected_minilang": "LET area = width * height + 2;"
+  },
+  {
+   "id": "SB10",
+   "category": "arithmetic",
+   "setup": [
+    "let ledgerBalance be 50"
+   ],
+   "setup_minilang": "LET ledgerBalance = 50;",
+   "input": "decrease ledgerBalance by 8",
+   "expected_status": "ok",
+   "expected_minilang": "ledgerBalance = ledgerBalance - 8;"
+  },
+  {
+   "id": "SB11",
+   "category": "conditional",
+   "setup": [
+    "let hikerAge be 16"
+   ],
+   "setup_minilang": "LET hikerAge = 16;",
+   "input": "if hikerAge is at least 18 then print adult else print junior",
+   "expected_status": "ok",
+   "expected_minilang": "IF hikerAge >= 18 THEN { PRINT \"adult\"; } ELSE { PRINT \"junior\"; }"
+  },
+  {
+   "id": "SB12",
+   "category": "conditional",
+   "setup": [
+    "let windSpeed be 30"
+   ],
+   "setup_minilang": "LET windSpeed = 30;",
+   "input": "if windSpeed is above 25 then print \"stay inside\"",
+   "expected_status": "ok",
+   "expected_minilang": "IF windSpeed > 25 THEN { PRINT \"stay inside\"; }"
+  },
+  {
+   "id": "SB13",
+   "category": "conditional",
+   "setup": [
+    "let mapMode be \"night\""
+   ],
+   "setup_minilang": "LET mapMode = \"night\";",
+   "input": "if mapMode does not equal \"day\" then print \"dim screen\"",
+   "expected_status": "ok",
+   "expected_minilang": "IF mapMode != \"day\" THEN { PRINT \"dim screen\"; }"
+  },
+  {
+   "id": "SB14",
+   "category": "repeat",
+   "setup": [],
+   "setup_minilang": "",
+   "input": "repeat 4 times print \"wave\"",
+   "expected_status": "ok",
+   "expected_minilang": "REPEAT 4 TIMES { PRINT \"wave\"; }"
+  },
+  {
+   "id": "SB15",
+   "category": "repeat",
+   "setup": [
+    "let stepCount be 0"
+   ],
+   "setup_minilang": "LET stepCount = 0;",
+   "input": "do add 2 to stepCount 3 times",
+   "expected_status": "ok",
+   "expected_minilang": "REPEAT 3 TIMES { stepCount = stepCount + 2; }"
+  },
+  {
+   "id": "SB16",
+   "category": "repeat",
+   "setup": [
+    "let drumBeat be 1"
+   ],
+   "setup_minilang": "LET drumBeat = 1;",
+   "input": "repeat show drumBeat 2 times",
+   "expected_status": "ok",
+   "expected_minilang": "REPEAT 2 TIMES { PRINT drumBeat; }"
+  },
+  {
+   "id": "SB17",
+   "category": "pronoun_context",
+   "setup": [
+    "let candleCount be 6"
+   ],
+   "setup_minilang": "LET candleCount = 6;",
+   "input": "raise it by 4",
+   "expected_status": "ok",
+   "expected_minilang": "candleCount = candleCount + 4;"
+  },
+  {
+   "id": "SB18",
+   "category": "pronoun_context",
+   "setup": [
+    "let compassHeading be 270"
+   ],
+   "setup_minilang": "LET compassHeading = 270;",
+   "input": "display compassHeading",
+   "expected_status": "ok",
+   "expected_minilang": "PRINT compassHeading;"
+  },
+  {
+   "id": "SB19",
+   "category": "pronoun_context",
+   "setup": [
+    "let doorCount be 2"
+   ],
+   "setup_minilang": "LET doorCount = 2;",
+   "input": "set bellCount to doorCount plus 1",
+   "expected_status": "ok",
+   "expected_minilang": "LET bellCount = doorCount + 1;"
+  },
+  {
+   "id": "SB20",
+   "category": "ambiguity",
+   "setup": [
+    "let jarCount be 8"
+   ],
+   "setup_minilang": "LET jarCount = 8;",
+   "input": "reduce jarCount",
+   "expected_status": "needs_clarification",
+   "expected_minilang": null
+  },
+  {
+   "id": "SB21",
+   "category": "ambiguity",
+   "setup": [
+    "let buoyCount be 5"
+   ],
+   "setup_minilang": "LET buoyCount = 5;",
+   "input": "set buoyCount to 7 or 9",
+   "expected_status": "needs_clarification",
+   "expected_minilang": null
+  },
+  {
+   "id": "SB22",
+   "category": "ambiguity",
+   "setup": [
+    "let rocket be 3"
+   ],
+   "setup_minilang": "LET rocket = 3;",
+   "input": "show rockte",
+   "expected_status": "needs_clarification",
+   "expected_minilang": null
+  },
+  {
+   "id": "SB23",
+   "category": "unsupported",
+   "setup": [],
+   "setup_minilang": "",
+   "input": "draw a circle on the screen",
+   "expected_status": "unsupported",
+   "expected_minilang": null
+  },
+  {
+   "id": "SB24",
+   "category": "unsupported",
+   "setup": [],
+   "setup_minilang": "",
+   "input": "send an email to the whole team",
+   "expected_status": "unsupported",
+   "expected_minilang": null
+  },
+  {
+   "id": "SB25",
+   "category": "unsupported",
+   "setup": [
+    "let fuelLevel be 9"
+   ],
+   "setup_minilang": "LET fuelLevel = 9;",
+   "input": "if fuelLevel is below 10 then print refuel and print hurry",
+   "expected_status": "unsupported",
+   "expected_minilang": null
+  }
+ ]
+}

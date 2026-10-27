@@ -17,9 +17,10 @@ exception is a ``crash`` outcome; both count as failures. Suggestions are judged
 automatically: for a rejected input with a known meaning, the suggestion is compiled in
 the same setup and is useful only if it gives the gold code. Mutation detection uses the
 test-only operators in ``tests/mutations/operators.py`` (CLAUDE.md rule 6) on the gold
-programs, checked with the real V2 and V3 layers. An optional ``human_blind.json`` set is
-run the same way and reported in its own section, outside the headline numbers. Output
-is deterministic: no timestamps, items in data order.
+programs, checked with the real V2 and V3 layers. Optional ``human_blind.json`` and
+``synthetic_blind.json`` sets are run the same way and each reported in its own section,
+outside the headline numbers; the synthetic section also prints the file's provenance.
+Output is deterministic: no timestamps, items in data order.
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from __future__ import annotations
 import argparse
 import csv
 import importlib.util
+import json
 import sys
 from collections.abc import Sequence
 from itertools import zip_longest
@@ -287,9 +289,34 @@ def _blind_section(blind: dict[str, list[Outcome]] | None) -> list[str]:
     ]
 
 
+def _synthetic_section(synthetic: dict[str, list[Outcome]] | None, provenance: str | None) -> list[str]:
+    if synthetic is None:
+        return ["Not provided: `tests/eval_data/synthetic_blind.json` (same format as the human",
+                "blind set) is reported here when present."]
+    return [
+        f"Provenance: {provenance or 'not stated in the file'}",
+        "",
+        "Not written by a person; kept out of the held-out numbers above.",
+        "", *_metric_table(synthetic["baseline"]), "", *_ablation_table(synthetic), "",
+        *_failure_table(synthetic["baseline"]),
+    ]
+
+
+def _provenance(path: Path) -> str | None:
+    """The ``provenance`` of a data file as one line (a string, or a mapping's values)."""
+    if not path.is_file():
+        return None
+    value = json.loads(path.read_text(encoding="utf-8")).get("provenance")
+    if isinstance(value, dict):
+        return "; ".join(f"{key}: {text}" for key, text in value.items())
+    return value if isinstance(value, str) else None
+
+
 def summary(held: dict[str, list[Outcome]], development: dict[str, list[Outcome]],
             mutations: list[MutationResult] | None, files: Sequence[Path],
-            blind: dict[str, list[Outcome]] | None = None) -> str:
+            blind: dict[str, list[Outcome]] | None = None,
+            synthetic: dict[str, list[Outcome]] | None = None,
+            synthetic_provenance: str | None = None) -> str:
     lines = [
         "# Parsley evaluation results",
         "",
@@ -329,6 +356,10 @@ def summary(held: dict[str, list[Outcome]], development: dict[str, list[Outcome]
         "## Human blind set",
         "",
         *_blind_section(blind),
+        "",
+        "## Synthetic blind set",
+        "",
+        *_synthetic_section(synthetic, synthetic_provenance),
         "",
         "## Development fixtures (not held-out)",
         "",
@@ -409,13 +440,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"run_eval: {error}", file=sys.stderr)
         return 2
     blind_items = [i for i in held_items if i.subset == "human_blind"]
-    held_items = [i for i in held_items if i.subset != "human_blind"]
+    synthetic_items = [i for i in held_items if i.subset == "synthetic_blind"]
+    held_items = [i for i in held_items if i.subset not in ("human_blind", "synthetic_blind")]
     operators = load_operators(args.root)
     held, development = _run_all(held_items), _run_all(dev_items)
     blind = _run_all(blind_items) if blind_items else None
+    synthetic = _run_all(synthetic_items) if synthetic_items else None
     mutations = None if operators is None else mutation_results(held_items, operators)
-    text = summary(held, development, mutations, sorted(Path(data).glob("*.json")), blind)
-    groups = (held, *([blind] if blind else []), development)
+    text = summary(held, development, mutations, sorted(Path(data).glob("*.json")), blind,
+                   synthetic, _provenance(Path(data) / "synthetic_blind.json"))
+    groups = (held, *([blind] if blind else []), *([synthetic] if synthetic else []), development)
     outcomes = [o for by_condition in groups for condition in CONDITIONS for o in by_condition[condition]]
     write_results(out, outcomes, mutations, text)
     print(f"wrote {out / 'results.csv'} and {out / 'summary.md'}")

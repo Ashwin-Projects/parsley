@@ -157,3 +157,51 @@ def test_without_a_human_blind_file_the_section_says_so(tmp_path):
     run_eval.main(["--data", str(data), "--fixtures", str(fixtures), "--out", str(out), "--root", str(ROOT)])
     text = (out / "summary.md").read_text(encoding="utf-8")
     assert "## Human blind set" in text and "Not provided" in text
+
+
+def _write_blind(data, name, provenance):
+    (data / f"{name}.json").write_text(json.dumps({"version": 1, "category": name, "provenance": provenance, "cases": [
+        {"id": "SB01", "setup": [], "setup_minilang": "", "input": "let z be 3",
+         "expected_status": "ok", "expected_minilang": "LET z = 3;"},
+    ]}), encoding="utf-8")
+
+
+def _section(text, heading):
+    _, _, rest = text.partition(f"## {heading}\n")
+    assert rest, f"missing section {heading!r}"
+    return rest.split("\n## ")[0]
+
+
+def test_synthetic_blind_set_has_its_own_section_with_its_provenance(tmp_path):
+    data, fixtures = _tiny_data(tmp_path)
+    _write_blind(data, "synthetic_blind", "Synthetic: written by an AI agent; not human-authored.")
+    out = tmp_path / "results"
+    assert run_eval.main(["--data", str(data), "--fixtures", str(fixtures), "--out", str(out),
+                          "--root", str(ROOT)]) == 0
+    text = (out / "summary.md").read_text(encoding="utf-8")
+    synthetic = _section(text, "Synthetic blind set")
+    assert "Provenance: Synthetic: written by an AI agent; not human-authored." in synthetic
+    assert "| exact-match accuracy | 1/1 (100.0%) | synthetic_blind |" in synthetic
+    assert "synthetic_blind" not in _section(text, "Held-out results")  # headline excludes it
+    assert "Not provided" in _section(text, "Human blind set")  # the two sets stay separate
+    rows = list(csv.DictReader((out / "results.csv").open(encoding="utf-8", newline="")))
+    assert {r["condition"] for r in rows if r["subset"] == "synthetic_blind"} == set(run_eval.CONDITIONS)
+
+
+def test_human_and_synthetic_blind_sets_are_reported_separately(tmp_path):
+    data, fixtures = _tiny_data(tmp_path)
+    _write_blind(data, "human_blind", {"author": "a person"})
+    _write_blind(data, "synthetic_blind", "Synthetic.")
+    out = tmp_path / "results"
+    run_eval.main(["--data", str(data), "--fixtures", str(fixtures), "--out", str(out), "--root", str(ROOT)])
+    text = (out / "summary.md").read_text(encoding="utf-8")
+    assert "| human_blind |" in _section(text, "Human blind set")
+    assert "| synthetic_blind |" not in _section(text, "Human blind set")
+    assert "| synthetic_blind |" in _section(text, "Synthetic blind set")
+
+
+def test_without_a_synthetic_blind_file_its_section_says_so(tmp_path):
+    data, fixtures = _tiny_data(tmp_path)
+    out = tmp_path / "results"
+    run_eval.main(["--data", str(data), "--fixtures", str(fixtures), "--out", str(out), "--root", str(ROOT)])
+    assert "Not provided" in _section((out / "summary.md").read_text(encoding="utf-8"), "Synthetic blind set")

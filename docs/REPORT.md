@@ -436,14 +436,43 @@ budget.*
 V3 missed the mutants that do not change final state or output, mostly operand swaps of
 commutative operators.
 
-### 8.7 Human blind set
+### 8.7 Synthetic blind evaluation set
 
-> **PLACEHOLDER: human blind set results.** This subsection is reserved for the optional
-> set `tests/eval_data/human_blind.json`, written by someone who has not seen the code
-> (format in TESTING.md). When the file is added, `run_eval` reports it in the "Human blind
-> set" section of `results/summary.md`, outside the headline numbers above; copy that
-> section's tables here. At the time of writing the file does not exist and the summary
-> reads "Not provided". No results are claimed for this set.
+A 25-case blind set (`tests/eval_data/synthetic_blind.json`, frozen with SHA-256 before its
+first run) covering declarations, assignment, arithmetic, conditionals, repetition, pronouns
+and context, ambiguity and unsupported input. No independently human-authored blind set was
+collected. The results below are copied from the "Synthetic blind set" section of
+`results/summary.md`.
+
+Provenance: Synthetic: written by the AI coding agent that helped build this system; not independently human-authored.
+
+Not written by a person; kept out of the held-out numbers above.
+
+| Metric | Result | Over |
+|---|---|---|
+| exact-match accuracy | 19/19 (100.0%) | synthetic_blind |
+| exact-match accuracy | 19/19 (100.0%) | all with gold code |
+| paraphrase consistency (same AST) | n/a (no items) | paraphrase |
+| paraphrase consistency (gold AST) | n/a (no items) | paraphrase |
+| ambiguity precision | 3/3 (100.0%) | all |
+| ambiguity recall | 3/3 (100.0%) | ambiguous |
+| unnecessary-question rate | 0/19 (0.0%) | expected to compile |
+| context-resolution accuracy | 15/15 (100.0%) | context-dependent |
+| safe-rejection rate | 3/3 (100.0%) | unsupported |
+| suggestion usefulness | n/a (no items) | rejected, meaning known |
+| wrong-code rate | 0/25 (0.0%) | all |
+| crashes | 0/25 (0.0%) | all |
+
+| Condition | exact-match accuracy | wrong-code rate | unnecessary-question rate | ambiguity recall | context-resolution accuracy | safe-rejection rate |
+|---|---|---|---|---|---|---|
+| baseline | 19/19 (100.0%) | 0/25 (0.0%) | 0/19 (0.0%) | 3/3 (100.0%) | 15/15 (100.0%) | 3/3 (100.0%) |
+| context_off | 11/19 (57.9%) | 0/25 (0.0%) | 0/19 (0.0%) | 2/3 (66.7%) | 7/15 (46.7%) | 3/3 (100.0%) |
+| forced_top1 | 19/19 (100.0%) | 2/25 (8.0%) | 0/19 (0.0%) | 1/3 (33.3%) | 15/15 (100.0%) | 3/3 (100.0%) |
+
+- context_off vs baseline: exact-match accuracy -42.1 pp; wrong-code rate +0.0 pp; unnecessary-question rate +0.0 pp; ambiguity recall -33.3 pp; context-resolution accuracy -53.3 pp; safe-rejection rate +0.0 pp.
+- forced_top1 vs baseline: exact-match accuracy +0.0 pp; wrong-code rate +8.0 pp; unnecessary-question rate +0.0 pp; ambiguity recall -66.7 pp; context-resolution accuracy +0.0 pp; safe-rejection rate +0.0 pp.
+
+No failures.
 
 ### 8.8 Development fixtures (sanity check)
 
@@ -471,8 +500,11 @@ are not evidence; they only confirm that the runner and the system agree with th
   development-fixture context, so they may share the system's phrasing; their perfect
   scores should be read with that in mind. The paraphrase set was written before its author
   saw the pattern table and is the stronger evidence, but it is also AI-assisted and has
-  not been independently reviewed by a human. The human blind set (Section 8.7) is meant to
-  close this gap.
+  not been independently reviewed by a human.
+- **No human-authored blind set.** No independently human-authored held-out set was
+  collected. The synthetic blind set (Section 8.7) was written by the same AI agent that
+  helped build the system, so it may share the system's phrasing; its perfect baseline
+  score is weak evidence of generalisation.
 - **Gaps against the plan.** There is no held-out subset of about 50 valid single
   statements (the paraphrases stand in), and the held-out unsupported inputs include no
   semantic errors.
@@ -495,7 +527,7 @@ are not evidence; they only confirm that the runner and the system agree with th
   including the verifier mutation tests; the held-out paraphrase set; the demonstration
   script and presenter guide.
 - **Maheep Singh.** Lexer and parser, round-trip check (V2), interpreter and AST evaluator
-  (V3), and the human blind test set (pending).
+  (V3).
 
 ## 11. Conclusion and future work
 
@@ -511,7 +543,8 @@ evidence for V3 beyond V2.
 
 **Future work.**
 
-1. Run the human blind set and report it next to the held-out results.
+1. Collect an independently human-authored blind set and report it next to the held-out
+   results.
 2. Add mutants that V2 cannot see, such as a bug shared by the parser and the code
    generator, so that the value of V3 can be measured.
 3. Widen pattern coverage using the rejected paraphrases as a guide, then measure on a new
