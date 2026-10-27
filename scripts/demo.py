@@ -106,7 +106,7 @@ def demonstrate() -> None:
             'final execution did not match the presentation')
     print(f'\nFinal variables: {state}; printed output: {output}; errors: {errors}')
     print('DEMO PASS: real N1, N2, N4, V1/V2/V3, semantic rejection, confirmation and context ablation.')
-    print('Full held-out metrics and clarification ablation belong to the Evaluation owner; no results invented.')
+    print('Full held-out metrics and ablations: python -m parsley.eval.run_eval (see NOVELTY.md).')
 
 
 def main() -> int:
