@@ -99,6 +99,63 @@ Phase 7 by a teammate and frozen before running.
 
 Honesty rule: the report shows failures too.
 
+## Results (2026-10-27)
+
+From `python -m parsley.eval.run_eval` on the frozen held-out set: 168 inputs (60
+paraphrases in 15 groups, 25 ambiguous, 25 unsupported, 58 sentences in 10 sessions). The run is
+deterministic; `results/summary.md` has every table and the SHA-256 of each data file.
+Baseline: exact match 104/118 (88.1%), wrong code 0/168, crashes 0/168, unnecessary questions
+0/118, safe rejection 25/25, ambiguity precision 25/25 and recall 25/25.
+
+**N1 ablation (context resolution off for the evaluated sentence; setup unchanged).**
+
+| Measure | N1 on | N1 off |
+|---|---|---|
+| Exact-match accuracy | 104/118 (88.1%) | 38/118 (32.2%) |
+| Context-resolution accuracy | 92/102 (90.2%) | 26/102 (25.5%) |
+
+**N2 ablation (no questions: each one answered with its top-ranked option).** Wrong code rises
+from 0/168 to 11/168 (6.5%): every guess on 5 alternatives, 3 typos and 3 operator-scope
+inputs (e.g. `set queueLimit to 14 or 28` silently becomes `queueLimit = 14;`). Questions
+with nothing to guess from (a missing value) still stop, so recall falls to 14/25 rather
+than 0.
+
+**N3 mutation detection by layer.** 188 test-only code-generation mutants of the held-out
+gold programs (last statement), checked with the real layers:
+
+| Layer | Caught |
+|---|---|
+| V2 (re-parse + AST compare) | 188/188 (100.0%) |
+| V3 (AST evaluator vs. interpreter) | 173/188 (92.0%) |
+| V2 or V3 | 188/188 (100.0%) |
+
+V3 misses mutants that do not change final state or output: 9 of 17 operand swaps
+(`visits + 3` vs. `3 + visits`), 3 literal, 1 comparison, 1 string and 1 variable change.
+
+## Limitations
+
+- **Paraphrase consistency is 1/15 groups** (all members giving the same AST, and the gold
+  AST). In 13 groups the deliberately out-of-coverage phrasing (e.g. `quadruple subtotal`,
+  `bump visits up by 3`) is rejected, and `set flag to 1 provided pressure does not exceed 8`
+  ends in a semantic error. Per input, 46/60 (76.7%) paraphrases match.
+- **N4 suggestion usefulness is 0/13.** For none of the 13 rejected paraphrases with a known
+  meaning did N4 offer a suggestion. Usefulness is judged automatically (the suggestion must
+  compile to the gold code), not manually as planned.
+- **V3 added no detections beyond V2 on this mutation set.** Every mutant V3 caught, V2 also
+  caught (173 both, 15 V2 only, 0 V3 only). The set has no mutant that V2 misses, so it does
+  not show what V3 adds; V3's purpose is bugs that a shared parser and code generator would
+  hide from V2, and none are modelled here.
+- **Data provenance.** The ambiguous, unsupported and session subsets were AI-written in this
+  repository by an author with compiler-integration and development-fixture context, so they
+  may share the system's phrasing; read their perfect scores with that in mind. The paraphrase
+  set was written before its author saw the pattern table and is the stronger evidence, but it
+  is also AI-assisted and not independently human-reviewed. An optional
+  `tests/eval_data/human_blind.json` (format in TESTING.md) is reported in its own section.
+- **Gaps against the plan.** There is no held-out subset of ~50 valid single statements (the
+  paraphrases stand in), and held-out unsupported inputs include no semantic errors.
+- The sets are small (168 inputs, one deterministic run), so the numbers have wide
+  uncertainty; no confidence intervals are reported.
+
 ## Related work
 
 All five entries were found with the paper-search tool (OpenAlex) and their DOIs were

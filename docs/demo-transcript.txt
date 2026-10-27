@@ -1,0 +1,90 @@
+PARSLEY: real pipeline demonstration (scripted clarification replies)
+
+> make a variable called score and set it to 10
+  decision: ACCEPT; status: ok
+  I understood: create variable score with value 10.
+  MiniLang: LET score = 10;
+  V1: create variable score with value 10. | V2 pass | V3 pass
+
+> add 5 to it
+  decision: ACCEPT; status: ok
+  I understood: increase score by 5.
+  MiniLang: score = score + 5;
+  V1: increase score by 5. | V2 pass | V3 pass
+
+> print total
+  decision: ACCEPT; status: ok
+  I understood: print "total".
+  MiniLang: PRINT "total";
+  V1: print "total". | V2 pass | V3 pass
+
+> print scroe
+  decision: CLARIFY; status: needs_clarification
+  question: Did you mean the variable score?
+  scripted reply: yes
+  decision: ACCEPT; status: ok
+  I understood: print score.
+  MiniLang: PRINT score;
+  V1: print score. | V2 pass | V3 pass
+
+> increase score
+  decision: CLARIFY; status: needs_clarification
+  question: By how much should score increase?
+  scripted reply: 2
+  decision: ACCEPT; status: ok
+  I understood: increase score by 2.
+  MiniLang: score = score + 2;
+  V1: increase score by 2. | V2 pass | V3 pass
+
+> set score to 10 or 20
+  decision: CLARIFY; status: needs_clarification
+  question: 10 or 20?
+  scripted reply: 20
+  decision: ACCEPT; status: ok
+  I understood: set score to 20.
+  MiniLang: score = 20;
+  V1: set score to 20. | V2 pass | V3 pass
+
+> if score is at least 17 then print "adult" else print "minor"
+  decision: ACCEPT; status: ok
+  I understood: if score is greater than or equal to 17 then begin print "adult" end else begin print "minor" end.
+  MiniLang: IF score >= 17 THEN { PRINT "adult"; } ELSE { PRINT "minor"; }
+  V1: if score is greater than or equal to 17 then begin print "adult" end else begin print "minor" end. | V2 pass | V3 pass
+
+> repeat 2 times print "hello"
+  decision: ACCEPT; status: ok
+  I understood: repeat 2 times begin print "hello" end.
+  MiniLang: REPEAT 2 TIMES { PRINT "hello"; }
+  V1: repeat 2 times begin print "hello" end. | V2 pass | V3 pass
+
+> store 50 in bonus
+  decision: REJECT; status: unsupported
+  candidates E101: I could not understand this sentence: this sentence does not match any supported pattern (NO_MATCH)
+  Try: set bonus to 50
+  checked: did not execute rejected input
+
+> set score to missingValue plus 1
+  decision: ACCEPT; status: error
+  semantic E201: missingValue is used before it is created
+
+Strict confirmation: reject an interpretation
+  decision: ACCEPT; status: error
+  ambiguity E103: the interpretation was not confirmed, so nothing was recorded
+
+Small context ablation (demo case, not the held-out evaluation):
+  context ON=ok; OFF=error
+
+Final variables: {'score': 20}; printed output: ['total', '15', 'adult', 'hello', 'hello']; errors: []
+DEMO PASS: real N1, N2, N4, V1/V2/V3, semantic rejection, confirmation and context ablation.
+Full held-out metrics and clarification ablation belong to the Evaluation owner; no results invented.
+operator: V2=detected; V3=detected
+.dropped_statement: V2=detected; V3=detected
+.literal: V2=detected; V3=detected
+.precedence: V2=detected; V3=detected
+.runtime_error: V2=detected; V3=detected
+.syntax_error: V2=detected; V3=detected
+.equivalent_mutant: V2=detected; V3=same behavior
+.unexecuted_branch: V2=detected; V3=same behavior
+.harmless_whitespace: V2=same; V3=same behavior
+.
+9 passed, 24 deselected in 0.02s

@@ -381,7 +381,7 @@ def test_repl_clarification_then_confirm(monkeypatch, capsys) -> None:
 
 def test_cli_shows_verification_summary(capsys) -> None:
     assert cli.main(["let x be 1"]) == 0
-    assert "V1 ok | V2 skipped | V3 skipped" in capsys.readouterr().out
+    assert "V1 ok | V2 ok | V3 ok" in capsys.readouterr().out
 
 
 def test_cli_summary_with_passing_and_failing_layers(monkeypatch, capsys) -> None:
@@ -398,7 +398,7 @@ def test_trace_shows_verification_details(capsys) -> None:
     out = capsys.readouterr().out
     assert "verification:" in out
     assert "  V1: create variable x with value 1." in out
-    assert "  V2 skipped: not available" in out
+    assert "  V2 ok:" in out
 
 
 def test_failing_layer_keeps_stderr_clean_and_exit_zero(monkeypatch, capsys) -> None:
@@ -407,7 +407,7 @@ def test_failing_layer_keeps_stderr_clean_and_exit_zero(monkeypatch, capsys) -> 
     assert cli.main(["let x be 1"]) == 0
     output = capsys.readouterr()
     assert output.err == ""
-    assert "V1 ok | V2 failed | V3 skipped" in output.out
+    assert "V1 ok | V2 failed | V3 ok" in output.out
 
 
 # N4 "Try: ..." line
@@ -421,7 +421,27 @@ def test_cli_shows_the_suggestion(monkeypatch, capsys) -> None:
     assert "candidates E101" in err and "Try: set bonus to 50" in err
 
 
-def test_cli_without_suggestion_has_no_try_line(capsys) -> None:
+def test_cli_shows_the_real_suggestion_for_store_in(capsys) -> None:
+    # No monkeypatch: pins what the real suggest.py gives for the plan's demo sentence.
+    assert cli.main(["store 50 in bonus"]) == 1
+    err = capsys.readouterr().err
+    assert err.splitlines() == [
+        "candidates E101: I could not understand this sentence: "
+        "this sentence does not match any supported pattern (NO_MATCH)",
+        "Try: set bonus to 50",
+    ]
+
+
+def test_cli_and_rejection_has_one_try_line_with_a_phrasing(capsys) -> None:
+    assert cli.main(["repeat 3 times print 1 and print 2"]) == 1
+    err = capsys.readouterr().err.splitlines()
+    assert err[0].startswith("candidates E101: ") and "Blocks hold one statement." in err[0]
+    assert err[1:] == ["Try: repeat 3 times print 1"]
+
+
+def test_cli_without_suggestion_has_no_try_line(monkeypatch, capsys) -> None:
+    from parsley.nlp import suggest
+    monkeypatch.setattr(suggest, "suggest", lambda text, code: None, raising=False)
     assert cli.main(["store 50 in bonus"]) == 1
     assert "Try:" not in capsys.readouterr().err
 

@@ -21,12 +21,12 @@ programming language, and checks its own output instead of asking you to trust i
 It is deterministic and runs offline. It uses only the Python standard library, with no
 LLMs and no external APIs.
 
-> **Status:** in active development. The compiler works end to end: English sentences,
-> files and an interactive REPL compile to MiniLang, with compiler-informed
-> interpretation, clarification questions, `--confirm` and back-translation. The
-> round-trip and execution-equivalence checks, the MiniLang parser and the
-> "Try: ..." suggestions for unsupported sentences are wired in but report
-> `skipped` until their modules are finished. The evaluation has not been run yet.
+> **Status (2026-10-27):** the English pipeline, standalone MiniLang lexer/parser,
+> N4 rewrite suggestions, V2 structural comparison and V3 execution checks are working.
+> Run `python scripts/demo.py --with-mutations` for the checked presentation and
+> `python scripts/validate_paraphrases.py` to validate 60 frozen paraphrase inputs.
+> `python -m parsley.eval.run_eval` runs the held-out evaluation and ablations (see
+> [Evaluation](#evaluation)).
 
 ---
 
@@ -59,8 +59,7 @@ a single guess. A decision rule then picks one of three outcomes:
 - **Clarify**: two plausible readings, or something is missing, so Parsley asks a
   targeted question. Examples: `increase x` → "By how much?", and `set x to 10 or 20` →
   "10 or 20?"
-- **Reject**: nothing supported matches, so Parsley explains why and, once the
-  suggestion module is finished, suggests a phrasing that works.
+- **Reject**: nothing supported matches, so Parsley explains why and suggests a supported rewrite when one is close.
   Example: `store 50 in bonus` → "Try: set bonus to 50".
 
 In file mode a clarification becomes a diagnostic, so batch runs never hang.
@@ -167,6 +166,8 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+The demo and paraphrase validation scripts run from the repo root with no install needed.
+
 Run the tests:
 
 ```
@@ -196,8 +197,9 @@ resolution. Pipeline statuses are `ok`, `needs_clarification`, `unsupported` and
 arguments, 130 on interruption).
 
 Each accepted statement ends with a verification summary such as
-`V1 ok | V2 skipped | V3 skipped`. A layer reports `skipped` while its module is not
-finished, and never stops compilation. An unsupported sentence reports its reason
+`V1 ok | V2 ok | V3 ok`. A missing layer reports `skipped`; a disagreement reports
+`failed`. As defined by the pipeline contract, verification reports findings and does
+not change the compilation status. An unsupported sentence reports its reason
 (e.g. `candidates E101: ... (NO_MATCH)`), followed by `Try: ...` when a supported
 phrasing is close.
 
@@ -205,19 +207,32 @@ phrasing is close.
 
 ## Evaluation
 
-Parsley is evaluated on a held-out set of about 150 inputs, kept separate from the
-development fixtures. The set covers valid statements, blind-written paraphrases,
-multi-sentence sessions, ambiguous input and unsupported input. The metrics are:
+Run from the repository root (after `pip install -e .`):
 
-- exact-match accuracy and paraphrase consistency
-- ambiguity precision and recall, and the rate of unnecessary questions
-- context-resolution accuracy and safe-rejection rate
-- suggestion usefulness
-- mutation detection per verification layer
-- ablation: accuracy with context on vs off, and wrong-code rate with clarification on vs
-  off
+```
+python -m parsley.eval.run_eval
+```
 
-Results will be reported as measured, failures included.
+It runs every frozen held-out input in `tests/eval_data/` (168 inputs: 15 paraphrase groups
+of 4, 25 ambiguous, 25 unsupported, 10 multi-sentence sessions) through the real pipeline,
+with context resolution on and off and with clarification replaced by a forced top-1 guess.
+It writes `results/results.csv` (one row per input and condition) and `results/summary.md`
+(metrics, ablations, failures by category, mutation detection by layer). The output is
+deterministic. A file whose SHA-256 freeze does not match is refused. An optional
+`human_blind.json` is reported in its own section (format in [TESTING.md](TESTING.md)).
+
+Results on the held-out set (2026-10-27):
+
+- Exact match 104/118 (88.1%), with no wrong code, no crashes and 25/25 unsupported inputs safely rejected.
+- With context resolution off, exact match falls to 38/118 (32.2%).
+- Without clarification (forced top-1 guess), wrong code rises from 0 to 11/168.
+- Injected code-generation bugs: V2 caught 188/188 and V3 173/188; V3 caught none that V2 missed.
+- Weak spots: paraphrase consistency 1/15 groups and N4 suggestion usefulness 0/13.
+
+[NOVELTY.md](NOVELTY.md) has the results and their limitations, including data provenance.
+Do not tune on the held-out inputs. `python scripts/validate_paraphrases.py` checks the
+paraphrase file's freeze and gold programs; `python scripts/demo.py --with-mutations` runs
+the checked demo ([guide](docs/DEMO.md)).
 
 ---
 

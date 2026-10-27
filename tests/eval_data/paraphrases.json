@@ -1,0 +1,412 @@
+{
+  "version": 1,
+  "category": "held_out_paraphrases",
+  "spec": "LANGUAGE_SPEC.md",
+  "provenance": {
+    "author": "AI-assisted Parser/Verifier contribution; independent human review still recommended",
+    "method": "Written from the supplied project plan and frozen language specification before inspecting patterns.py or running these inputs through NLP.",
+    "limitations": "The author had read the public specification and development fixtures. This is blind to the implementation pattern table, not blind to the language specification, and is not an independently human-authored benchmark.",
+    "freeze_policy": "Do not tune on these examples. Keep failures. A deliberate data correction requires a version change, explanation, and new digest.",
+    "coverage": "15 groups x 4 inputs, including plausible out-of-coverage English. All four express the same intended AST; acceptance is measured, never assumed."
+  },
+  "groups": [
+    {
+      "id": "H01",
+      "intent_family": "declare",
+      "setup": [],
+      "setup_minilang": "",
+      "expected_minilang": "LET seedCount = 0;",
+      "paraphrases": [
+        {
+          "id": "H01-1",
+          "input": "create a variable called seedCount and set it to 0"
+        },
+        {
+          "id": "H01-2",
+          "input": "declare a new variable named seedCount with value 0"
+        },
+        {
+          "id": "H01-3",
+          "input": "let seedCount be 0"
+        },
+        {
+          "id": "H01-4",
+          "input": "initialize seedCount with zero"
+        }
+      ]
+    },
+    {
+      "id": "H02",
+      "intent_family": "assign",
+      "setup": [
+        "let unitPrice be 0"
+      ],
+      "setup_minilang": "LET unitPrice = 0;",
+      "expected_minilang": "unitPrice = 2.75;",
+      "paraphrases": [
+        {
+          "id": "H02-1",
+          "input": "set unitPrice to 2.75"
+        },
+        {
+          "id": "H02-2",
+          "input": "change unitPrice to 2.75"
+        },
+        {
+          "id": "H02-3",
+          "input": "assign 2.75 to unitPrice"
+        },
+        {
+          "id": "H02-4",
+          "input": "replace the value of unitPrice with 2.75"
+        }
+      ]
+    },
+    {
+      "id": "H03",
+      "intent_family": "increment",
+      "setup": [
+        "let visits be 9"
+      ],
+      "setup_minilang": "LET visits = 9;",
+      "expected_minilang": "visits = visits + 3;",
+      "paraphrases": [
+        {
+          "id": "H03-1",
+          "input": "increment visits by 3"
+        },
+        {
+          "id": "H03-2",
+          "input": "raise visits by 3"
+        },
+        {
+          "id": "H03-3",
+          "input": "add 3 to visits"
+        },
+        {
+          "id": "H03-4",
+          "input": "bump visits up by 3"
+        }
+      ]
+    },
+    {
+      "id": "H04",
+      "intent_family": "decrement",
+      "setup": [
+        "let tickets be 11"
+      ],
+      "setup_minilang": "LET tickets = 11;",
+      "expected_minilang": "tickets = tickets - 2;",
+      "paraphrases": [
+        {
+          "id": "H04-1",
+          "input": "reduce tickets by 2"
+        },
+        {
+          "id": "H04-2",
+          "input": "lower tickets by 2"
+        },
+        {
+          "id": "H04-3",
+          "input": "subtract 2 from tickets"
+        },
+        {
+          "id": "H04-4",
+          "input": "take 2 away from tickets"
+        }
+      ]
+    },
+    {
+      "id": "H05",
+      "intent_family": "multiply",
+      "setup": [
+        "let subtotal be 6"
+      ],
+      "setup_minilang": "LET subtotal = 6;",
+      "expected_minilang": "subtotal = subtotal * 4;",
+      "paraphrases": [
+        {
+          "id": "H05-1",
+          "input": "multiply subtotal by 4"
+        },
+        {
+          "id": "H05-2",
+          "input": "set subtotal to subtotal times 4"
+        },
+        {
+          "id": "H05-3",
+          "input": "change subtotal to subtotal multiplied by 4"
+        },
+        {
+          "id": "H05-4",
+          "input": "quadruple subtotal"
+        }
+      ]
+    },
+    {
+      "id": "H06",
+      "intent_family": "divide",
+      "setup": [
+        "let budget be 35"
+      ],
+      "setup_minilang": "LET budget = 35;",
+      "expected_minilang": "budget = budget / 5;",
+      "paraphrases": [
+        {
+          "id": "H06-1",
+          "input": "divide budget by 5"
+        },
+        {
+          "id": "H06-2",
+          "input": "set budget to budget divided by 5"
+        },
+        {
+          "id": "H06-3",
+          "input": "update budget to budget / 5"
+        },
+        {
+          "id": "H06-4",
+          "input": "make budget one fifth of its current value"
+        }
+      ]
+    },
+    {
+      "id": "H07",
+      "intent_family": "print_text",
+      "setup": [],
+      "setup_minilang": "",
+      "expected_minilang": "PRINT \"Launch Ready\";",
+      "paraphrases": [
+        {
+          "id": "H07-1",
+          "input": "print \"Launch Ready\""
+        },
+        {
+          "id": "H07-2",
+          "input": "show \"Launch Ready\""
+        },
+        {
+          "id": "H07-3",
+          "input": "display \"Launch Ready\""
+        },
+        {
+          "id": "H07-4",
+          "input": "say \"Launch Ready\""
+        }
+      ]
+    },
+    {
+      "id": "H08",
+      "intent_family": "print_variable",
+      "setup": [
+        "let balance be 45"
+      ],
+      "setup_minilang": "LET balance = 45;",
+      "expected_minilang": "PRINT balance;",
+      "paraphrases": [
+        {
+          "id": "H08-1",
+          "input": "print balance"
+        },
+        {
+          "id": "H08-2",
+          "input": "show balance"
+        },
+        {
+          "id": "H08-3",
+          "input": "display balance"
+        },
+        {
+          "id": "H08-4",
+          "input": "output balance"
+        }
+      ]
+    },
+    {
+      "id": "H09",
+      "intent_family": "concatenate",
+      "setup": [],
+      "setup_minilang": "",
+      "expected_minilang": "PRINT \"North\" + \"Star\";",
+      "paraphrases": [
+        {
+          "id": "H09-1",
+          "input": "print \"North\" plus \"Star\""
+        },
+        {
+          "id": "H09-2",
+          "input": "show \"North\" + \"Star\""
+        },
+        {
+          "id": "H09-3",
+          "input": "display \"North\" plus \"Star\""
+        },
+        {
+          "id": "H09-4",
+          "input": "join \"North\" and \"Star\" and print the result"
+        }
+      ]
+    },
+    {
+      "id": "H10",
+      "intent_family": "negative",
+      "setup": [
+        "let temperature be 8"
+      ],
+      "setup_minilang": "LET temperature = 8;",
+      "expected_minilang": "temperature = -6;",
+      "paraphrases": [
+        {
+          "id": "H10-1",
+          "input": "set temperature to negative 6"
+        },
+        {
+          "id": "H10-2",
+          "input": "change temperature to -6"
+        },
+        {
+          "id": "H10-3",
+          "input": "assign negative 6 to temperature"
+        },
+        {
+          "id": "H10-4",
+          "input": "make temperature six below zero"
+        }
+      ]
+    },
+    {
+      "id": "H11",
+      "intent_family": "if_greater_equal",
+      "setup": [
+        "let level be 12"
+      ],
+      "setup_minilang": "LET level = 12;",
+      "expected_minilang": "IF level >= 10 THEN { PRINT \"ready\"; }",
+      "paraphrases": [
+        {
+          "id": "H11-1",
+          "input": "if level is at least 10 then print \"ready\""
+        },
+        {
+          "id": "H11-2",
+          "input": "if level is greater than or equal to 10 then show \"ready\""
+        },
+        {
+          "id": "H11-3",
+          "input": "if level is at least 10 then display \"ready\""
+        },
+        {
+          "id": "H11-4",
+          "input": "when level reaches 10 or higher, print \"ready\""
+        }
+      ]
+    },
+    {
+      "id": "H12",
+      "intent_family": "if_less_equal",
+      "setup": [
+        "let pressure be 8",
+        "let flag be 0"
+      ],
+      "setup_minilang": "LET pressure = 8;\nLET flag = 0;",
+      "expected_minilang": "IF pressure <= 8 THEN { flag = 1; }",
+      "paraphrases": [
+        {
+          "id": "H12-1",
+          "input": "if pressure is at most 8 then set flag to 1"
+        },
+        {
+          "id": "H12-2",
+          "input": "if pressure is less than or equal to 8 then change flag to 1"
+        },
+        {
+          "id": "H12-3",
+          "input": "if pressure is at most 8 then assign 1 to flag"
+        },
+        {
+          "id": "H12-4",
+          "input": "set flag to 1 provided pressure does not exceed 8"
+        }
+      ]
+    },
+    {
+      "id": "H13",
+      "intent_family": "repeat",
+      "setup": [],
+      "setup_minilang": "",
+      "expected_minilang": "REPEAT 3 TIMES { PRINT \"ping\"; }",
+      "paraphrases": [
+        {
+          "id": "H13-1",
+          "input": "repeat 3 times show \"ping\""
+        },
+        {
+          "id": "H13-2",
+          "input": "repeat display \"ping\" 3 times"
+        },
+        {
+          "id": "H13-3",
+          "input": "do print \"ping\" 3 times"
+        },
+        {
+          "id": "H13-4",
+          "input": "print \"ping\" on three occasions"
+        }
+      ]
+    },
+    {
+      "id": "H14",
+      "intent_family": "reference",
+      "setup": [
+        "let points be 20"
+      ],
+      "setup_minilang": "LET points = 20;",
+      "expected_minilang": "points = points + 4;",
+      "paraphrases": [
+        {
+          "id": "H14-1",
+          "input": "add 4 to that"
+        },
+        {
+          "id": "H14-2",
+          "input": "increase the variable by 4"
+        },
+        {
+          "id": "H14-3",
+          "input": "raise points by 4"
+        },
+        {
+          "id": "H14-4",
+          "input": "add 4 to it"
+        }
+      ]
+    },
+    {
+      "id": "H15",
+      "intent_family": "if_string_not_equal",
+      "setup": [
+        "let mode be \"active\""
+      ],
+      "setup_minilang": "LET mode = \"active\";",
+      "expected_minilang": "IF mode != \"paused\" THEN { PRINT \"go\"; }",
+      "paraphrases": [
+        {
+          "id": "H15-1",
+          "input": "if mode is not equal to \"paused\" then print \"go\""
+        },
+        {
+          "id": "H15-2",
+          "input": "if mode does not equal \"paused\" then show \"go\""
+        },
+        {
+          "id": "H15-3",
+          "input": "if mode is not equal to \"paused\" then display \"go\""
+        },
+        {
+          "id": "H15-4",
+          "input": "unless mode equals \"paused\", print \"go\""
+        }
+      ]
+    }
+  ]
+}

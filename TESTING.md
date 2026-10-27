@@ -79,3 +79,69 @@ Rules for adding fixtures:
 
 Each phase's exit test is listed in DEVELOPMENT.md. A phase is done only when its exit test
 has been **run** and its output recorded.
+
+## Evaluation (Phase 8)
+
+`python -m parsley.eval.run_eval` (see README) loads every `tests/eval_data/*.json` through
+`parsley/eval/dataset.py`. A file with a `.sha256` next to it must match it byte for byte,
+and an unknown `category` is an error. The loader never writes to the data directory, and
+nothing tunes on it. `tests/unit/test_eval_*.py` and `test_run_eval.py` cover the loader,
+every metric and the runner; `tests/mutations/operators.py` holds the test-only mutation
+operators that the runner loads by path (CLAUDE.md rule 6).
+
+### Optional human blind set: `tests/eval_data/human_blind.json`
+
+For inputs written by someone who has not seen the code or the pattern table. When the
+file exists, `run_eval` reports it in its own "Human blind set" section (all three
+conditions, metrics, failures), outside the held-out headline numbers. Format:
+
+```json
+{
+  "version": 1,
+  "category": "human_blind",
+  "provenance": {"author": "...", "method": "how and when it was written"},
+  "cases": [
+    {"id": "HB01", "setup": [], "setup_minilang": "",
+     "input": "make a counter starting at zero",
+     "expected_status": "ok", "expected_minilang": "LET counter = 0;"},
+    {"id": "HB02", "setup": ["let total be 4"], "setup_minilang": "LET total = 4;",
+     "input": "bump the total", "expected_status": "needs_clarification", "expected_minilang": null}
+  ]
+}
+```
+
+- `setup`: English sentences run first, in a fresh session; `setup_minilang` is their
+  canonical MiniLang, one statement per line (a mismatch is a `setup_failed` outcome).
+- `expected_status`: `ok`, `needs_clarification`, `unsupported` or `error`.
+  `expected_minilang` is required for `ok` and is the one canonical statement.
+- Freeze it before the first run: `sha256sum human_blind.json > human_blind.sha256`. Never
+  edit it to improve a score; a correction needs a new version, a reason and a new digest.
+
+## Parser/Verifier contribution checks (2026-10-27)
+
+```
+python -m pytest -q
+python scripts/validate_paraphrases.py
+python scripts/demo.py --with-mutations
+```
+
+`test_lexer.py`, `test_parser.py`, `test_roundtrip.py`, `test_interpreter.py` and
+`test_suggest.py` cover the assigned runtime modules. Existing CLI/pipeline tests now
+exercise available verifiers; missing-layer tests explicitly remove their functions with
+`monkeypatch`, so they remain meaningful after implementation.
+
+`tests/integration/test_verifier_mutations.py` compares both real evaluators and V2 on all
+valid development fixtures. Its corruptions live only in tests: operator swaps, dropped
+statements, changed literals, lost grouping, runtime and syntax errors. Equivalent-result
+and unexecuted-branch mutations are expected to pass V3 while failing V2; whitespace passes
+both. `test_demo.py` also injects a test-only V2 failure to ensure the presentation fails.
+
+`test_paraphrase_data.py` checks held-out integrity and gold validity without compiling the
+held-out English. Paraphrase consistency and NLP coverage belong in the Evaluation owner's
+runner, never as tuning assertions in the unit suite.
+
+Both evaluators use a per-loop 1000-iteration cap and a total work budget of
+`parsley.verify.STEP_LIMIT` (100,000 statement/expression/iteration steps), defined once.
+`run(..., max_steps=...)` can reduce it for a bounded test. Exceeding it reports
+`STEP_LIMIT_ERROR` (`execution step limit exceeded`) and stops the run; the pipeline then
+reports `V3 skipped: execution budget exceeded` (ARCHITECTURE.md 2.6).

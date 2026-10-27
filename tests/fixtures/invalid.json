@@ -38,7 +38,8 @@
     {"id": "X11", "given": {"symbols": {"count": "number"}, "ref_stack": ["count"]},
      "input": "if count is greater than 5 then print big and print done",
      "expected_status": "unsupported", "expected_reason_code": "REJECT_AND_CONTINUATION", "reason": "block_continuation",
-     "expected_suggestion": "Blocks hold one statement. Try: \"if count is greater than 5 then print big\" and then \"print done\" as separate sentences.",
+     "expected_suggestion": "if count is greater than 5 then print big",
+     "expected_guidance": "Blocks hold one statement. Try: \"if count is greater than 5 then print big\" and then \"print done\" as separate sentences.",
      "note": "MVP blocks hold exactly one statement (LANGUAGE_SPEC.md 6.3, decision D-4)"}
   ]
 }

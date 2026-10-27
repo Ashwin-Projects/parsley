@@ -8,7 +8,7 @@ through the plan, not left to the end. If the deadline is shorter, compress Phas
 
 ## Team
 
-Final split. Current progress is in [Status](#status-2026-10-26).
+Final split. Current progress is in [Status](#status-2026-10-27).
 
 | Member | Responsibility |
 |---|---|
@@ -26,23 +26,19 @@ Final split. Current progress is in [Status](#status-2026-10-26).
 
 ### Module ownership
 
-| Module(s) | Owner | Notes |
+| Module(s) | Owner | Status on this branch (2026-10-27) |
 |---|---|---|
-| `nlp/normalizer.py`, `patterns.py`, `candidates.py` | Core | Done |
-| `nlp/context.py`, `ambiguity.py` | Core | Done (N1, N2), integrated in the pipeline and REPL |
-| `nlp/suggest.py` | Parser/Verifier | **Stub.** The pipeline hook is in place: `suggest(text, reason_code) -> str \| None` (ARCHITECTURE.md 2.10) |
-| `compiler/ast_nodes.py` | Core | Done; a data contract the parser depends on |
-| `compiler/ir_builder.py`, `keywords.py` | Core | Done. `src/parsley/keywords.py`: the one shared MiniLang keyword set (`KEYWORDS`, `is_reserved`), used by `nlp/patterns.py` and `compiler/lexer.py` |
-| `compiler/lexer.py`, `parser.py` | Parser/Verifier | **Stub.** Import keywords from `parsley.keywords`; V2 and the interpreter need the parser |
-| `compiler/symbols.py`, `semantic.py`, `session.py` | Core | Done |
-| `compiler/codegen.py`, `verify/backtranslate.py`, `pipeline.py`, `cli.py`, `diagnostics.py`, `__main__.py` | Core | Done |
-| `verify/roundtrip.py`, `verify/interpreter.py` | Parser/Verifier | **Stubs.** Pipeline hooks in place: `roundtrip.check`, `interpreter.run` (ARCHITECTURE.md 2.6) |
-| `verify/ast_eval.py`, mutation tests (under `tests/`) | Evaluation | **Stub.** Pipeline hook in place: `ast_eval.run` (ARCHITECTURE.md 2.6) |
-| `eval/metrics.py`, `eval/run_eval.py`, ablation and results tables | Evaluation | **Stubs** |
-| `tests/eval_data/` paraphrase set | Parser/Verifier | Empty. Written blind, without looking at the pattern table |
-| `parsley_ml/` | Evaluation | Optional; not started, off the critical path |
-| Demo script | Parser/Verifier | Not started |
-| Final integration and release | Core | Ongoing |
+| `nlp/normalizer.py`, `patterns.py`, `candidates.py`, `context.py`, `ambiguity.py` | Core | Existing implementation, unchanged |
+| `nlp/suggest.py` | Parser/Verifier | Implemented and tested; existing pipeline hook now active |
+| `compiler/ast_nodes.py`, `ir_builder.py`, `keywords.py`, semantic analysis, symbols | Core | Existing implementation, unchanged |
+| `compiler/lexer.py`, `parser.py` | Parser/Verifier | Inherited Phase 3 implementation validated; lexer uses the shared keyword owner |
+| `compiler/codegen.py`, `verify/backtranslate.py`, `pipeline.py`, CLI, session | Core | Existing implementation, unchanged |
+| `verify/roundtrip.py`, `verify/interpreter.py` | Parser/Verifier | Implemented, tested and hardened; V2/V3 active |
+| `verify/ast_eval.py` | Evaluation | Existing implementation inherited from `phase-7-verifier`, unchanged |
+| `eval/dataset.py`, `eval/metrics.py`, `eval/run_eval.py`, ablation, results | Evaluation | Done; results in NOVELTY.md (Results, Limitations) |
+| `tests/eval_data/paraphrases.json` | Parser/Verifier | 15 groups / 60 inputs, frozen; gold validation passes |
+| `scripts/demo.py`, `docs/DEMO.md` | Parser/Verifier | Runnable presentation, failure checks and actual transcript |
+| Optional `parsley_ml/` | Evaluation | Not started; outside this contribution |
 
 `ast_eval.py` (Evaluation) and `interpreter.py` (Parser/Verifier) have different authors on purpose,
 so V3 does not share bugs between them.
@@ -70,28 +66,21 @@ owner's review.
 | 8 | Week 7 | Evaluation dataset, metrics, ablation | N5 | Evaluation (metrics, run_eval, ablation, results tables); Parser/Verifier (blind paraphrase set) |
 | 9 | Week 8 | Hardening, docs, report, demo | Novelty demo script | Core (final integration, release); Evaluation (results section); Parser/Verifier (demo script) |
 
-## Status (2026-10-26)
+## Status (2026-10-27)
+
+**All phases are done. Remaining: the final report.** The evaluation runs with
+`python -m parsley.eval.run_eval`; its results and limitations are in NOVELTY.md.
 
 | Phase | State |
 |---|---|
-| 0-2 | Done. |
-| 3 | Core part done (AST nodes, IR builder, keywords). **Lexer and parser not started** (Parser/Verifier). |
-| 4 | Done: semantic analysis (E201-E209, W208), symbol table, session. |
-| 5 | Done: code generation, V1 back-translation, pipeline, CLI (sentence, `--file`, REPL, `--trace`, `--output`, `python -m parsley`). |
-| 6 | Core part done: N1 context resolver, N2 ambiguity gate with REPL answers and `--confirm`. **N4 waits on `nlp/suggest.py`** (Parser/Verifier); the pipeline calls it and shows `Try: ...` once it exists. |
-| 7 | Core integration done: every accepted statement carries a `Verification`, and the CLI prints `V1 ok \| V2 skipped \| V3 skipped`. **V2 and V3 wait on `roundtrip.py`, `ast_eval.py` and `interpreter.py`** (and on the parser). Mutation tests not started. |
-| 8 | Not started (Evaluation): `eval/` modules and the held-out set are empty. |
-| 9 | In progress: docs kept in step with the code; report and demo not started. |
+| 0-2, 4-5 | Done. |
+| 3 | Done. Lexer/parser checked against every valid fixture, precedence, all comparisons, nested blocks and malformed input. |
+| 6 | Done. N1, N2 and N4 suggestions (ranked supported rewrites, block-splitting guidance). |
+| 7 | Done. Real V2/V3 active in the pipeline; `ast_eval.py` and `interpreter.py` stay independent; test-only mutation tests. |
+| 8 | Done. Frozen held-out set (168 inputs), every Section 8 metric, N1 and N2 ablations, failures by category, mutation detection by layer; optional human blind set. |
+| 9 | Done: demo script and transcript, documentation. **Remaining: final report.** |
 
-Waiting on teammates, with the interface each module must provide:
-
-| Module | Owner | Interface |
-|---|---|---|
-| `compiler/lexer.py`, `parser.py` | Parser/Verifier | Parse canonical MiniLang to the AST in ARCHITECTURE.md 2.8 |
-| `verify/roundtrip.py` | Parser/Verifier | `check(source, expected) -> str \| None` (ARCHITECTURE.md 2.6) |
-| `verify/interpreter.py` | Parser/Verifier | `run(source) -> (variables, output, errors)` (2.6) |
-| `verify/ast_eval.py` | Evaluation | `run(program) -> (variables, output, errors)` (2.6) |
-| `nlp/suggest.py` | Parser/Verifier | `suggest(text, reason_code) -> str \| None` (2.10) |
+Details of the parser/verifier hand-off are in `docs/ASSIGNED_PHASES.md`.
 
 ---
 
