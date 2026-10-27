@@ -488,12 +488,14 @@ are not evidence; they only confirm that the runner and the system agree with th
   language specification and data contracts, the NLP front end (normalizer, pattern table,
   candidate generator), IR builder, semantic analysis and session, code generation and
   back-translation (V1), the CLI, the context resolver (N1) and the ambiguity gate (N2).
-  Verification integration in the pipeline, and the evaluation runner (N5).
-- **Aditya Kishor.** Lexer and parser, round-trip check (V2), interpreter (V3), suggestions
-  (N4), the held-out paraphrase set and the demonstration script. The interpreter was
-  committed from Maheep Singh's account, so the repository history shows that account as
-  its committer.
-- **Maheep Singh.** AST evaluator (V3), mutation tests and the human blind set.
+  Integration of the verifier layers into the pipeline and the V3 and N4 fixes. The
+  evaluation (N5): runner, metrics and ablations, and the mutation operators and
+  mutation-detection evaluation.
+- **Aditya Kishor.** Suggestions (N4); the test suites for the lexer, parser and verifiers,
+  including the verifier mutation tests; the held-out paraphrase set; the demonstration
+  script and presenter guide.
+- **Maheep Singh.** Lexer and parser, round-trip check (V2), interpreter and AST evaluator
+  (V3), and the human blind test set (pending).
 
 ## 11. Conclusion and future work
 
