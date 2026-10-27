@@ -80,6 +80,43 @@ Rules for adding fixtures:
 Each phase's exit test is listed in DEVELOPMENT.md. A phase is done only when its exit test
 has been **run** and its output recorded.
 
+## Evaluation (Phase 8)
+
+`python -m parsley.eval.run_eval` (see README) loads every `tests/eval_data/*.json` through
+`parsley/eval/dataset.py`. A file with a `.sha256` next to it must match it byte for byte,
+and an unknown `category` is an error. The loader never writes to the data directory, and
+nothing tunes on it. `tests/unit/test_eval_*.py` and `test_run_eval.py` cover the loader,
+every metric and the runner; `tests/mutations/operators.py` holds the test-only mutation
+operators that the runner loads by path (CLAUDE.md rule 6).
+
+### Optional human blind set: `tests/eval_data/human_blind.json`
+
+For inputs written by someone who has not seen the code or the pattern table. When the
+file exists, `run_eval` reports it in its own "Human blind set" section (all three
+conditions, metrics, failures), outside the held-out headline numbers. Format:
+
+```json
+{
+  "version": 1,
+  "category": "human_blind",
+  "provenance": {"author": "...", "method": "how and when it was written"},
+  "cases": [
+    {"id": "HB01", "setup": [], "setup_minilang": "",
+     "input": "make a counter starting at zero",
+     "expected_status": "ok", "expected_minilang": "LET counter = 0;"},
+    {"id": "HB02", "setup": ["let total be 4"], "setup_minilang": "LET total = 4;",
+     "input": "bump the total", "expected_status": "needs_clarification", "expected_minilang": null}
+  ]
+}
+```
+
+- `setup`: English sentences run first, in a fresh session; `setup_minilang` is their
+  canonical MiniLang, one statement per line (a mismatch is a `setup_failed` outcome).
+- `expected_status`: `ok`, `needs_clarification`, `unsupported` or `error`.
+  `expected_minilang` is required for `ok` and is the one canonical statement.
+- Freeze it before the first run: `sha256sum human_blind.json > human_blind.sha256`. Never
+  edit it to improve a score; a correction needs a new version, a reason and a new digest.
+
 ## Parser/Verifier contribution checks (2026-10-27)
 
 ```

@@ -129,3 +129,31 @@ def test_main_refuses_a_changed_frozen_file(tmp_path, capsys):
     (data / "valid.sha256").write_text("0" * 64 + "  valid.json\n")
     assert run_eval.main(["--data", str(data), "--fixtures", str(fixtures), "--out", str(tmp_path / "r")]) == 2
     assert "digest" in capsys.readouterr().err
+
+
+def test_human_blind_set_is_reported_in_its_own_section_and_not_in_the_headline(tmp_path):
+    data, fixtures = _tiny_data(tmp_path)
+    (data / "human_blind.json").write_text(json.dumps({"version": 1, "category": "human_blind", "cases": [
+        {"id": "HB01", "setup": [], "setup_minilang": "", "input": "let z be 3",
+         "expected_status": "ok", "expected_minilang": "LET z = 3;"},
+    ]}), encoding="utf-8")
+    out = tmp_path / "results"
+    assert run_eval.main(["--data", str(data), "--fixtures", str(fixtures), "--out", str(out),
+                          "--root", str(ROOT)]) == 0
+    text = (out / "summary.md").read_text(encoding="utf-8")
+    held, _, rest = text.partition("## Human blind set")
+    assert rest, "missing human blind section"
+    blind = rest.split("\n## ")[0]
+    assert "| exact-match accuracy | 1/1 (100.0%) | human_blind |" in blind
+    assert "human_blind" not in held.split("## Held-out results")[1]  # headline excludes it
+    assert "| exact-match accuracy | 1/2 (50.0%) | all with gold code |" in held
+    rows = list(csv.DictReader((out / "results.csv").open(encoding="utf-8", newline="")))
+    assert {r["condition"] for r in rows if r["subset"] == "human_blind"} == set(run_eval.CONDITIONS)
+
+
+def test_without_a_human_blind_file_the_section_says_so(tmp_path):
+    data, fixtures = _tiny_data(tmp_path)
+    out = tmp_path / "results"
+    run_eval.main(["--data", str(data), "--fixtures", str(fixtures), "--out", str(out), "--root", str(ROOT)])
+    text = (out / "summary.md").read_text(encoding="utf-8")
+    assert "## Human blind set" in text and "Not provided" in text

@@ -12,6 +12,10 @@ Held-out files (``tests/eval_data/*.json``), chosen by their ``category``:
   ``setup_minilang`` and ``input``; expected ``needs_clarification`` / ``unsupported``.
 * ``held_out_sessions``: ``sessions`` of ``sentences`` whose ``expected_minilang`` has one
   line per sentence. Sentence *k* becomes one item, run after sentences 1..k-1.
+* ``human_blind`` (optional ``human_blind.json``): ``cases`` written by a person who has not
+  seen the code; each has ``setup``, ``setup_minilang``, ``input``, ``expected_status``
+  (``ok``, ``needs_clarification``, ``unsupported`` or ``error``) and ``expected_minilang``
+  (required for ``ok``). Reported in its own section (TESTING.md).
 * ``valid`` / ``invalid`` / ``ambiguous`` / ``semantic``: the development-fixture format
   (TESTING.md), with ``given`` symbols as setup.
 
@@ -92,6 +96,8 @@ def _load(path: Path, source: str) -> list[Item]:
             return [_case("unsupported", "unsupported", c, source) for c in data["cases"]]
         if category == "held_out_sessions":
             return list(_sessions(data, source))
+        if category == "human_blind":
+            return [_human_blind(path.name, c, source) for c in data["cases"]]
     except (KeyError, TypeError, ValueError) as error:
         raise DatasetError(f"{path.name}: malformed data ({error!r})") from error
     raise DatasetError(f"{path.name}: unknown category {category!r}")
@@ -149,6 +155,18 @@ def _case(subset: str, status: str, case: Mapping[str, Any], source: str) -> Ite
         expected_status=status, expected_minilang=case.get("expected_minilang"),
         expected_suggestion=case.get("expected_suggestion"), expected_codes=(), context=None,
     )
+
+
+_BLIND_STATUSES = {"ok": "ok", "needs_clarification": "ambiguous", "unsupported": "unsupported", "error": "error"}
+
+
+def _human_blind(file: str, case: Mapping[str, Any], source: str) -> Item:
+    status = _BLIND_STATUSES.get(case["expected_status"])
+    if status is None:
+        raise DatasetError(f"{file}: case {case['id']}: unknown expected_status {case['expected_status']!r}")
+    if status == "ok" and not case.get("expected_minilang"):
+        raise DatasetError(f"{file}: case {case['id']}: expected_status ok needs expected_minilang")
+    return _case("human_blind", status, case, source)
 
 
 def _sessions(data: Mapping[str, Any], source: str) -> Iterator[Item]:

@@ -25,7 +25,8 @@ LLMs and no external APIs.
 > N4 rewrite suggestions, V2 structural comparison and V3 execution checks are working.
 > Run `python scripts/demo.py --with-mutations` for the checked presentation and
 > `python scripts/validate_paraphrases.py` to validate 60 frozen paraphrase inputs.
-> The evaluation runner, metrics and ablation (`eval/`) are not written yet.
+> `python -m parsley.eval.run_eval` runs the held-out evaluation and ablations (see
+> [Evaluation](#evaluation)).
 
 ---
 
@@ -206,22 +207,32 @@ phrasing is close.
 
 ## Evaluation
 
-The held-out set has **15 frozen paraphrase groups / 60 English
-inputs**, with setup sessions and expected MiniLang. They were written before looking at
-the implementation pattern table and include plausible out-of-coverage wording. Their
-AI-assisted provenance and limits are recorded in `tests/eval_data/README.md`.
+Run from the repository root (after `pip install -e .`):
 
 ```
-python scripts/validate_paraphrases.py
-python scripts/demo.py
-python scripts/demo.py --with-mutations
+python -m parsley.eval.run_eval
 ```
 
-The validator checks the digest, schema, separation from development fixtures and the
-syntax/semantics/execution of gold programs. It does **not** assert NLP accuracy on held-out
-inputs. Do not tune on these inputs. Full metrics, the remaining evaluation subsets and
-N1/N2 ablation tables are not written yet (`eval/` is unfinished).
-See [the demo guide](docs/DEMO.md) and [the phase handoff](docs/ASSIGNED_PHASES.md).
+It runs every frozen held-out input in `tests/eval_data/` (168 inputs: 15 paraphrase groups
+of 4, 25 ambiguous, 25 unsupported, 10 multi-sentence sessions) through the real pipeline,
+with context resolution on and off and with clarification replaced by a forced top-1 guess.
+It writes `results/results.csv` (one row per input and condition) and `results/summary.md`
+(metrics, ablations, failures by category, mutation detection by layer). The output is
+deterministic. A file whose SHA-256 freeze does not match is refused. An optional
+`human_blind.json` is reported in its own section (format in [TESTING.md](TESTING.md)).
+
+Results on the held-out set (2026-10-27):
+
+- Exact match 104/118 (88.1%), with no wrong code, no crashes and 25/25 unsupported inputs safely rejected.
+- With context resolution off, exact match falls to 38/118 (32.2%).
+- Without clarification (forced top-1 guess), wrong code rises from 0 to 11/168.
+- Injected code-generation bugs: V2 caught 188/188 and V3 173/188; V3 caught none that V2 missed.
+- Weak spots: paraphrase consistency 1/15 groups and N4 suggestion usefulness 0/13.
+
+[NOVELTY.md](NOVELTY.md) has the results and their limitations, including data provenance.
+Do not tune on the held-out inputs. `python scripts/validate_paraphrases.py` checks the
+paraphrase file's freeze and gold programs; `python scripts/demo.py --with-mutations` runs
+the checked demo ([guide](docs/DEMO.md)).
 
 ---
 

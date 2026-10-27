@@ -35,7 +35,7 @@ Final split. Current progress is in [Status](#status-2026-10-27).
 | `compiler/codegen.py`, `verify/backtranslate.py`, `pipeline.py`, CLI, session | Core | Existing implementation, unchanged |
 | `verify/roundtrip.py`, `verify/interpreter.py` | Parser/Verifier | Implemented, tested and hardened; V2/V3 active |
 | `verify/ast_eval.py` | Evaluation | Existing implementation inherited from `phase-7-verifier`, unchanged |
-| `eval/metrics.py`, `eval/run_eval.py`, ablation, remaining evaluation subsets and results | Evaluation | **Remaining work**; no evaluation results claimed yet |
+| `eval/dataset.py`, `eval/metrics.py`, `eval/run_eval.py`, ablation, results | Evaluation | Done; results in NOVELTY.md (Results, Limitations) |
 | `tests/eval_data/paraphrases.json` | Parser/Verifier | 15 groups / 60 inputs, frozen; gold validation passes |
 | `scripts/demo.py`, `docs/DEMO.md` | Parser/Verifier | Runnable presentation, failure checks and actual transcript |
 | Optional `parsley_ml/` | Evaluation | Not started; outside this contribution |
@@ -68,8 +68,8 @@ owner's review.
 
 ## Status (2026-10-27)
 
-**Only `eval/` remains: `metrics.py`, `run_eval.py` and the N1/N2 ablation, owned by
-Evaluation.** Every other module is implemented and integrated on the `integration` branch.
+**All phases are done. Remaining: the final report.** The evaluation runs with
+`python -m parsley.eval.run_eval`; its results and limitations are in NOVELTY.md.
 
 | Phase | State |
 |---|---|
@@ -77,8 +77,8 @@ Evaluation.** Every other module is implemented and integrated on the `integrati
 | 3 | Done. Lexer/parser checked against every valid fixture, precedence, all comparisons, nested blocks and malformed input. |
 | 6 | Done. N1, N2 and N4 suggestions (ranked supported rewrites, block-splitting guidance). |
 | 7 | Done. Real V2/V3 active in the pipeline; `ast_eval.py` and `interpreter.py` stay independent; test-only mutation tests. |
-| 8 | Held-out set done: 60 paraphrase inputs with gold programs, SHA-256 frozen. **Remaining: `eval/` metrics, runner, ablation (Evaluation).** |
-| 9 | Demo script and transcript done. Final report and video remain. |
+| 8 | Done. Frozen held-out set (168 inputs), every Section 8 metric, N1 and N2 ablations, failures by category, mutation detection by layer; optional human blind set. |
+| 9 | Done: demo script and transcript, documentation. **Remaining: final report.** |
 
 Details of the parser/verifier hand-off are in `docs/ASSIGNED_PHASES.md`.
 

@@ -143,3 +143,36 @@ def test_loading_never_writes_to_the_data_directory():
     before = {p.name: p.read_bytes() for p in data.iterdir() if p.is_file()}
     dataset.load_held_out(data)
     assert {p.name: p.read_bytes() for p in data.iterdir() if p.is_file()} == before
+
+
+HUMAN_BLIND = {"version": 1, "category": "human_blind", "provenance": {"author": "a person who never saw the code"},
+               "cases": [
+    {"id": "HB01", "setup": [], "setup_minilang": "", "input": "let x be 1",
+     "expected_status": "ok", "expected_minilang": "LET x = 1;"},
+    {"id": "HB02", "setup": ["let x be 1"], "setup_minilang": "LET x = 1;", "input": "increase x",
+     "expected_status": "needs_clarification", "expected_minilang": None},
+    {"id": "HB03", "setup": [], "setup_minilang": "", "input": "sort the list",
+     "expected_status": "unsupported", "expected_minilang": None},
+    {"id": "HB04", "setup": [], "setup_minilang": "", "input": "print y times 2",
+     "expected_status": "error", "expected_minilang": None},
+]}
+
+
+def test_optional_human_blind_file_is_its_own_subset(tmp_path):
+    _write(tmp_path / "human_blind.json", HUMAN_BLIND, freeze=True)
+    items = {i.id: i for i in dataset.load_held_out(tmp_path)}
+    assert {i.subset for i in items.values()} == {"human_blind"}
+    assert [items[k].expected_status for k in ("HB01", "HB02", "HB03", "HB04")] == [
+        "ok", "ambiguous", "unsupported", "error"]
+    assert items["HB01"].expected_minilang == "LET x = 1;"
+    assert items["HB02"].setup == ("let x be 1",) and items["HB02"].context_dependent
+
+
+@pytest.mark.parametrize("case", [
+    {"id": "B", "setup": [], "setup_minilang": "", "input": "x", "expected_status": "maybe"},
+    {"id": "B", "setup": [], "setup_minilang": "", "input": "x", "expected_status": "ok", "expected_minilang": None},
+])
+def test_human_blind_case_with_a_bad_expectation_is_refused(tmp_path, case):
+    _write(tmp_path / "human_blind.json", {"version": 1, "category": "human_blind", "cases": [case]})
+    with pytest.raises(dataset.DatasetError, match=r"human_blind.json: case B: "):
+        dataset.load_held_out(tmp_path)

@@ -17,8 +17,9 @@ exception is a ``crash`` outcome; both count as failures. Suggestions are judged
 automatically: for a rejected input with a known meaning, the suggestion is compiled in
 the same setup and is useful only if it gives the gold code. Mutation detection uses the
 test-only operators in ``tests/mutations/operators.py`` (CLAUDE.md rule 6) on the gold
-programs, checked with the real V2 and V3 layers. Output is deterministic: no
-timestamps, items in data order.
+programs, checked with the real V2 and V3 layers. An optional ``human_blind.json`` set is
+run the same way and reported in its own section, outside the headline numbers. Output
+is deterministic: no timestamps, items in data order.
 """
 
 from __future__ import annotations
@@ -275,8 +276,20 @@ def _mutation_section(results: Sequence[MutationResult] | None) -> list[str]:
     return lines
 
 
+def _blind_section(blind: dict[str, list[Outcome]] | None) -> list[str]:
+    if blind is None:
+        return ["Not provided: add `tests/eval_data/human_blind.json` (format in TESTING.md) to",
+                "report a set written by someone who has not seen the code."]
+    return [
+        "Written by someone who has not seen the code; kept out of the held-out numbers above.",
+        "", *_metric_table(blind["baseline"]), "", *_ablation_table(blind), "",
+        *_failure_table(blind["baseline"]),
+    ]
+
+
 def summary(held: dict[str, list[Outcome]], development: dict[str, list[Outcome]],
-            mutations: list[MutationResult] | None, files: Sequence[Path]) -> str:
+            mutations: list[MutationResult] | None, files: Sequence[Path],
+            blind: dict[str, list[Outcome]] | None = None) -> str:
     lines = [
         "# Parsley evaluation results",
         "",
@@ -312,6 +325,10 @@ def summary(held: dict[str, list[Outcome]], development: dict[str, list[Outcome]
         "statement), checked with the real V2 (re-parse) and V3 (AST evaluator vs interpreter).",
         "",
         *_mutation_section(mutations),
+        "",
+        "## Human blind set",
+        "",
+        *_blind_section(blind),
         "",
         "## Development fixtures (not held-out)",
         "",
@@ -391,11 +408,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     except DatasetError as error:
         print(f"run_eval: {error}", file=sys.stderr)
         return 2
+    blind_items = [i for i in held_items if i.subset == "human_blind"]
+    held_items = [i for i in held_items if i.subset != "human_blind"]
     operators = load_operators(args.root)
     held, development = _run_all(held_items), _run_all(dev_items)
+    blind = _run_all(blind_items) if blind_items else None
     mutations = None if operators is None else mutation_results(held_items, operators)
-    text = summary(held, development, mutations, sorted(Path(data).glob("*.json")))
-    outcomes = [o for runs in (held, development) for condition in CONDITIONS for o in runs[condition]]
+    text = summary(held, development, mutations, sorted(Path(data).glob("*.json")), blind)
+    groups = (held, *([blind] if blind else []), development)
+    outcomes = [o for by_condition in groups for condition in CONDITIONS for o in by_condition[condition]]
     write_results(out, outcomes, mutations, text)
     print(f"wrote {out / 'results.csv'} and {out / 'summary.md'}")
     return 0
