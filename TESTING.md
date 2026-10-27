@@ -103,9 +103,8 @@ both. `test_demo.py` also injects a test-only V2 failure to ensure the presentat
 held-out English. Paraphrase consistency and NLP coverage belong in the Evaluation owner's
 runner, never as tuning assertions in the unit suite.
 
-The interpreter uses a per-loop 1000-iteration cap and an independent total work budget
-(default 100,000 statement/expression/iteration steps). `run(source, max_steps=...)` can
-reduce it for a bounded test. Exceeding it reports `execution step limit exceeded` and
-stops the run. The AST evaluator retains its inherited per-loop cap; it has no total work
-budget yet. This is a known limitation for arbitrary deeply nested MiniLang, which the
-current English front end does not generate.
+Both evaluators use a per-loop 1000-iteration cap and a total work budget of
+`parsley.verify.STEP_LIMIT` (100,000 statement/expression/iteration steps), defined once.
+`run(..., max_steps=...)` can reduce it for a bounded test. Exceeding it reports
+`STEP_LIMIT_ERROR` (`execution step limit exceeded`) and stops the run; the pipeline then
+reports `V3 skipped: execution budget exceeded` (ARCHITECTURE.md 2.6).

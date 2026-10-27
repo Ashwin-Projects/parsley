@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from parsley.nlp.suggest import suggest
+from parsley.nlp.suggest import split_guidance, suggest
 from parsley.pipeline import run
 from parsley.session import Session
 
@@ -22,17 +22,38 @@ def test_useful_rewrites_preserve_slot_values(text, expected):
     assert suggest(text, 'NO_MATCH') == expected
 
 
-def test_fixed_split_guidance_from_spec():
+def _x11():
     fixtures = json.loads((Path(__file__).resolve().parents[1] / 'fixtures/invalid.json').read_text())
-    fixture = next(f for f in fixtures['fixtures'] if f['id'] == 'X11')
+    return next(f for f in fixtures['fixtures'] if f['id'] == 'X11')
+
+
+def test_and_rejection_suggests_only_the_first_statements_phrasing():
+    fixture = _x11()
     assert suggest(fixture['input'], 'REJECT_AND_CONTINUATION') == fixture['expected_suggestion']
 
 
+def test_fixed_split_guidance_from_spec():
+    fixture = _x11()
+    assert split_guidance(fixture['input']) == fixture['expected_guidance']
+
+
 def test_split_does_not_treat_quoted_and_as_a_boundary():
-    assert suggest('print "a and set x to 1" and print "done"', 'REJECT_AND_CONTINUATION') == (
+    text = 'print "a and set x to 1" and print "done"'
+    assert suggest(text, 'REJECT_AND_CONTINUATION') == 'print "a and set x to 1"'
+    assert split_guidance(text) == (
         'Blocks hold one statement. Try: "print \\"a and set x to 1\\"" and then '
         '"print \\"done\\"" as separate sentences.'
     )
+
+
+@pytest.mark.parametrize('text', ['store 50 in bonus', 'print x and', '', 'z' * 501, 42])
+def test_no_split_guidance_without_two_supported_halves(text):
+    assert split_guidance(text) is None
+
+
+def test_suggestions_are_phrasings_not_try_sentences():
+    for text, code in [(_x11()['input'], 'REJECT_AND_CONTINUATION'), ('store 50 in bonus', 'NO_MATCH')]:
+        assert 'Try:' not in suggest(text, code)
 
 
 @pytest.mark.parametrize('reason', [

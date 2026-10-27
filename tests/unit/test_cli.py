@@ -432,6 +432,13 @@ def test_cli_shows_the_real_suggestion_for_store_in(capsys) -> None:
     ]
 
 
+def test_cli_and_rejection_has_one_try_line_with_a_phrasing(capsys) -> None:
+    assert cli.main(["repeat 3 times print 1 and print 2"]) == 1
+    err = capsys.readouterr().err.splitlines()
+    assert err[0].startswith("candidates E101: ") and "Blocks hold one statement." in err[0]
+    assert err[1:] == ["Try: repeat 3 times print 1"]
+
+
 def test_cli_without_suggestion_has_no_try_line(monkeypatch, capsys) -> None:
     from parsley.nlp import suggest
     monkeypatch.setattr(suggest, "suggest", lambda text, code: None, raising=False)

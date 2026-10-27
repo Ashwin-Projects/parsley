@@ -45,6 +45,11 @@ def test_nested_repeats_obey_a_total_work_budget():
     assert errors == ['execution step limit exceeded']
 
 
+def test_negative_zero_is_negated_not_subtracted_from_zero():
+    # -x keeps the sign of 0.0 (as ast_eval does); 0 - x would print '0.0'.
+    assert run('PRINT -0.0; LET y = 0.0; PRINT -y;') == ({'y': 0.0}, ['-0.0', '-0.0'], [])
+
+
 def test_long_expression_returns_an_error_instead_of_crashing():
     result = run('PRINT ' + ' + '.join(['1'] * 1600) + '; PRINT 9;')
     assert result[1] == ['9']

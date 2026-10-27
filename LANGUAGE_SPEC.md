@@ -390,7 +390,7 @@ It never crashes and never produces code.
 | `out_of_scope`: library maths | `calculate the square root of 16` | none, or nearest pattern |
 | `out_of_scope`: files / I/O / jumps | `open the file data.txt`, `go to line 10` | none, or nearest pattern |
 | `unsupported_phrasing` | `store 50 in bonus` | nearest pattern, e.g. `set bonus to 50` |
-| `block_continuation` | `if count is greater than 5 then print big and print done`, `set x to 5 and set y to 6` | `Blocks hold one statement. Try: "{sentence before and}" and then "{clause}" as separate sentences.` |
+| `block_continuation` | `if count is greater than 5 then print big and print done`, `set x to 5 and set y to 6` | The sentence before `and`, e.g. `if count is greater than 5 then print big`. The E101 message adds: `Blocks hold one statement. Try: "{sentence before and}" and then "{clause}" as separate sentences.` |
 | `malformed` | `!!!` (empty after normalization), an unterminated quote, input longer than 500 characters, or more than 64 readings of one rule | none |
 
 ## 9. Decision log

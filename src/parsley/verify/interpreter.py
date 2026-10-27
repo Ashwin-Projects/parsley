@@ -16,9 +16,9 @@ from typing import Any
 import parsley.compiler.ast_nodes as nodes
 from parsley.compiler.lexer import LexError
 from parsley.compiler.parser import ParseError, parse
+from parsley.verify import STEP_LIMIT, STEP_LIMIT_ERROR
 
 LOOP_LIMIT = 1000
-STEP_LIMIT = 100_000
 
 _WHOLE_NUMBER = re.compile(r"[0-9]+")
 _PLAIN: dict[str, Callable[[Any, Any], Any]] = {
@@ -77,7 +77,7 @@ class _Machine:
     def tick(self) -> None:
         self.remaining -= 1
         if self.remaining < 0:
-            raise _Fault("execution step limit exceeded")
+            raise _Fault(STEP_LIMIT_ERROR)
 
     def step(self, node: object) -> None:
         self.tick()
@@ -134,7 +134,7 @@ class _Machine:
         inner = self.value(node.operand)
         if type(inner) is str:
             raise _Fault("type error: cannot negate text")
-        return 0 - inner  # type: ignore[operator]
+        return -inner  # type: ignore[operator]
 
     def eval_BinOp(self, node: nodes.BinOp) -> object:
         lhs, rhs = self.value(node.left), self.value(node.right)

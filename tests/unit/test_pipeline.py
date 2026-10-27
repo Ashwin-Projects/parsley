@@ -400,7 +400,8 @@ def test_operator_scope_bad_answer_asks_again(reply):
 ])
 def test_unsupported_message_names_its_reason_codes(text, codes):
     [d] = run(text, Session()).diagnostics
-    assert d.message.endswith(f"({codes})")
+    _, named, after = d.message.partition(f"({codes})")
+    assert named and (after == "" or after.startswith(". "))  # N4 guidance may follow the codes
 
 
 # Phase 7 verification integration (V1 back-translation, V2 round-trip, V3 execution
@@ -708,3 +709,66 @@ def test_v3_part_whose_equality_raises_is_a_reported_failure(monkeypatch):
     _fake_evaluators(monkeypatch, (_BadEq(), [], []), ({}, [], []), [])
     result = run("let x be 1", Session())
     assert result.status == "ok" and result.verification.v3_match is False
+
+
+# V3 work budget, negative zero, and N4 phrasing vs E101 guidance (real modules unless faked)
+
+from parsley import verify as verify_package  # noqa: E402
+
+_BUDGET = verify_package.STEP_LIMIT_ERROR
+
+
+def test_v3_is_skipped_not_failed_when_a_long_session_exceeds_the_budget():
+    session = Session()
+    assert run("let x be 0", session).verification.v3_match is True
+    results = [run("repeat 1000 times add 1 to x", session) for _ in range(20)]
+    assert [r.status for r in results] == ["ok"] * 20
+    assert [r.verification.v3_match for r in results[:19]] == [True] * 19
+    last = results[-1].verification
+    assert last.v3_match is None
+    assert last.details[-1] == "V3 skipped: execution budget exceeded"
+
+
+@pytest.mark.parametrize("ast_result,interp_result", [
+    (({"x": 1}, [], [_BUDGET]), ({"x": 9}, [], [])),   # only the AST evaluator ran out
+    (({"x": 9}, [], []), ({"x": 1}, [], [_BUDGET])),   # only the interpreter ran out
+    (({"x": 1}, [], [_BUDGET]), ({"x": 1}, [], [_BUDGET])),
+])
+def test_v3_is_skipped_when_either_evaluator_hits_its_budget(monkeypatch, ast_result, interp_result):
+    _fake_evaluators(monkeypatch, ast_result, interp_result, [])
+    v = run("let x be 1", Session()).verification
+    assert v.v3_match is None
+    assert v.details[-1] == "V3 skipped: execution budget exceeded"
+
+
+def test_print_negative_zero_passes_v3():
+    v = run("print negative 0.0", Session()).verification
+    assert (v.v2_match, v.v3_match) == (True, True)
+
+
+def test_and_rejection_puts_guidance_in_e101_and_a_phrasing_in_the_suggestion():
+    result = run("repeat 3 times print 1 and print 2", Session())
+    assert result.status == "unsupported"
+    assert result.suggestion == "repeat 3 times print 1"
+    message = result.diagnostics[0].message
+    assert message.endswith(
+        '(REJECT_AND_CONTINUATION). Blocks hold one statement. Try: "repeat 3 times print 1" '
+        'and then "print 2" as separate sentences.'
+    )
+
+
+@pytest.mark.parametrize("behaviour", [
+    lambda text: None, lambda text: 42, lambda text: "  ",
+    lambda text: (_ for _ in ()).throw(ValueError("boom")),
+])
+def test_e101_without_usable_guidance_keeps_the_plain_message(monkeypatch, behaviour):
+    monkeypatch.setattr(suggest_module, "split_guidance", behaviour, raising=False)
+    message = run("repeat 3 times print 1 and print 2", Session()).diagnostics[0].message
+    assert message.endswith("(REJECT_AND_CONTINUATION)")
+
+
+def test_guidance_is_only_asked_for_and_rejections(monkeypatch):
+    calls = []
+    monkeypatch.setattr(suggest_module, "split_guidance", lambda text: calls.append(text), raising=False)
+    run("store 50 in bonus", Session())
+    assert calls == []

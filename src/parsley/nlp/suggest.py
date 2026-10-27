@@ -52,30 +52,46 @@ def _quote(text: str) -> str:
     return '"' + text.replace('\\', '\\\\').replace('"', '\\"') + '"'
 
 
-def _split_guidance(text: str) -> str | None:
+def _split(text: str) -> tuple[str, str] | None:
+    """The two supported statements joined by an unquoted ``and``, or None."""
+    if not isinstance(text, str) or not text.strip() or len(text) > 500:
+        return None
     norm = normalize(text)
     for token in norm.tokens:
         if token.kind != 'word' or token.lower != patterns.CONTINUATION_WORD:
             continue
         first, second = norm.text[:token.start].strip(), norm.text[token.end:].strip()
         if first and second and _supported(first) and _supported(second):
-            return (
-                f'Blocks hold one statement. Try: {_quote(first)} and then '
-                f'{_quote(second)} as separate sentences.'
-            )
+            return first, second
     return None
 
 
-def suggest(text: str, reason_code: str) -> str | None:
-    """Return supported English guidance, or None when no safe rewrite is close.
+def split_guidance(text: str) -> str | None:
+    """How to split a sentence rejected for ``and`` (LANGUAGE_SPEC.md 8); the pipeline
+    adds it to the E101 message. None when there are not two supported statements.
+    """
+    halves = _split(text)
+    if halves is None:
+        return None
+    first, second = halves
+    return (
+        f'Blocks hold one statement. Try: {_quote(first)} and then '
+        f'{_quote(second)} as separate sentences.'
+    )
 
-    ``reason_code`` is the primary NLP reason (ARCHITECTURE.md 2.10). Malformed,
+
+def suggest(text: str, reason_code: str) -> str | None:
+    """Return one supported phrasing to try, or None when no safe rewrite is close.
+
+    ``reason_code`` is the primary NLP reason (ARCHITECTURE.md 2.10). For an ``and``
+    rejection it is the first statement; ``split_guidance`` explains the split. Malformed,
     excessive, or internal-error inputs receive no speculative rewrite.
     """
     if not isinstance(text, str) or not text.strip() or len(text) > 500:
         return None
     if reason_code == 'REJECT_AND_CONTINUATION':
-        return _split_guidance(text)
+        halves = _split(text)
+        return halves[0] if halves else None
     if reason_code != 'NO_MATCH':
         return None
     norm = normalize(text)

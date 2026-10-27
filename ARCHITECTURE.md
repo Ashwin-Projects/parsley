@@ -74,6 +74,12 @@ the feedback paths that make N1 work.
     as `v3_match` already could. The V2/V3 layer interface (2.6) is proposed for the
     owners of `roundtrip.py`, `ast_eval.py` and `interpreter.py` to approve. Requested by
     the project lead.
+  - 2026-10-27: V3 work budget (2.6). Both evaluators enforce one shared step limit,
+    `parsley.verify.STEP_LIMIT`, and V3 is skipped (`None`), not failed, when either one runs
+    out. N4 (2.10): `suggest()` returns only a phrasing; the new
+    `suggest.split_guidance(text)` gives the block-splitting guidance, which the pipeline puts
+    in the E101 message. Additive; affects `ast_eval.py`, `interpreter.py`, `suggest.py`
+    and the pipeline. Requested by the project lead.
 
 ### 2.2 Plan notation (verbatim)
 
@@ -211,6 +217,19 @@ nested REPEATs multiply). The whole session is re-run for now, because sessions 
 it costs O(n^2) over a session. A run-time error in an earlier statement appears in both
 evaluators' `errors`, so V3 still passes when they agree about it.
 
+**Shared work budget.** Both evaluators also enforce one total work budget, defined once in
+`parsley/verify/__init__.py`: `STEP_LIMIT` (100,000) steps, where every statement executed,
+expression node evaluated and REPEAT iteration costs one step. An evaluator that runs out
+stops the whole run and adds `STEP_LIMIT_ERROR` (`execution step limit exceeded`) to
+`errors`. Both accept a keyword-only `max_steps` (default `STEP_LIMIT`) for bounded tests.
+Only these two constants are shared; the evaluators still share no evaluation code (design
+rule 5).
+
+**Skip rule.** If either evaluator's `errors` contains `STEP_LIMIT_ERROR`, the run was cut
+off and says nothing about equivalence, so V3 is skipped (`v3_match = None`, detail
+`V3 skipped: execution budget exceeded`), not failed. Because V3 re-runs the whole session,
+a long session can reach the budget even when every statement is small.
+
 *Future work:* incremental V3 (keep each evaluator's state after the last accepted
 statement and run only the new one), once both evaluators can resume from a saved state.
 
@@ -304,11 +323,15 @@ statement is recorded only if it returns true. Consumers: CLI, evaluation, `test
 |---|---|
 | `parsley.nlp.suggest.suggest(text: str, reason_code: str) -> str \| None` | `text` is the sentence as typed; `reason_code` is the primary `NLPResult` reason code (2.4), the same one the E101 message explains: the first code other than `NO_MATCH`, or `NO_MATCH` when it is the only one. Return a supported phrasing to try (e.g. `set bonus to 50` for `store 50 in bonus`), or `None` when nothing is close. Must not emit MiniLang. |
 
+| `parsley.nlp.suggest.split_guidance(text: str) -> str \| None` | For `REJECT_AND_CONTINUATION` only: how to split the sentence, as in LANGUAGE_SPEC.md 8 (`Blocks hold one statement. Try: "..." and then "..." as separate sentences.`), or `None` when the two parts are not both supported statements. The pipeline appends it to the E101 message after the reason codes. For the same input, `suggest()` returns only the first statement's phrasing. |
+
+`suggest()` returns a phrasing only, never a sentence with `Try:` in it; the CLI adds `Try:`.
 The pipeline calls it only for `unsupported` results, and never for `INTERNAL_ERROR` (a
 bug, not a phrasing problem). A missing function or `NotImplementedError` gives
 `suggestion = None`; any other error (even `SystemExit`) is logged at debug level and also
-gives `None`, as does a return value that is not a non-empty string. A suggestion never
-changes the status, the session or the CLI's stderr.
+gives `None`, as does a return value that is not a non-empty string. `split_guidance`
+follows the same rules; without a usable answer, E101 keeps its plain message. A suggestion
+never changes the status, the session or the CLI's stderr.
 
 ## 3. Design rules
 

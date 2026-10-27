@@ -80,16 +80,6 @@ Evaluation.** Every other module is implemented and integrated on the `integrati
 | 8 | Held-out set done: 60 paraphrase inputs with gold programs, SHA-256 frozen. **Remaining: `eval/` metrics, runner, ablation (Evaluation).** |
 | 9 | Demo script and transcript done. Final report and video remain. |
 
-Known contract mismatches, reported to the module owners (not fixed in their modules):
-
-- V3 false failure: `interpreter.py` adds a 100,000-step budget that `ast_eval.py` and
-  ARCHITECTURE.md 2.6 do not have. V3 re-runs the whole session, so the 20th
-  `repeat 1000 times add 1 to x` in one session fails V3 although both evaluators are correct.
-- V3 false failure on negative zero: `print negative 0.0` gives `-0.0` from `ast_eval.py`
-  (`-x`) but `0.0` from `interpreter.py` (`0 - x`).
-- N4: for `REJECT_AND_CONTINUATION`, `suggest()` returns a guidance sentence rather than a
-  phrasing (ARCHITECTURE.md 2.10), so the CLI prints `Try: Blocks hold one statement. Try: ...`.
-
 Details of the parser/verifier hand-off are in `docs/ASSIGNED_PHASES.md`.
 
 ---

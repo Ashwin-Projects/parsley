@@ -10,6 +10,8 @@ Run-time rules (shared with the interpreter only as a written contract, so V3 ca
 * A statement that fails records one message in ``errors`` and stops; the statements after it
   still run, and effects made before the failure stay.
 * Every REPEAT loop runs at most ``REPEAT_CAP`` (1000) times; nested loops multiply.
+* Each statement, expression node and loop iteration costs one step of a ``STEP_LIMIT``
+  budget (``parsley.verify``); running out records ``STEP_LIMIT_ERROR`` and ends the run.
 * ``output`` holds the printed lines: strings as they are, ``int`` with ``str``, ``float``
   with ``repr``.
 """
@@ -19,6 +21,7 @@ from __future__ import annotations
 from parsley.compiler.ast_nodes import (
     Assign, BinOp, Compare, Expr, If, Let, Neg, Num, Print, Program, Repeat, Stmt, Str, Var,
 )
+from parsley.verify import STEP_LIMIT, STEP_LIMIT_ERROR
 
 REPEAT_CAP = 1000
 
@@ -30,19 +33,34 @@ class _Failure(Exception):
     """A run-time error; its message goes to ``errors`` and the current statement stops."""
 
 
+class _OutOfSteps(Exception):
+    """The work budget is spent; the whole run stops."""
+
+
 class _State:
-    def __init__(self) -> None:
+    def __init__(self, max_steps: int) -> None:
         self.variables: dict[str, Value] = {}
         self.output: list[str] = []
         self.errors: list[str] = []
+        self.steps_left = max_steps
+
+    def spend(self) -> None:
+        self.steps_left -= 1
+        if self.steps_left < 0:
+            raise _OutOfSteps
 
 
-def run(program: Program) -> Result:
+def run(program: Program, *, max_steps: int = STEP_LIMIT) -> Result:
     """Evaluate ``program``; returns ``(variables, output, errors)``."""
-    state = _State()
+    if type(max_steps) is not int or max_steps < 1:
+        raise ValueError("max_steps must be a positive integer")
+    state = _State(max_steps)
     for statement in program.statements:
         try:
             _execute(statement, state)
+        except _OutOfSteps:
+            state.errors.append(STEP_LIMIT_ERROR)
+            break
         except _Failure as failure:
             state.errors.append(str(failure))
         except (OverflowError, ValueError):
@@ -51,6 +69,7 @@ def run(program: Program) -> Result:
 
 
 def _execute(statement: Stmt, state: _State) -> None:
+    state.spend()
     if isinstance(statement, Let):
         state.variables[statement.name] = _evaluate(statement.value, state)
     elif isinstance(statement, Assign):
@@ -67,6 +86,7 @@ def _execute(statement: Stmt, state: _State) -> None:
             _execute_all(statement.else_body, state)
     elif isinstance(statement, Repeat):
         for _ in range(_loop_count(statement.count)):
+            state.spend()
             _execute_all(statement.body, state)
     else:  # pragma: no cover - the AST contract has no other statement
         raise TypeError(f"not a statement: {statement!r}")
@@ -85,6 +105,7 @@ def _loop_count(count: Num) -> int:
 
 
 def _evaluate(expression: Expr, state: _State) -> Value:
+    state.spend()
     if isinstance(expression, Num):
         return float(expression.text) if "." in expression.text else int(expression.text)
     if isinstance(expression, Str):

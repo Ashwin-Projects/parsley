@@ -9,6 +9,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+# V3 work budget, shared by both evaluators (ARCHITECTURE.md 2.6). Only these two values
+# are shared; ast_eval.py and interpreter.py still share no evaluation code.
+STEP_LIMIT = 100_000
+STEP_LIMIT_ERROR = "execution step limit exceeded"
+
 
 @dataclass(frozen=True)
 class Verification:

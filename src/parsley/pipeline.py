@@ -36,7 +36,7 @@ from parsley.nlp.context import Resolution, resolve
 from parsley.nlp import suggest
 from parsley.nlp.normalizer import normalize
 from parsley.session import Session
-from parsley.verify import Verification, ast_eval, interpreter, roundtrip
+from parsley.verify import STEP_LIMIT_ERROR, Verification, ast_eval, interpreter, roundtrip
 from parsley.verify.backtranslate import backtranslate
 
 logger = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ def run(
     if nlp.status == "unsupported":
         trace = Trace(str(text), normalized, (), (), "REJECT")
         return PipelineResult(
-            "unsupported", trace, diagnostics=(_unsupported(nlp.notes),), notes=tuple(nlp.notes),
+            "unsupported", trace, diagnostics=(_unsupported(nlp.notes, str(text)),), notes=tuple(nlp.notes),
             suggestion=_suggestion(str(text), nlp.notes),
         )
     resolutions = _resolve(candidates, session, use_context, frozenset())
@@ -193,6 +193,10 @@ class _Unavailable(Exception):
     """A verification layer's module does not provide its function yet."""
 
 
+class _Skipped(Exception):
+    """A verification layer ran but cannot give a verdict (e.g. the V3 work budget ran out)."""
+
+
 def _verify(stmt: Stmt, minilang: str, back_translation: str, session: Session) -> Verification:
     """V2 on this statement; V3 on the whole session program (plan Phase 7)."""
     details = [f"V1: {back_translation}"]
@@ -212,6 +216,9 @@ def _layer(name: str, details: list[str], check: Callable[[], tuple[bool, str]])
     except (_Unavailable, NotImplementedError) as missing:
         what = _text(missing)
         details.append(f"{name} skipped: not available" + (f" ({what})" if what else ""))
+        return None
+    except _Skipped as skipped:
+        details.append(f"{name} skipped: {skipped}")
         return None
     except (Exception, SystemExit) as error:
         details.append(f"{name} failed: {type(error).__name__}: {_text(error)}")
@@ -256,6 +263,9 @@ def _equivalence(program: Program) -> tuple[bool, str]:
         if not isinstance(result, (tuple, list)) or len(result) != len(_V3_PARTS):
             return False, f"{name} returned {_text(result, as_repr=True)}, expected (variables, output, errors)"
     from_ast, from_source = results.values()
+    if any(_out_of_steps(result[2]) for result in (from_ast, from_source)):
+        # A cut-off run says nothing about equivalence, so neither pass nor fail.
+        raise _Skipped("execution budget exceeded")
     differing = [part for part, a, b in zip(_V3_PARTS, from_ast, from_source, strict=True) if a != b]
     if not differing:
         return True, "the AST evaluator and the interpreter agree on variables, output and errors"
@@ -263,6 +273,13 @@ def _equivalence(program: Program) -> tuple[bool, str]:
         f"{' and '.join(differing)} differ: the AST evaluator gave {_text(tuple(from_ast), as_repr=True)} "
         f"but the interpreter gave {_text(tuple(from_source), as_repr=True)}"
     )
+
+
+def _out_of_steps(errors: object) -> bool:
+    try:
+        return isinstance(errors, (list, tuple)) and STEP_LIMIT_ERROR in errors
+    except Exception:
+        return False  # an element whose == raises; the comparison below reports it
 
 
 # N4 suggestion hook
@@ -280,11 +297,16 @@ def _suggestion(text: str, reasons: Sequence[str]) -> str | None:
     reason = _primary_reason(reasons)
     if reason == Reason.INTERNAL_ERROR:
         return None
+    return _ask_n4("suggest", text, reason)
+
+
+def _ask_n4(name: str, text: str, *args: str) -> str | None:
+    """Call ``suggest.<name>(text, *args)``; any failure or unusable answer gives None."""
     try:
-        answer = _function(suggest, "suggest")(text, reason)
+        answer = _function(suggest, name)(text, *args)
     except (Exception, SystemExit) as error:
         if not isinstance(error, (_Unavailable, NotImplementedError)):
-            logger.debug("suggest.suggest failed for %s: %s", _text(text, as_repr=True), _text(error))
+            logger.debug("suggest.%s failed for %s: %s", name, _text(text, as_repr=True), _text(error))
         return None
     return answer.strip() if isinstance(answer, str) and answer.strip() else None
 
@@ -295,13 +317,14 @@ def _primary_reason(reasons: Sequence[str]) -> str:
     return str(specific[0] if specific else Reason.NO_MATCH)
 
 
-def _unsupported(reasons: Sequence[str]) -> Diagnostic:
+def _unsupported(reasons: Sequence[str], text: str) -> Diagnostic:
     reason = _primary_reason(reasons)
     message = _UNSUPPORTED_MESSAGES.get(reason, _UNSUPPORTED_MESSAGES[Reason.NO_MATCH])
     codes = ", ".join(reasons) if reasons else Reason.NO_MATCH
-    return Diagnostic(
-        "error", "candidates", "E101", f"I could not understand this sentence: {message} ({codes})",
-    )
+    full = f"I could not understand this sentence: {message} ({codes})"
+    # N4 guidance on how to split the sentence (LANGUAGE_SPEC.md 8, block_continuation).
+    guidance = _ask_n4("split_guidance", text) if reason == Reason.REJECT_AND_CONTINUATION else None
+    return Diagnostic("error", "candidates", "E101", f"{full}. {guidance}" if guidance else full)
 
 
 def _ir_error(error: IRBuildError, candidate: Candidate, use_context: bool) -> Diagnostic:
