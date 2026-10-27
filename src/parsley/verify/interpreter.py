@@ -18,6 +18,7 @@ from parsley.compiler.lexer import LexError
 from parsley.compiler.parser import ParseError, parse
 
 LOOP_LIMIT = 1000
+STEP_LIMIT = 100_000
 
 _WHOLE_NUMBER = re.compile(r"[0-9]+")
 _PLAIN: dict[str, Callable[[Any, Any], Any]] = {
@@ -33,25 +34,32 @@ class _Fault(Exception):
     """A run-time error: reported in ``errors``, ends the current top-level statement."""
 
 
-def run(source: str) -> tuple[dict[str, object], list[str], list[str]]:
+def run(source: str, *, max_steps: int = STEP_LIMIT) -> tuple[dict[str, object], list[str], list[str]]:
     """Parse and run ``source``; returns ``(variables, output, errors)``.
 
     A program that does not parse runs nothing and reports one ``syntax error: ...``.
+    Statements, expression nodes and loop iterations consume a global work budget.
+    The budget stops the whole run, including nested loops with empty bodies.
     """
     try:
         tree = parse(source)
     except (LexError, ParseError) as error:
         return {}, [], [f"syntax error: {error}"]
-    machine = _Machine()
+    if type(max_steps) is not int or max_steps < 1:
+        raise ValueError("max_steps must be a positive integer")
+    machine = _Machine(max_steps)
     for statement in tree.statements:
         machine.top_level(statement)
+        if machine.remaining < 0:
+            break
     return machine.memory, machine.printed, machine.problems
 
 
 class _Machine:
     """Executes parsed nodes by dispatching on the node's class name."""
 
-    def __init__(self) -> None:
+    def __init__(self, max_steps: int) -> None:
+        self.remaining = max_steps
         self.memory: dict[str, object] = {}
         self.printed: list[str] = []
         self.problems: list[str] = []
@@ -63,11 +71,20 @@ class _Machine:
             self.problems.append(fault.args[0])
         except (OverflowError, ValueError):
             self.problems.append("number out of range")
+        except RecursionError:
+            self.problems.append("expression is too deeply nested")
+
+    def tick(self) -> None:
+        self.remaining -= 1
+        if self.remaining < 0:
+            raise _Fault("execution step limit exceeded")
 
     def step(self, node: object) -> None:
+        self.tick()
         getattr(self, f"do_{type(node).__name__}")(node)
 
     def value(self, node: object) -> object:
+        self.tick()
         return getattr(self, f"eval_{type(node).__name__}")(node)
 
     # Statements
@@ -95,6 +112,7 @@ class _Machine:
         if _WHOLE_NUMBER.fullmatch(text) is None or int(text) == 0:
             raise _Fault(f"invalid REPEAT count: {text}")
         for _ in range(min(int(text), LOOP_LIMIT)):
+            self.tick()
             for inner in node.body:
                 self.step(inner)
 

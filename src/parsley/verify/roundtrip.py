@@ -21,33 +21,32 @@ def check(source: str, expected: Program) -> str | None:
         actual = parse(source)
     except (LexError, ParseError) as error:
         return f"re-parse failed: {error}"
-    if actual == expected:
-        return None
-    return first_difference(expected, actual, "Program") or "the re-parsed AST differs"
+    return first_difference(expected, actual, "Program")
 
 
 def first_difference(expected: object, actual: object, path: str) -> str | None:
     """Describe the first place, in source order, where two trees differ; ``None`` if equal."""
-    if type(expected) is not type(actual):
-        return f"{path}: expected {_name(expected)}, got {_name(actual)}"
-    if is_dataclass(expected):
-        for field in fields(expected):
-            found = first_difference(
-                getattr(expected, field.name), getattr(actual, field.name), f"{path}.{field.name}",
+    # The same field-by-field equality as the frozen dataclasses, but with an
+    # explicit stack: long left-associative expressions must not exhaust Python's.
+    pending = [(expected, actual, path)]
+    while pending:
+        want, got, location = pending.pop()
+        if type(want) is not type(got):
+            return f"{location}: expected {_name(want)}, got {_name(got)}"
+        if is_dataclass(want):
+            pending.extend(
+                (getattr(want, field.name), getattr(got, field.name), f"{location}.{field.name}")
+                for field in reversed(fields(want))
             )
-            if found is not None:
-                return found
-        return None
-    if isinstance(expected, tuple) and isinstance(actual, tuple):
-        for index, (want, got) in enumerate(zip(expected, actual, strict=False)):
-            found = first_difference(want, got, f"{path}[{index}]")
-            if found is not None:
-                return found
-        if len(expected) != len(actual):
-            return f"{path}: expected {len(expected)} items, got {len(actual)}"
-        return None
-    if expected != actual:
-        return f"{path}: expected {expected!r}, got {actual!r}"
+        elif isinstance(want, tuple) and isinstance(got, tuple):
+            if len(want) != len(got):
+                return f"{location}: expected {len(want)} items, got {len(got)}"
+            pending.extend(
+                (want[index], got[index], f"{location}[{index}]")
+                for index in reversed(range(len(want)))
+            )
+        elif want != got:
+            return f"{location}: expected {want!r}, got {got!r}"
     return None
 
 

@@ -410,7 +410,9 @@ from parsley.compiler.ast_nodes import Print, Program, Str  # noqa: E402
 from parsley.verify import Verification, ast_eval, interpreter, roundtrip  # noqa: E402
 
 
-def test_unavailable_layers_are_skipped_and_never_fail():
+def test_unavailable_layers_are_skipped_and_never_fail(monkeypatch):
+    monkeypatch.delattr(roundtrip, "check", raising=False)
+    monkeypatch.delattr(interpreter, "run", raising=False)
     result = run("make a variable called age and set it to 20", Session())
     assert result.status == "ok"
     v = result.verification
@@ -480,6 +482,7 @@ def test_v3_fail_when_the_evaluators_disagree(monkeypatch):
 
 
 def test_v3_skipped_when_only_one_evaluator_exists(monkeypatch):
+    monkeypatch.delattr(interpreter, "run", raising=False)
     monkeypatch.setattr(ast_eval, "run", lambda program: ({}, [], []), raising=False)
     assert run("let x be 1", Session()).verification.v3_match is None
 
@@ -559,6 +562,7 @@ def test_roundtrip_result_outside_the_contract_is_a_reported_failure(monkeypatch
 
 
 def test_v3_skips_before_generating_the_session_program(monkeypatch):
+    monkeypatch.delattr(interpreter, "run", raising=False)
     from parsley import pipeline as pipeline_module
     calls = []
     real = pipeline_module.codegen.generate
@@ -609,7 +613,9 @@ def test_v3_result_outside_the_contract_is_a_reported_failure(monkeypatch, bad):
 from parsley.nlp import suggest as suggest_module  # noqa: E402
 
 
-def test_suggestion_is_none_while_suggest_is_not_implemented():
+def test_suggestion_is_none_while_suggest_is_not_implemented(monkeypatch):
+    from parsley.nlp import suggest
+    monkeypatch.delattr(suggest, "suggest", raising=False)
     result = run("store 50 in bonus", Session())
     assert result.status == "unsupported" and result.suggestion is None
 

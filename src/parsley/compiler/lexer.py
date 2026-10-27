@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-KEYWORDS = frozenset({"LET", "PRINT", "IF", "THEN", "ELSE", "REPEAT", "TIMES"})
+from parsley.keywords import KEYWORDS
 
 _TWO_CHAR_SYMBOLS = frozenset({"==", "!=", ">=", "<="})
 _ONE_CHAR_SYMBOLS = frozenset("=;{}()+-*/<>")

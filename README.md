@@ -21,12 +21,11 @@ programming language, and checks its own output instead of asking you to trust i
 It is deterministic and runs offline. It uses only the Python standard library, with no
 LLMs and no external APIs.
 
-> **Status:** in active development. The compiler works end to end: English sentences,
-> files and an interactive REPL compile to MiniLang, with compiler-informed
-> interpretation, clarification questions, `--confirm` and back-translation. The
-> round-trip and execution-equivalence checks, the MiniLang parser and the
-> "Try: ..." suggestions for unsupported sentences are wired in but report
-> `skipped` until their modules are finished. The evaluation has not been run yet.
+> **Status (2026-10-27):** the English pipeline, standalone MiniLang lexer/parser,
+> N4 rewrite suggestions, V2 structural comparison and V3 execution checks are working.
+> Run `python scripts/demo.py --with-mutations` for the checked presentation and
+> `python scripts/validate_paraphrases.py` to validate 60 frozen paraphrase inputs.
+> The full evaluation runner and metrics are still assigned to the Evaluation owner.
 
 ---
 
@@ -59,8 +58,7 @@ a single guess. A decision rule then picks one of three outcomes:
 - **Clarify**: two plausible readings, or something is missing, so Parsley asks a
   targeted question. Examples: `increase x` → "By how much?", and `set x to 10 or 20` →
   "10 or 20?"
-- **Reject**: nothing supported matches, so Parsley explains why and, once the
-  suggestion module is finished, suggests a phrasing that works.
+- **Reject**: nothing supported matches, so Parsley explains why and suggests a supported rewrite when one is close.
   Example: `store 50 in bonus` → "Try: set bonus to 50".
 
 In file mode a clarification becomes a diagnostic, so batch runs never hang.
@@ -196,8 +194,9 @@ resolution. Pipeline statuses are `ok`, `needs_clarification`, `unsupported` and
 arguments, 130 on interruption).
 
 Each accepted statement ends with a verification summary such as
-`V1 ok | V2 skipped | V3 skipped`. A layer reports `skipped` while its module is not
-finished, and never stops compilation. An unsupported sentence reports its reason
+`V1 ok | V2 ok | V3 ok`. A missing layer reports `skipped`; a disagreement reports
+`failed`. As defined by the pipeline contract, verification reports findings and does
+not change the compilation status. An unsupported sentence reports its reason
 (e.g. `candidates E101: ... (NO_MATCH)`), followed by `Try: ...` when a supported
 phrasing is close.
 
@@ -205,19 +204,22 @@ phrasing is close.
 
 ## Evaluation
 
-Parsley is evaluated on a held-out set of about 150 inputs, kept separate from the
-development fixtures. The set covers valid statements, blind-written paraphrases,
-multi-sentence sessions, ambiguous input and unsupported input. The metrics are:
+The Parser/Verifier contribution includes **15 frozen paraphrase groups / 60 English
+inputs**, with setup sessions and expected MiniLang. They were written before looking at
+the implementation pattern table and include plausible out-of-coverage wording. Their
+AI-assisted provenance and limits are recorded in `tests/eval_data/README.md`.
 
-- exact-match accuracy and paraphrase consistency
-- ambiguity precision and recall, and the rate of unnecessary questions
-- context-resolution accuracy and safe-rejection rate
-- suggestion usefulness
-- mutation detection per verification layer
-- ablation: accuracy with context on vs off, and wrong-code rate with clarification on vs
-  off
+```
+python scripts/validate_paraphrases.py
+python scripts/demo.py
+python scripts/demo.py --with-mutations
+```
 
-Results will be reported as measured, failures included.
+The validator checks the digest, schema, separation from development fixtures and the
+syntax/semantics/execution of gold programs. It does **not** assert NLP accuracy on held-out
+inputs. Do not tune on these inputs. Full metrics, the remaining evaluation subsets and
+N1/N2 ablation tables belong to the Evaluation owner; `eval/` is still unfinished.
+See [the demo guide](docs/DEMO.md) and [the phase handoff](docs/ASSIGNED_PHASES.md).
 
 ---
 
