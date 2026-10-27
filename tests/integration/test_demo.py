@@ -1,6 +1,7 @@
 """The presentation runs the real pipeline and exits nonzero on a broken check."""
 
 import importlib.util
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -12,7 +13,10 @@ SCRIPT = ROOT / 'scripts/demo.py'
 
 
 def test_demonstration_script_runs_from_repository_root():
-    completed = subprocess.run([sys.executable, str(SCRIPT)], cwd=ROOT, capture_output=True, text=True, timeout=30)
+    # The script imports parsley, so run it against this checkout even when it is not installed.
+    env = os.environ.copy()
+    env['PYTHONPATH'] = os.pathsep.join(p for p in (str(ROOT / 'src'), env.get('PYTHONPATH', '')) if p)
+    completed = subprocess.run([sys.executable, str(SCRIPT)], cwd=ROOT, env=env, capture_output=True, text=True, timeout=30)
     assert completed.returncode == 0, completed.stdout + completed.stderr
     assert 'DEMO PASS' in completed.stdout
     assert 'V2 pass | V3 pass' in completed.stdout

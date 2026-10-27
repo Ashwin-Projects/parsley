@@ -421,6 +421,17 @@ def test_cli_shows_the_suggestion(monkeypatch, capsys) -> None:
     assert "candidates E101" in err and "Try: set bonus to 50" in err
 
 
+def test_cli_shows_the_real_suggestion_for_store_in(capsys) -> None:
+    # No monkeypatch: pins what the real suggest.py gives for the plan's demo sentence.
+    assert cli.main(["store 50 in bonus"]) == 1
+    err = capsys.readouterr().err
+    assert err.splitlines() == [
+        "candidates E101: I could not understand this sentence: "
+        "this sentence does not match any supported pattern (NO_MATCH)",
+        "Try: set bonus to 50",
+    ]
+
+
 def test_cli_without_suggestion_has_no_try_line(monkeypatch, capsys) -> None:
     from parsley.nlp import suggest
     monkeypatch.setattr(suggest, "suggest", lambda text, code: None, raising=False)
