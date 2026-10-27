@@ -132,6 +132,11 @@ gold programs (last statement), checked with the real layers:
 V3 misses mutants that do not change final state or output: 9 of 17 operand swaps
 (`visits + 3` vs. `3 + visits`), 3 literal, 1 comparison, 1 string and 1 variable change.
 
+**Synthetic blind set.** 25 cases scored 19/19 exact match, ambiguity recall 3/3 and safe
+rejection 3/3, with no wrong code (`results/summary.md`). Provenance: synthetic, written by the
+AI coding agent that helped build this system and not independently human-authored, so it is
+weak evidence; no human-authored blind set was obtained.
+
 ## Limitations
 
 - **Paraphrase consistency is 1/15 groups** (all members giving the same AST, and the gold

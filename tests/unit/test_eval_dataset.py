@@ -176,3 +176,20 @@ def test_human_blind_case_with_a_bad_expectation_is_refused(tmp_path, case):
     _write(tmp_path / "human_blind.json", {"version": 1, "category": "human_blind", "cases": [case]})
     with pytest.raises(dataset.DatasetError, match=r"human_blind.json: case B: "):
         dataset.load_held_out(tmp_path)
+
+
+def test_optional_synthetic_blind_file_is_its_own_subset(tmp_path):
+    synthetic = {**HUMAN_BLIND, "category": "synthetic_blind", "provenance": "Synthetic: written by an AI agent."}
+    _write(tmp_path / "synthetic_blind.json", synthetic, freeze=True)
+    items = {i.id: i for i in dataset.load_held_out(tmp_path)}
+    assert {i.subset for i in items.values()} == {"synthetic_blind"}
+    assert [items[k].expected_status for k in ("HB01", "HB02", "HB03", "HB04")] == [
+        "ok", "ambiguous", "unsupported", "error"]
+    assert items["HB01"].expected_minilang == "LET x = 1;"
+
+
+def test_synthetic_blind_case_with_a_bad_expectation_is_refused(tmp_path):
+    case = {"id": "B", "setup": [], "setup_minilang": "", "input": "x", "expected_status": "ok"}
+    _write(tmp_path / "synthetic_blind.json", {"version": 1, "category": "synthetic_blind", "cases": [case]})
+    with pytest.raises(dataset.DatasetError, match=r"synthetic_blind\.json: case B: "):
+        dataset.load_held_out(tmp_path)

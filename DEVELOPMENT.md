@@ -66,10 +66,12 @@ owner's review.
 | 8 | Week 7 | Evaluation dataset, metrics, ablation | N5 | Evaluation (metrics, run_eval, ablation, results tables); Parser/Verifier (blind paraphrase set) |
 | 9 | Week 8 | Hardening, docs, report, demo | Novelty demo script | Core (final integration, release); Evaluation (results section); Parser/Verifier (demo script) |
 
-## Status (2026-10-27)
+## Status (2026-10-28)
 
-**All phases are done. Remaining: the final report.** The evaluation runs with
-`python -m parsley.eval.run_eval`; its results and limitations are in NOVELTY.md.
+**The project is complete.** The evaluation runs with `python -m parsley.eval.run_eval`;
+its results and limitations are in NOVELTY.md and the final report is `docs/REPORT.md`.
+The evaluation includes a synthetic blind set (`tests/eval_data/synthetic_blind.json`,
+written by the AI coding agent, not human-authored); no human-authored blind set was obtained.
 
 | Phase | State |
 |---|---|
@@ -77,8 +79,8 @@ owner's review.
 | 3 | Done. Lexer/parser checked against every valid fixture, precedence, all comparisons, nested blocks and malformed input. |
 | 6 | Done. N1, N2 and N4 suggestions (ranked supported rewrites, block-splitting guidance). |
 | 7 | Done. Real V2/V3 active in the pipeline; `ast_eval.py` and `interpreter.py` stay independent; test-only mutation tests. |
-| 8 | Done. Frozen held-out set (168 inputs), every Section 8 metric, N1 and N2 ablations, failures by category, mutation detection by layer; optional human blind set. |
-| 9 | Done: demo script and transcript, documentation. **Remaining: final report.** |
+| 8 | Done. Frozen held-out set (168 inputs), every Section 8 metric, N1 and N2 ablations, failures by category, mutation detection by layer; synthetic blind set (25 cases). No human-authored blind set was obtained. |
+| 9 | Done: demo script and transcript, documentation, final report (`docs/REPORT.md`, `docs/Parsley_Report.docx`). |
 
 Details of the parser/verifier hand-off are in `docs/ASSIGNED_PHASES.md`.
 
