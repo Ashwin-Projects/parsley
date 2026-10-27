@@ -1,0 +1,265 @@
+{
+  "version": 1,
+  "category": "held_out_unsupported",
+  "spec": "LANGUAGE_SPEC.md",
+  "provenance": {
+    "author": "AI-assisted evaluation-data contribution; independent human review recommended",
+    "method": "Authored from LANGUAGE_SPEC.md without consulting src/parsley/nlp/patterns.py or running these English inputs through NLP during this task.",
+    "limitations": "The author has prior compiler-integration and development-fixture context. This is blind to the pattern-table implementation during authorship, not an independent human benchmark.",
+    "freeze_policy": "Keep failures. Do not tune the implementation on these inputs. A gold correction requires a version change, explanation, and new SHA-256 digest.",
+    "coverage": "25 inputs: 18 out-of-scope requests and 7 malformed inputs; excludes semantic errors and mere clarification cases."
+  },
+  "status_contract": "PipelineResult.status (ARCHITECTURE.md 2.10). Each raw input is evaluated independently, including whitespace-only and overlength strings.",
+  "cases": [
+    {
+      "id": "HU01",
+      "reason": "out_of_scope",
+      "subcategory": "functions",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "define a function called farewell with parameter guest",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU02",
+      "reason": "out_of_scope",
+      "subcategory": "functions",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "call the function farewell",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU03",
+      "reason": "out_of_scope",
+      "subcategory": "collections",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "create a list called autumnBins",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU04",
+      "reason": "out_of_scope",
+      "subcategory": "collections",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "append 12 to autumnBins",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU05",
+      "reason": "out_of_scope",
+      "subcategory": "collections",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "sort autumnBins in ascending order",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU06",
+      "reason": "out_of_scope",
+      "subcategory": "user_input",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "ask the user to enter a delivery code",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU07",
+      "reason": "out_of_scope",
+      "subcategory": "user_input",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "read parcelName from the keyboard",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU08",
+      "reason": "out_of_scope",
+      "subcategory": "other_loops",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "while lanternCount is below 9 print waiting",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU09",
+      "reason": "out_of_scope",
+      "subcategory": "other_loops",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "for each parcel in shipments print parcel",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU10",
+      "reason": "out_of_scope",
+      "subcategory": "library_maths",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "calculate the square root of 81",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU11",
+      "reason": "out_of_scope",
+      "subcategory": "library_maths",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "compute the sine of 45",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU12",
+      "reason": "out_of_scope",
+      "subcategory": "file_io",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "open the file harvest.csv",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU13",
+      "reason": "out_of_scope",
+      "subcategory": "file_io",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "write the report to harvest.csv",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU14",
+      "reason": "out_of_scope",
+      "subcategory": "jumps",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "go to line 24",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU15",
+      "reason": "out_of_scope",
+      "subcategory": "imports",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "import statistics",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU16",
+      "reason": "out_of_scope",
+      "subcategory": "control_flow",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "return early from this program",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU17",
+      "reason": "out_of_scope",
+      "subcategory": "deletion",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "delete the variable lanternCount",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU18",
+      "reason": "out_of_scope",
+      "subcategory": "collections",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "create a dictionary called postalLookup",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU19",
+      "reason": "malformed",
+      "subcategory": "empty_after_normalization",
+      "setup": [],
+      "setup_minilang": "",
+      "input": " \t \n ",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU20",
+      "reason": "malformed",
+      "subcategory": "empty_after_normalization",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "...?!...",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU21",
+      "reason": "malformed",
+      "subcategory": "unterminated_quote",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "show \"unclosed parcel",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU22",
+      "reason": "malformed",
+      "subcategory": "unterminated_quote",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "set bannerText to \"unfinished",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU23",
+      "reason": "malformed",
+      "subcategory": "input_longer_than_500_characters",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "print zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU24",
+      "reason": "malformed",
+      "subcategory": "more_than_four_alternatives",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "set queueLimit to 2 or 4 or 6 or 8 or 10",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    },
+    {
+      "id": "HU25",
+      "reason": "malformed",
+      "subcategory": "more_than_four_alternatives",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "display \"left\" or \"right\" or \"up\" or \"down\" or \"center\"",
+      "expected_status": "unsupported",
+      "expected_minilang": null
+    }
+  ]
+}

@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "category": "held_out_sessions",
+  "spec": "LANGUAGE_SPEC.md",
+  "provenance": {
+    "author": "AI-assisted evaluation-data contribution; independent human review recommended",
+    "method": "Authored from LANGUAGE_SPEC.md without consulting src/parsley/nlp/patterns.py or running these English inputs through NLP during this task.",
+    "limitations": "The author has prior compiler-integration and development-fixture context. This is blind to the pattern-table implementation during authorship, not an independent human benchmark.",
+    "freeze_policy": "Keep failures. Do not tune the implementation on these inputs. A gold correction requires a version change, explanation, and new SHA-256 digest.",
+    "coverage": "10 fresh multi-sentence sessions, each covering implicit declaration, it and variable-versus-text; also reference-stack switching, strings, numbers and single-statement blocks."
+  },
+  "execution_contract": "Run sentences in order in one fresh session per record. expected_minilang is the entire accepted program in canonical format, joined with LF and without a trailing newline. W301 warnings on implicit declarations are expected.",
+  "sessions": [
+    {
+      "id": "HS01",
+      "coverage": [
+        "implicit_declaration",
+        "pronoun_it",
+        "variable_vs_text"
+      ],
+      "setup": [],
+      "setup_minilang": "",
+      "sentences": [
+        "set lanternCount to 12",
+        "add 7 to it",
+        "print lanternCount",
+        "print \"lanternCount\"",
+        "display dusk"
+      ],
+      "expected_status": "ok",
+      "expected_minilang": "LET lanternCount = 12;\nlanternCount = lanternCount + 7;\nPRINT lanternCount;\nPRINT \"lanternCount\";\nPRINT \"dusk\";"
+    },
+    {
+      "id": "HS02",
+      "coverage": [
+        "implicit_declaration",
+        "pronoun_it",
+        "variable_vs_text"
+      ],
+      "setup": [],
+      "setup_minilang": "",
+      "sentences": [
+        "change crateTotal to 18",
+        "subtract 3 from it",
+        "show crateTotal",
+        "show \"crateTotal\"",
+        "print cargo"
+      ],
+      "expected_status": "ok",
+      "expected_minilang": "LET crateTotal = 18;\ncrateTotal = crateTotal - 3;\nPRINT crateTotal;\nPRINT \"crateTotal\";\nPRINT \"cargo\";"
+    },
+    {
+      "id": "HS03",
+      "coverage": [
+        "implicit_declaration",
+        "pronoun_it",
+        "variable_vs_text"
+      ],
+      "setup": [],
+      "setup_minilang": "",
+      "sentences": [
+        "update tileArea to 7",
+        "multiply it by 6",
+        "display tileArea",
+        "display \"tileArea\"",
+        "show mosaic"
+      ],
+      "expected_status": "ok",
+      "expected_minilang": "LET tileArea = 7;\ntileArea = tileArea * 6;\nPRINT tileArea;\nPRINT \"tileArea\";\nPRINT \"mosaic\";"
+    },
+    {
+      "id": "HS04",
+      "coverage": [
+        "implicit_declaration",
+        "pronoun_it",
+        "variable_vs_text"
+      ],
+      "setup": [],
+      "setup_minilang": "",
+      "sentences": [
+        "assign 32 to cisternVolume",
+        "divide it by 4",
+        "print cisternVolume",
+        "show \"cisternVolume\"",
+        "display rain"
+      ],
+      "expected_status": "ok",
+      "expected_minilang": "LET cisternVolume = 32;\ncisternVolume = cisternVolume / 4;\nPRINT cisternVolume;\nPRINT \"cisternVolume\";\nPRINT \"rain\";"
+    },
+    {
+      "id": "HS05",
+      "coverage": [
+        "implicit_declaration",
+        "pronoun_it",
+        "variable_vs_text",
+        "string_assignment"
+      ],
+      "setup": [],
+      "setup_minilang": "",
+      "sentences": [
+        "set welcomeBanner to \"Good Morning\"",
+        "set it to \"Welcome Aboard\"",
+        "show welcomeBanner",
+        "print \"welcomeBanner\"",
+        "display visitors"
+      ],
+      "expected_status": "ok",
+      "expected_minilang": "LET welcomeBanner = \"Good Morning\";\nwelcomeBanner = \"Welcome Aboard\";\nPRINT welcomeBanner;\nPRINT \"welcomeBanner\";\nPRINT \"visitors\";"
+    },
+    {
+      "id": "HS06",
+      "coverage": [
+        "implicit_declaration",
+        "pronoun_it",
+        "variable_vs_text",
+        "reference_stack_switch"
+      ],
+      "setup": [],
+      "setup_minilang": "",
+      "sentences": [
+        "set northStock to 10",
+        "let ticketQuota be 25",
+        "add 6 to it",
+        "print northStock",
+        "decrease it by 2",
+        "show ticketQuota",
+        "print \"ticketQuota\"",
+        "display goods"
+      ],
+      "expected_status": "ok",
+      "expected_minilang": "LET northStock = 10;\nLET ticketQuota = 25;\nticketQuota = ticketQuota + 6;\nPRINT northStock;\nnorthStock = northStock - 2;\nPRINT ticketQuota;\nPRINT \"ticketQuota\";\nPRINT \"goods\";"
+    },
+    {
+      "id": "HS07",
+      "coverage": [
+        "implicit_declaration",
+        "pronoun_it",
+        "variable_vs_text",
+        "repeat"
+      ],
+      "setup": [],
+      "setup_minilang": "",
+      "sentences": [
+        "set fabricRolls to 9",
+        "print fabricRolls",
+        "increase it by 3",
+        "repeat 2 times print fabricRolls",
+        "print \"fabricRolls\"",
+        "show cloth"
+      ],
+      "expected_status": "ok",
+      "expected_minilang": "LET fabricRolls = 9;\nPRINT fabricRolls;\nfabricRolls = fabricRolls + 3;\nREPEAT 2 TIMES { PRINT fabricRolls; }\nPRINT \"fabricRolls\";\nPRINT \"cloth\";"
+    },
+    {
+      "id": "HS08",
+      "coverage": [
+        "implicit_declaration",
+        "pronoun_it",
+        "variable_vs_text",
+        "conditional"
+      ],
+      "setup": [],
+      "setup_minilang": "",
+      "sentences": [
+        "set roomTemp to 22",
+        "reduce it by 3",
+        "if roomTemp is at least 18 then print mild else print cold",
+        "print roomTemp",
+        "show \"roomTemp\"",
+        "display forecast"
+      ],
+      "expected_status": "ok",
+      "expected_minilang": "LET roomTemp = 22;\nroomTemp = roomTemp - 3;\nIF roomTemp >= 18 THEN { PRINT \"mild\"; } ELSE { PRINT \"cold\"; }\nPRINT roomTemp;\nPRINT \"roomTemp\";\nPRINT \"forecast\";"
+    },
+    {
+      "id": "HS09",
+      "coverage": [
+        "implicit_declaration",
+        "pronoun_it",
+        "variable_vs_text",
+        "negative_number",
+        "decimal"
+      ],
+      "setup": [],
+      "setup_minilang": "",
+      "sentences": [
+        "set routeOffset to negative 3",
+        "add 1.5 to it",
+        "print routeOffset",
+        "show \"routeOffset\"",
+        "display compass"
+      ],
+      "expected_status": "ok",
+      "expected_minilang": "LET routeOffset = -3;\nrouteOffset = routeOffset + 1.5;\nPRINT routeOffset;\nPRINT \"routeOffset\";\nPRINT \"compass\";"
+    },
+    {
+      "id": "HS10",
+      "coverage": [
+        "implicit_declaration",
+        "pronoun_it",
+        "variable_vs_text",
+        "reference_stack_switch"
+      ],
+      "setup": [],
+      "setup_minilang": "",
+      "sentences": [
+        "assign 8 to marbleCount",
+        "change paperSheets to 30",
+        "subtract 2 from it",
+        "print marbleCount",
+        "multiply it by 3",
+        "show paperSheets",
+        "display \"paperSheets\"",
+        "print inventory"
+      ],
+      "expected_status": "ok",
+      "expected_minilang": "LET marbleCount = 8;\nLET paperSheets = 30;\npaperSheets = paperSheets - 2;\nPRINT marbleCount;\nmarbleCount = marbleCount * 3;\nPRINT paperSheets;\nPRINT \"paperSheets\";\nPRINT \"inventory\";"
+    }
+  ]
+}

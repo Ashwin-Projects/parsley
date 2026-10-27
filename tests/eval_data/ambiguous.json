@@ -1,0 +1,335 @@
+{
+  "version": 1,
+  "category": "held_out_ambiguous",
+  "spec": "LANGUAGE_SPEC.md",
+  "provenance": {
+    "author": "AI-assisted evaluation-data contribution; independent human review recommended",
+    "method": "Authored from LANGUAGE_SPEC.md without consulting src/parsley/nlp/patterns.py or running these English inputs through NLP during this task.",
+    "limitations": "The author has prior compiler-integration and development-fixture context. This is blind to the pattern-table implementation during authorship, not an independent human benchmark.",
+    "freeze_policy": "Keep failures. Do not tune the implementation on these inputs. A gold correction requires a version change, explanation, and new SHA-256 digest.",
+    "coverage": "25 inputs: 14 missing slots (including pronouns and block bodies), 5 alternatives, 3 typos and 3 operator-scope questions."
+  },
+  "status_contract": "PipelineResult.status (ARCHITECTURE.md 2.10). Run each case in a fresh session after setup; compare the initial question before any answer.",
+  "cases": [
+    {
+      "id": "HA01",
+      "ambiguity": "missing_slot",
+      "setup": [
+        "let lanternCount be 11"
+      ],
+      "setup_minilang": "LET lanternCount = 11;",
+      "input": "increase lanternCount",
+      "expected_status": "needs_clarification",
+      "expected_question": "By how much should lanternCount increase?",
+      "expected_options": []
+    },
+    {
+      "id": "HA02",
+      "ambiguity": "missing_slot",
+      "setup": [
+        "let voucherCount be 17"
+      ],
+      "setup_minilang": "LET voucherCount = 17;",
+      "input": "lower voucherCount",
+      "expected_status": "needs_clarification",
+      "expected_question": "By how much should voucherCount decrease?",
+      "expected_options": []
+    },
+    {
+      "id": "HA03",
+      "ambiguity": "missing_slot",
+      "setup": [
+        "let parcelWeight be 12"
+      ],
+      "setup_minilang": "LET parcelWeight = 12;",
+      "input": "multiply parcelWeight",
+      "expected_status": "needs_clarification",
+      "expected_question": "By how much should parcelWeight be multiplied?",
+      "expected_options": []
+    },
+    {
+      "id": "HA04",
+      "ambiguity": "missing_slot",
+      "setup": [
+        "let paintVolume be 36"
+      ],
+      "setup_minilang": "LET paintVolume = 36;",
+      "input": "divide paintVolume",
+      "expected_status": "needs_clarification",
+      "expected_question": "By how much should paintVolume be divided?",
+      "expected_options": []
+    },
+    {
+      "id": "HA05",
+      "ambiguity": "missing_slot",
+      "setup": [
+        "let orchardCount be 9"
+      ],
+      "setup_minilang": "LET orchardCount = 9;",
+      "input": "set orchardCount to",
+      "expected_status": "needs_clarification",
+      "expected_question": "What value should orchardCount be set to?",
+      "expected_options": []
+    },
+    {
+      "id": "HA06",
+      "ambiguity": "missing_slot",
+      "setup": [
+        "let ticketPrice be 2.25"
+      ],
+      "setup_minilang": "LET ticketPrice = 2.25;",
+      "input": "change ticketPrice to",
+      "expected_status": "needs_clarification",
+      "expected_question": "What value should ticketPrice be set to?",
+      "expected_options": []
+    },
+    {
+      "id": "HA07",
+      "ambiguity": "missing_slot",
+      "setup": [
+        "let reserveLevel be 40"
+      ],
+      "setup_minilang": "LET reserveLevel = 40;",
+      "input": "update reserveLevel to",
+      "expected_status": "needs_clarification",
+      "expected_question": "What value should reserveLevel be set to?",
+      "expected_options": []
+    },
+    {
+      "id": "HA08",
+      "ambiguity": "missing_slot",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "display",
+      "expected_status": "needs_clarification",
+      "expected_question": "What should be printed?",
+      "expected_options": []
+    },
+    {
+      "id": "HA09",
+      "ambiguity": "missing_slot",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "repeat print \"lunch ready\"",
+      "expected_status": "needs_clarification",
+      "expected_question": "How many times should it repeat?",
+      "expected_options": []
+    },
+    {
+      "id": "HA10",
+      "ambiguity": "missing_slot",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "subtract 8 from it",
+      "expected_status": "needs_clarification",
+      "expected_question": "Which variable does \"it\" refer to?",
+      "expected_options": []
+    },
+    {
+      "id": "HA11",
+      "ambiguity": "missing_slot",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "multiply that by 7",
+      "expected_status": "needs_clarification",
+      "expected_question": "Which variable does \"that\" refer to?",
+      "expected_options": []
+    },
+    {
+      "id": "HA12",
+      "ambiguity": "missing_slot",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "set the variable to 14",
+      "expected_status": "needs_clarification",
+      "expected_question": "Which variable does \"the variable\" refer to?",
+      "expected_options": []
+    },
+    {
+      "id": "HA13",
+      "ambiguity": "alternatives",
+      "setup": [
+        "let queueLimit be 22"
+      ],
+      "setup_minilang": "LET queueLimit = 22;",
+      "input": "set queueLimit to 14 or 28",
+      "expected_status": "needs_clarification",
+      "expected_question": "14 or 28?",
+      "expected_options": [
+        "14",
+        "28"
+      ]
+    },
+    {
+      "id": "HA14",
+      "ambiguity": "alternatives",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "show 6 or 11",
+      "expected_status": "needs_clarification",
+      "expected_question": "6 or 11?",
+      "expected_options": [
+        "6",
+        "11"
+      ]
+    },
+    {
+      "id": "HA15",
+      "ambiguity": "alternatives",
+      "setup": [
+        "let sailCount be 12"
+      ],
+      "setup_minilang": "LET sailCount = 12;",
+      "input": "change sailCount to 2 or 4 or 8",
+      "expected_status": "needs_clarification",
+      "expected_question": "2, 4 or 8?",
+      "expected_options": [
+        "2",
+        "4",
+        "8"
+      ]
+    },
+    {
+      "id": "HA16",
+      "ambiguity": "alternatives",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "print \"copper\" or \"silver\"",
+      "expected_status": "needs_clarification",
+      "expected_question": "\"copper\" or \"silver\"?",
+      "expected_options": [
+        "\"copper\"",
+        "\"silver\""
+      ]
+    },
+    {
+      "id": "HA17",
+      "ambiguity": "alternatives",
+      "setup": [
+        "let beaconLevel be 1"
+      ],
+      "setup_minilang": "LET beaconLevel = 1;",
+      "input": "set beaconLevel to 3 or 6 or 9 or 12",
+      "expected_status": "needs_clarification",
+      "expected_question": "3, 6, 9 or 12?",
+      "expected_options": [
+        "3",
+        "6",
+        "9",
+        "12"
+      ]
+    },
+    {
+      "id": "HA18",
+      "ambiguity": "typo",
+      "setup": [
+        "let lanternCount be 11"
+      ],
+      "setup_minilang": "LET lanternCount = 11;",
+      "input": "print lantrenCount",
+      "expected_status": "needs_clarification",
+      "expected_question": "Did you mean the variable lanternCount?",
+      "expected_options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "HA19",
+      "ambiguity": "typo",
+      "setup": [
+        "let voucherCount be 17"
+      ],
+      "setup_minilang": "LET voucherCount = 17;",
+      "input": "set voucehrCount to 19",
+      "expected_status": "needs_clarification",
+      "expected_question": "Did you mean the variable voucherCount?",
+      "expected_options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "HA20",
+      "ambiguity": "typo",
+      "setup": [
+        "let parcelWeight be 12"
+      ],
+      "setup_minilang": "LET parcelWeight = 12;",
+      "input": "increase parcelWieght by 2",
+      "expected_status": "needs_clarification",
+      "expected_question": "Did you mean the variable parcelWeight?",
+      "expected_options": [
+        "yes",
+        "no"
+      ]
+    },
+    {
+      "id": "HA21",
+      "ambiguity": "operator_scope",
+      "setup": [
+        "let ribbonLength be 12"
+      ],
+      "setup_minilang": "LET ribbonLength = 12;",
+      "input": "multiply ribbonLength by 3 plus 4",
+      "expected_status": "needs_clarification",
+      "expected_question": "Do you mean (ribbonLength times 3) plus 4, or ribbonLength times (3 plus 4)?",
+      "expected_options": [
+        "(ribbonLength times 3) plus 4",
+        "ribbonLength times (3 plus 4)"
+      ]
+    },
+    {
+      "id": "HA22",
+      "ambiguity": "operator_scope",
+      "setup": [
+        "let tankVolume be 30"
+      ],
+      "setup_minilang": "LET tankVolume = 30;",
+      "input": "divide tankVolume by 2 minus 5",
+      "expected_status": "needs_clarification",
+      "expected_question": "Do you mean (tankVolume divided by 2) minus 5, or tankVolume divided by (2 minus 5)?",
+      "expected_options": [
+        "(tankVolume divided by 2) minus 5",
+        "tankVolume divided by (2 minus 5)"
+      ]
+    },
+    {
+      "id": "HA23",
+      "ambiguity": "operator_scope",
+      "setup": [
+        "let batchSize be 6"
+      ],
+      "setup_minilang": "LET batchSize = 6;",
+      "input": "repeat 4 times multiply batchSize by 2 plus 7",
+      "expected_status": "needs_clarification",
+      "expected_question": "Do you mean (batchSize times 2) plus 7, or batchSize times (2 plus 7)?",
+      "expected_options": [
+        "(batchSize times 2) plus 7",
+        "batchSize times (2 plus 7)"
+      ]
+    },
+    {
+      "id": "HA24",
+      "ambiguity": "missing_slot",
+      "setup": [],
+      "setup_minilang": "",
+      "input": "raise it",
+      "expected_status": "needs_clarification",
+      "expected_question": "Which variable does \"it\" refer to?",
+      "expected_options": []
+    },
+    {
+      "id": "HA25",
+      "ambiguity": "missing_slot",
+      "setup": [
+        "let crateCount be 7"
+      ],
+      "setup_minilang": "LET crateCount = 7;",
+      "input": "if crateCount is greater than 3 then increase crateCount",
+      "expected_status": "needs_clarification",
+      "expected_question": "By how much should crateCount increase?",
+      "expected_options": []
+    }
+  ]
+}
