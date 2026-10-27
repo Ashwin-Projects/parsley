@@ -56,9 +56,9 @@ covers Python 3.11 and 3.13; those remote runs are not claimed as locally execut
 
 ## Known limits and team follow-up
 
-- The user assigned **paraphrase preparation**, not the whole Phase 8 evaluation. `eval/`
-  remains unfinished; no held-out accuracy, consistency score or full ablation table is
-  fabricated. The demo's context comparison is one labeled presentation case.
+- Phase 8 evaluation is now complete; see [NOVELTY.md](../NOVELTY.md#results-2026-10-27)
+  for measured accuracy, consistency, N1/N2 ablations and limitations. The original assignment
+  covered paraphrase preparation; the demo's context comparison is one labeled presentation case.
 - The paraphrases are AI-assisted and blind to the implementation table, not independent
   human annotations. Their author read the specification and fixtures. Human review of
   intended equivalence remains appropriate before publishing final study results.
@@ -80,7 +80,8 @@ covers Python 3.11 and 3.13; those remote runs are not claimed as locally execut
 - Pipeline contract: a verification failure is reported; it does not roll back or change an
   accepted compilation status. The demonstration script requires every layer to pass.
 - `docs/demo-transcript.txt` is a captured text rehearsal, not a video recording. Full report,
-  release, Evaluation-owned metrics and a screen recording remain separate team tasks.
+  release and a screen recording remain separate team tasks. Evaluation metrics are complete;
+  see [NOVELTY.md](../NOVELTY.md#results-2026-10-27).
 - Adding mutation/integration tests and adjusting Core tests should receive the appropriate
   owners' normal PR review; no shared runtime contracts were modified.
 
