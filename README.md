@@ -138,13 +138,13 @@ REPEAT 3 TIMES { PRINT "hello"; }
 
 | Intent | English | MiniLang |
 |---|---|---|
-| Declare | `make a variable called age and set it to 20` | `LET age = 20;` |
+| Declare | `make a variable called age and set it to 20` / `define age as 20` | `LET age = 20;` |
 | Assign | `set age to age plus 1` / `change age to 30` | `age = age + 1;` |
-| Increment / decrement | `increase count by 2` / `decrease count by 1` | `count = count + 2;` |
+| Increment / decrement | `increase count by 2` / `increase the count by 2` / `decrease count by 1` | `count = count + 2;` |
 | Arithmetic assign | `multiply total by 3` / `divide total by 2` | `total = total * 3;` |
-| Print | `print age` / `show "Hello"` / `display hello world` | `PRINT age;` / `PRINT "hello world";` |
+| Print | `print age` / `show me age` / `show "Hello"` / `display hello world` | `PRINT age;` / `PRINT "hello world";` |
 | If | `if age is greater than 17 then print adult else print minor` | `IF age > 17 THEN { ... } ELSE { ... }` |
-| Repeat | `repeat 3 times print hello` | `REPEAT 3 TIMES { PRINT "hello"; }` |
+| Repeat | `repeat 3 times print hello` / `loop 3 times print hello` | `REPEAT 3 TIMES { PRINT "hello"; }` |
 | Reference | `add 5 to it` | `score = score + 5;` |
 
 The full grammar, type rules, accepted phrasings and rejected patterns are in

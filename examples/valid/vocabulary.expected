@@ -1,0 +1,10 @@
+LET x = 5;
+x = x + 2;
+PRINT x;
+x = x + 3;
+x = x + 2;
+x = x - 2;
+x = 20;
+IF x >= 20 THEN { PRINT x; } ELSE { PRINT "small"; }
+REPEAT 2 TIMES { PRINT x; }
+PRINT x;

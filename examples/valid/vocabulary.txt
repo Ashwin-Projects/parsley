@@ -1,0 +1,10 @@
+define x as 5
+increase the x by 2
+show me x
+x becomes x plus 3
+grow x by 2
+take 2 from x
+set x as 20
+when x is no less than 20 then output x otherwise print out "small"
+loop 2 times print x
+please show me x
