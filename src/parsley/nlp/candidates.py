@@ -103,10 +103,11 @@ def generate(text: str) -> NLPResult:
             return _unsupported({Reason.UNTERMINATED_QUOTE})
         if not norm.tokens:
             return _unsupported({Reason.EMPTY_INPUT})
+        start = _after_filler(norm)
         found: list[Candidate] = []
         with _recording(set()) as rejections:
             for pattern in patterns.PATTERNS:
-                found.extend(_match(pattern, norm, 0, len(norm.text)))
+                found.extend(_match(pattern, norm, start, len(norm.text)))
         if not found:
             return _unsupported(rejections or {Reason.NO_MATCH})
         found.sort(key=lambda c: c.score, reverse=True)  # stable: ties keep table order
@@ -149,6 +150,14 @@ def _answer_text(text: str) -> Normalized | None:
         return None
     norm = normalize(text)
     return None if norm.malformed or not norm.tokens else norm
+
+
+def _after_filler(norm: Normalized) -> int:
+    """Where matching starts: after a leading filler word ("please"), if anything follows it."""
+    first = norm.tokens[0]
+    if len(norm.tokens) > 1 and first.kind == "word" and first.lower in patterns.LEADING_FILLER:
+        return norm.tokens[1].start
+    return 0
 
 
 def _unsupported(reasons: set[str]) -> NLPResult:
@@ -239,6 +248,9 @@ def _names(norm: Normalized, toks: Sequence[Token]) -> list[Slot]:
     text = norm.text[toks[0].start:toks[-1].end]
     if " ".join(t.lower for t in toks) in patterns.PRONOUNS:
         return [{"kind": "pronoun", "text": text}]
+    if len(toks) == 2 and toks[0].kind == "word" and toks[0].lower == patterns.ARTICLE:
+        toks = toks[1:]  # "the score" names score
+        text = norm.text[toks[0].start:toks[0].end]
     if (
         len(toks) == 1
         and toks[0].kind == "word"
@@ -311,7 +323,7 @@ def _conditions(norm: Normalized, toks: Sequence[Token]) -> list[Slot]:
 def _statements(norm: Normalized, toks: Sequence[Token]) -> list[Slot]:
     # Exactly one statement (decision D-4); "STMT and STMT" fails in the body's value slot.
     start, end = toks[0].start, toks[-1].end
-    if any(t.kind == "word" and t.lower == patterns.ELSE_WORD for t in toks):
+    if any(t.kind == "word" and t.lower in patterns.ELSE_WORDS for t in toks):
         return []
     return [
         {"kind": "statement", "intent": c.intent, "slots": c.slots}

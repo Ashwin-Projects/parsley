@@ -1,6 +1,6 @@
 # MiniLang and Constrained-English Specification
 
-Status: **frozen for Phase 2 (2026-10-25).** Source of truth: plan v2.1, Section 4
+Status: **frozen for Phase 2 (2026-10-25); v1.1 vocabulary added 2026-10-28 (see the [changelog](#changelog-v11-vocabulary)).** Source of truth: plan v2.1, Section 4
 ([`docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf`](docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf);
 "Clarix" in the PDF = Parsley), plus the team decisions recorded in
 [Section 9](#9-decision-log).
@@ -159,7 +159,7 @@ Adding a word is a spec change: update this list and the tests together.
 |---|---|
 | Pronouns | `it`, `that`, `the variable` in a variable position resolve to the most recently assigned or referenced variable (top of the reference stack). |
 | Empty reference stack | The pronoun is an unfilled required slot, so it clarifies (Section 7). |
-| Implicit declaration | Assignment intents (`set`, `change`, `update`, `assign`) to an undeclared name generate `LET` instead of assignment, with warning `W301` (stage `context`: `x was not created yet, so this creates it`), rather than failing. Only at the top level: inside a block the assignment stays an assignment (and reports `E201`). |
+| Implicit declaration | Assignment intents (`set`, `change`, `update`, `assign`, `make ... equal to`, `... becomes`) to an undeclared name generate `LET` instead of assignment, with warning `W301` (stage `context`: `x was not created yet, so this creates it`), rather than failing. Only at the top level: inside a block the assignment stays an assignment (and reports `E201`). |
 | Typos | Section 4 rule 3: confirmation question, never silent auto-correction. When several declared names are close, the closest wins; on a tie, the first declared. |
 | Type-aware wording | The symbol table stores inferred types. Arithmetic on a string variable (`add 5 to name`) gets a plain-English type error. |
 | Type-hint re-scoring | After resolution each candidate's score is nudged, then candidates are re-ranked: -0.1 if rule 4 made an undeclared identifier; for increase/decrease/multiply/divide, -0.1 if the target is text, +0.05 if the target and the amount are numbers. Scores stay in [0, 1]. |
@@ -180,25 +180,32 @@ traces, `Candidate.rule_id` and N4 suggestions.
 
 | Intent | Rule | Pattern | Example English | MiniLang |
 |---|---|---|---|---|
-| declare | D1 | `(make\|create\|declare) a [new] variable (called\|named) NAME and set it to VALUE` | make a variable called age and set it to 20 | `LET age = 20;` |
-| declare | D2 | `(make\|create\|declare) a [new] variable (called\|named) NAME (with value\|equal to) VALUE` | create a variable named totalAmount with value 0 | `LET totalAmount = 0;` |
+| declare | D1 | `(make\|create\|declare\|define\|initialize) a [new] variable (called\|named) NAME and set it to VALUE` | make a variable called age and set it to 20 | `LET age = 20;` |
+| declare | D2 | `(make\|create\|declare\|define\|initialize) a [new] variable (called\|named) NAME (with value\|equal to\|set to\|as\|=) VALUE` | create a variable named totalAmount with value 0 | `LET totalAmount = 0;` |
 | declare | D3 | `let NAME be VALUE` | let greeting be "Hello" | `LET greeting = "Hello";` |
+| declare | D4 | `(make\|create\|declare\|define\|initialize) a [new] variable NAME (with value\|equal to\|set to\|as\|=) VALUE` | create a variable total as 0 | `LET total = 0;` |
+| declare | D5 | `(define\|initialize\|declare) NAME (with value\|equal to\|set to\|as\|to\|=) VALUE` | define total as 0 / initialize total to 0 | `LET total = 0;` |
 | assign | S1 | `set NAME to [VALUE]` | set age to age plus 1 | `age = age + 1;` |
-| assign | S2 | `change NAME to [VALUE]` | change age to 30 | `age = 30;` |
-| assign | S3 | `update NAME to [VALUE]` | update score to 0 | `score = 0;` |
+| assign | S2 | `change NAME (to\|as) [VALUE]` | change age to 30 | `age = 30;` |
+| assign | S3 | `update NAME (to\|as) [VALUE]` | update score to 0 | `score = 0;` |
 | assign | S4 | `assign VALUE to NAME` | assign 5 to score | `score = 5;` |
-| increment | INC1 | `(increase\|increment\|raise) NAME [by VALUE]` | increase count by 2 | `count = count + 2;` |
+| assign | S5 | `set NAME (as\|equal to) [VALUE]` | set age as 30 | `age = 30;` |
+| assign | S6 | `make NAME equal to [VALUE]` | make age equal to 30 | `age = 30;` |
+| assign | S7 | `NAME becomes [VALUE]` | age becomes age plus 1 | `age = age + 1;` |
+| increment | INC1 | `(increase\|increment\|raise\|grow) NAME [by VALUE]` | increase count by 2 | `count = count + 2;` |
 | increment | INC2 | `add VALUE to NAME` | add 5 to score | `score = score + 5;` |
-| decrement | DEC1 | `(decrease\|decrement\|reduce\|lower) NAME [by VALUE]` | decrease count by 1 | `count = count - 1;` |
+| decrement | DEC1 | `(decrease\|decrement\|reduce\|lower\|drop) NAME [by VALUE]` | decrease count by 1 | `count = count - 1;` |
 | decrement | DEC2 | `subtract VALUE from NAME` | subtract 3 from lives | `lives = lives - 3;` |
+| decrement | DEC3 | `(take\|remove) VALUE from NAME` | take 3 from lives | `lives = lives - 3;` |
 | multiply | MUL1 | `multiply NAME [by VALUE]` | multiply total by 3 | `total = total * 3;` |
 | divide | DIV1 | `divide NAME [by VALUE]` | divide total by 2 | `total = total / 2;` |
-| print | P1 | `(print\|show\|display) [VALUE]` | print age / show "Hello" / display hello world | `PRINT age;` / `PRINT "Hello";` / `PRINT "hello world";` |
-| if | IF1 | `if COND then STMT` | if score is at least 10 then print winner | `IF score >= 10 THEN { PRINT "winner"; }` |
-| if | IF2 | `if COND then STMT else STMT` | if age is greater than 17 then print adult else print minor | `IF age > 17 THEN { PRINT "adult"; } ELSE { PRINT "minor"; }` |
-| repeat | REP1 | `repeat [N times] STMT` | repeat 3 times print hello | `REPEAT 3 TIMES { PRINT "hello"; }` |
+| print | P1 | `(print out\|show me\|print\|show\|display\|output) [VALUE]` | print age / show "Hello" / display hello world | `PRINT age;` / `PRINT "Hello";` / `PRINT "hello world";` |
+| if | IF1 | `(if\|when) COND then STMT` | if score is at least 10 then print winner | `IF score >= 10 THEN { PRINT "winner"; }` |
+| if | IF2 | `(if\|when) COND then STMT (else\|otherwise) STMT` | if age is greater than 17 then print adult else print minor | `IF age > 17 THEN { PRINT "adult"; } ELSE { PRINT "minor"; }` |
+| repeat | REP1 | `(repeat\|loop) [N times] STMT` | repeat 3 times print hello | `REPEAT 3 TIMES { PRINT "hello"; }` |
 | repeat | REP2 | `repeat STMT N times` | repeat show score 2 times | `REPEAT 2 TIMES { PRINT score; }` |
 | repeat | REP3 | `do STMT N times` | do print hello 3 times | `REPEAT 3 TIMES { PRINT "hello"; }` |
+| repeat | REP4 | `STMT N times` | print hello 3 times | `REPEAT 3 TIMES { PRINT "hello"; }` |
 | reference | (any NAME) | pronoun in a `NAME` position | add 5 to it (after a statement using score) | `score = score + 5;` |
 
 The templates in this table are compiled directly into the pattern table
@@ -209,7 +216,19 @@ that may be missing from the English. A missing one leads to a clarification que
 not a rejection (Section 7). This is how `increase x` produces `By how much?`.
 
 Synonym groups (plan Phase 2): `make/create/declare`, `show/display/print`,
-`plus/add`, `greater than/more than/above`.
+`plus/add`, `greater than/more than/above`. v1.1 adds `define/initialize` (declare),
+`grow` (increase), `drop` (decrease), `print out/show me/output` (print), `when` (if),
+`otherwise` (else) and `loop` (repeat).
+
+Two-word verbs are tried before one-word verbs, so `print out x` prints `x`, not `"out x"`.
+Rule S1 keeps its exact template: N4 builds the `store ... in` rewrite (`set NAME to VALUE`)
+from it (Section 8), so `set ... as` and `set ... equal to` are a separate rule, S5.
+
+**Fillers (v1.1).** A leading `please` is ignored (`please print x` = `print x`); `please`
+alone is unsupported. The article `the` before a variable name is ignored: in a `NAME`
+position always (`increase the score by 2`), and in a value only when the word after `the`
+is a declared variable (`print the score`). Otherwise `the ...` is ordinary text
+(`print the end` prints `"the end"`), and `the variable` stays a pronoun (Section 5).
 
 ### 6.1 Values
 
@@ -237,12 +256,12 @@ before `is greater than`).
 
 | English phrase | MiniLang |
 |---|---|
-| `is greater than`, `is more than`, `is above` | `>` |
-| `is less than`, `is below` | `<` |
-| `is greater than or equal to`, `is at least` | `>=` |
-| `is less than or equal to`, `is at most` | `<=` |
+| `is greater than`, `is more than`, `is above`, `is bigger than`, `is larger than` | `>` |
+| `is less than`, `is below`, `is smaller than`, `is under` | `<` |
+| `is greater than or equal to`, `is at least`, `is no less than` | `>=` |
+| `is less than or equal to`, `is at most`, `is no more than` | `<=` |
 | `is equal to`, `equals` | `==` |
-| `is not equal to`, `does not equal` | `!=` |
+| `is not equal to`, `does not equal`, `isn't`, `isn't equal to` | `!=` |
 
 Bare `is` is **not** a comparison (it is too ambiguous).
 
@@ -415,3 +434,35 @@ applied throughout this document.
 
 Edit distance in D-2 is optimal string alignment (an adjacent swap counts as one edit), so
 the plan's demo case `print scroe` stays a typo question for the 5-letter name `score`.
+
+## Changelog: v1.1 vocabulary
+
+*2026-10-28.* More English phrasings, each mapped onto an existing intent. The grammar,
+AST and MiniLang are unchanged (Sections 1-2); all phrasings live in
+`parsley/nlp/patterns.py`, and `tests/unit/test_vocabulary.py` checks each one against its
+canonical phrasing. The submitted report and NOVELTY.md describe v1.0.
+
+| Area | Added | Rules |
+|---|---|---|
+| declare | verbs `define`, `initialize`; value connectors `as`, `=`, `equal to`, `set to` (and `to` after `define`/`initialize`/`declare` NAME); `a variable NAME` without `called`/`named` | D1, D2, new D4, D5 |
+| assign | `set NAME as/equal to VALUE`, `make NAME equal to VALUE`, `change/update NAME as VALUE`, `NAME becomes VALUE` | S2, S3, new S5, S6, S7 |
+| increment | `grow` (`increment` and `raise` were already supported) | INC1 |
+| decrement | `drop`; `take/remove VALUE from NAME` (`decrement` and `lower` were already supported) | DEC1, new DEC3 |
+| print | `output`, `print out`, `show me` | P1 |
+| conditions | `is bigger than`, `is larger than`, `is smaller than`, `is under`, `is no less than`, `is no more than`, `isn't`, `isn't equal to`; `otherwise` for `else`; `when` for `if` (`equals` and `is not equal to` were already supported) | 6.2, IF1, IF2 |
+| repeat | `loop N times STMT`; `STMT N times` | REP1, new REP4 |
+| fillers | leading `please`; `the` before a variable name | Section 6 |
+
+Not added:
+
+- **`write` (print).** Dropped: it is edit distance 2 from `while`, so N4 would suggest
+  `write x is less than 10 print x` for an out-of-scope `while` loop (Section 8), which must
+  get no suggestion.
+- **Excluded by request:** `store VALUE in NAME` (stays rejected with the N4 suggestion
+  `set NAME to VALUE`), `double`, `triple`, `quadruple`, `bump`, `exceed(s)`, `provided`.
+
+Behaviour that changes for input v1.0 accepted: `show me` and `print out` with nothing
+after them now ask `What should be printed?` instead of printing `"me"` or `"out"`;
+`print the x` prints the variable `x` when it is declared, not the text `"the x"`. Input
+v1.0 rejected that now asks a question: a repeated statement with a missing value
+(`print 3 times`, `set x to 3 times`, REP4).

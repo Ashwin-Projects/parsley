@@ -84,6 +84,37 @@ written by the AI coding agent, not human-authored); no human-authored blind set
 
 Details of the parser/verifier hand-off are in `docs/ASSIGNED_PHASES.md`.
 
+### v1.1 (after vocabulary expansion; not used in the submitted paper/report)
+
+After the submission, the English vocabulary was expanded (LANGUAGE_SPEC.md, "Changelog:
+v1.1 vocabulary"): new phrasings mapped onto existing intents, with no grammar, AST or
+MiniLang change. `write` was dropped because N4 would then suggest a rewrite of a `while`
+loop. The report and NOVELTY.md keep the v1.0 numbers. Held-out set (168 inputs),
+`python -m parsley.eval.run_eval`, 2026-10-28:
+
+| Metric | v1.0 | v1.1 |
+|---|---|---|
+| exact-match accuracy, paraphrase | 46/60 (76.7%) | 47/60 (78.3%) |
+| exact-match accuracy, session | 58/58 (100.0%) | 58/58 (100.0%) |
+| exact-match accuracy, all with gold code | 104/118 (88.1%) | 105/118 (89.0%) |
+| whole-session exact match | 10/10 (100.0%) | 10/10 (100.0%) |
+| paraphrase consistency (same AST) | 1/15 (6.7%) | 2/15 (13.3%) |
+| paraphrase consistency (gold AST) | 1/15 (6.7%) | 2/15 (13.3%) |
+| ambiguity precision | 25/25 (100.0%) | 25/25 (100.0%) |
+| ambiguity recall | 25/25 (100.0%) | 25/25 (100.0%) |
+| unnecessary-question rate | 0/118 (0.0%) | 0/118 (0.0%) |
+| context-resolution accuracy | 92/102 (90.2%) | 93/102 (91.2%) |
+| safe-rejection rate | 25/25 (100.0%) | 25/25 (100.0%) |
+| suggestion usefulness | 0/13 (0.0%) | 0/11 (0.0%) |
+| wrong-code rate | 0/168 (0.0%) | 0/168 (0.0%) |
+| crashes | 0/168 (0.0%) | 0/168 (0.0%) |
+
+Ablations in v1.1: context_off 38/118 exact match (unchanged; -56.8 pp from the v1.1
+baseline); forced_top1 wrong code 11/168 (6.5%) and ambiguity recall 14/25, both unchanged.
+Paraphrase failures: 13 rejected and 1 error in v1.0; 11 rejected and 2 errors in v1.1 (one
+input moved from rejected to a semantic error, still not wrong code). The synthetic blind
+set and the development fixtures score the same as in v1.0.
+
 ---
 
 ## Phase 0 - Setup (Days 1-2)

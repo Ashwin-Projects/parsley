@@ -22,12 +22,22 @@ from parsley.keywords import KEYWORDS as MINILANG_KEYWORDS  # noqa: F401  (re-ex
 # Vocabulary (LANGUAGE_SPEC.md 6, 6.1, 6.2)
 
 SYNONYMS: dict[str, tuple[str, ...]] = {
-    "declare": ("make", "create", "declare"),
+    "declare": ("make", "create", "declare", "define", "initialize"),
+    "define": ("define", "initialize", "declare"),  # D5: verbs that declare without "a variable"
     "named": ("called", "named"),
-    "initial": ("with value", "equal to"),
-    "increase": ("increase", "increment", "raise"),
-    "decrease": ("decrease", "decrement", "reduce", "lower"),
-    "print": ("print", "show", "display"),
+    "initial": ("with value", "equal to", "set to", "as", "="),
+    "define_value": ("with value", "equal to", "set to", "as", "to", "="),
+    "set_as": ("as", "equal to"),
+    "change_to": ("to", "as"),
+    "increase": ("increase", "increment", "raise", "grow"),
+    "decrease": ("decrease", "decrement", "reduce", "lower", "drop"),
+    "take": ("take", "remove"),
+    # Two-word verbs first: alternatives are tried in order, so "print out x" is not "print" + "out x".
+    # "write" is left out: it is a near miss of "while", so N4 would suggest a rewrite of a while loop.
+    "print": ("print out", "show me", "print", "show", "display", "output"),
+    "if": ("if", "when"),
+    "else": ("else", "otherwise"),
+    "repeat": ("repeat", "loop"),
 }
 
 BINARY_OPERATORS: tuple[tuple[str, str], ...] = (
@@ -47,23 +57,33 @@ COMPARISONS: tuple[tuple[str, str], ...] = (
     ("is greater than or equal to", ">="),
     ("is less than or equal to", "<="),
     ("is not equal to", "!="),
+    ("is no less than", ">="),
+    ("is no more than", "<="),
     ("is greater than", ">"),
     ("is more than", ">"),
+    ("is bigger than", ">"),
+    ("is larger than", ">"),
     ("is less than", "<"),
+    ("is smaller than", "<"),
     ("is at least", ">="),
     ("is at most", "<="),
     ("is equal to", "=="),
+    ("isn't equal to", "!="),
     ("does not equal", "!="),
     ("is above", ">"),
     ("is below", "<"),
+    ("is under", "<"),
     ("equals", "=="),
+    ("isn't", "!="),
 )
 
 PRONOUNS: tuple[str, ...] = ("the variable", "it", "that")
+ARTICLE = "the"  # "the NAME": ignored before a variable name (v1.1)
+LEADING_FILLER: tuple[str, ...] = ("please",)  # ignored at the start of a sentence (v1.1)
 UNARY_MINUS_WORD = "negative"
 ALTERNATIVE_WORD = "or"  # "VALUE or VALUE" -> one candidate per alternative
 CONTINUATION_WORD = "and"  # "STMT and STMT" in a block body -> rejected (D-4)
-ELSE_WORD = "else"  # never part of a block body; it belongs to IF2
+ELSE_WORDS: tuple[str, ...] = SYNONYMS["else"]  # never part of a block body; they belong to IF2
 
 BLOCK_BODY_INTENTS = frozenset({"print", "assign", "increment", "decrement", "multiply", "divide"})
 
@@ -99,7 +119,7 @@ class Pattern:
 _TEMPLATE_TOKEN = re.compile(r"[()\[\]|]|[^\s()\[\]|]+")
 _PRONOUN_ALTERNATION = "|".join(re.escape(p) for p in sorted(PRONOUNS, key=len, reverse=True))
 _PLACEHOLDER_REGEX = {
-    "NAME": rf"(?:{_PRONOUN_ALTERNATION}|\S+)",
+    "NAME": rf"(?:{_PRONOUN_ALTERNATION}|(?:{ARTICLE} )?\S+)",
     "N": r"\S+",
     "VALUE": r".+?",
     "COND": r".+?",
@@ -169,23 +189,34 @@ PATTERNS: tuple[Pattern, ...] = (
     _rule("D2", "declare", f"{_syn('declare')} a [new] variable {_syn('named')} NAME {_syn('initial')} VALUE",
           ("name", "value"), "create a variable named totalAmount with value 0"),
     _rule("D3", "declare", "let NAME be VALUE", ("name", "value"), 'let greeting be "Hello"'),
+    _rule("D4", "declare", f"{_syn('declare')} a [new] variable NAME {_syn('initial')} VALUE",
+          ("name", "value"), "create a variable total as 0"),
+    _rule("D5", "declare", f"{_syn('define')} NAME {_syn('define_value')} VALUE", ("name", "value"),
+          "define total as 0"),
+    # S1 stays exactly "set NAME to [VALUE]": N4 builds its "store ... in" rewrite from it.
     _rule("S1", "assign", "set NAME to [VALUE]", ("name", "value"), "set age to age plus 1"),
-    _rule("S2", "assign", "change NAME to [VALUE]", ("name", "value"), "change age to 30"),
-    _rule("S3", "assign", "update NAME to [VALUE]", ("name", "value"), "update score to 0"),
+    _rule("S2", "assign", f"change NAME {_syn('change_to')} [VALUE]", ("name", "value"), "change age to 30"),
+    _rule("S3", "assign", f"update NAME {_syn('change_to')} [VALUE]", ("name", "value"), "update score to 0"),
     _rule("S4", "assign", "assign VALUE to NAME", ("value", "name"), "assign 5 to score"),
+    _rule("S5", "assign", f"set NAME {_syn('set_as')} [VALUE]", ("name", "value"), "set age as 30"),
+    _rule("S6", "assign", "make NAME equal to [VALUE]", ("name", "value"), "make age equal to 30"),
+    _rule("S7", "assign", "NAME becomes [VALUE]", ("name", "value"), "age becomes age plus 1"),
     _rule("INC1", "increment", f"{_syn('increase')} NAME [by VALUE]", ("name", "amount"), "increase count by 2"),
     _rule("INC2", "increment", "add VALUE to NAME", ("amount", "name"), "add 5 to score"),
     _rule("DEC1", "decrement", f"{_syn('decrease')} NAME [by VALUE]", ("name", "amount"), "decrease count by 1"),
     _rule("DEC2", "decrement", "subtract VALUE from NAME", ("amount", "name"), "subtract 3 from lives"),
+    _rule("DEC3", "decrement", f"{_syn('take')} VALUE from NAME", ("amount", "name"), "take 3 from lives"),
     _rule("MUL1", "multiply", "multiply NAME [by VALUE]", ("name", "amount"), "multiply total by 3"),
     _rule("DIV1", "divide", "divide NAME [by VALUE]", ("name", "amount"), "divide total by 2"),
     _rule("P1", "print", f"{_syn('print')} [VALUE]", ("value",), "print age"),
-    _rule("IF1", "if", "if COND then STMT", ("condition", "then"), "if score is at least 10 then print winner"),
-    _rule("IF2", "if", "if COND then STMT else STMT", ("condition", "then", "else"),
+    _rule("IF1", "if", f"{_syn('if')} COND then STMT", ("condition", "then"),
+          "if score is at least 10 then print winner"),
+    _rule("IF2", "if", f"{_syn('if')} COND then STMT {_syn('else')} STMT", ("condition", "then", "else"),
           "if age is greater than 17 then print adult else print minor"),
-    _rule("REP1", "repeat", "repeat [N times] STMT", ("count", "body"), "repeat 3 times print hello"),
+    _rule("REP1", "repeat", f"{_syn('repeat')} [N times] STMT", ("count", "body"), "repeat 3 times print hello"),
     _rule("REP2", "repeat", "repeat STMT N times", ("body", "count"), "repeat show score 2 times"),
     _rule("REP3", "repeat", "do STMT N times", ("body", "count"), "do print hello 3 times"),
+    _rule("REP4", "repeat", "STMT N times", ("body", "count"), "print hello 3 times"),
 )
 
 
@@ -205,8 +236,8 @@ def _vocabulary() -> frozenset[str]:
     phrases: list[str] = [p.template for p in PATTERNS]
     phrases += [phrase for group in SYNONYMS.values() for phrase in group]
     phrases += [phrase for phrase, _ in COMPARISONS + BINARY_OPERATORS]
-    phrases += [*PRONOUNS, UNARY_MINUS_WORD, ALTERNATIVE_WORD, CONTINUATION_WORD, ELSE_WORD]
-    words = {word for phrase in phrases for word in re.findall(r"[A-Za-z]+", phrase)}
+    phrases += [*PRONOUNS, ARTICLE, *LEADING_FILLER, UNARY_MINUS_WORD, ALTERNATIVE_WORD, CONTINUATION_WORD]
+    words = {word for phrase in phrases for word in re.findall(r"[A-Za-z][A-Za-z']*|=", phrase)}  # "isn't", "="
     return frozenset(word for word in words if word not in _PLACEHOLDER_REGEX)
 
 
