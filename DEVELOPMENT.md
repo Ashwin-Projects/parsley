@@ -89,8 +89,10 @@ Details of the parser/verifier hand-off are in `docs/ASSIGNED_PHASES.md`.
 After the submission, the English vocabulary was expanded (LANGUAGE_SPEC.md, "Changelog:
 v1.1 vocabulary"): new phrasings mapped onto existing intents, with no grammar, AST or
 MiniLang change. `write` was dropped because N4 would then suggest a rewrite of a `while`
-loop. The report and NOVELTY.md keep the v1.0 numbers. Held-out set (168 inputs),
-`python -m parsley.eval.run_eval`, 2026-10-28:
+loop. v1.1 also ignores word-ending commas, reads `zero` to `twenty` as numbers, and adds
+the CLI `--run`, `--version` and REPL commands (`:run`, `:program`, `:undo`, `:reset`,
+`:help`, `:quit`). The report and NOVELTY.md keep the v1.0 numbers. Held-out set (168
+inputs), `python -m parsley.eval.run_eval`, 2026-10-28, re-run after all v1.1 changes:
 
 | Metric | v1.0 | v1.1 |
 |---|---|---|
@@ -112,8 +114,10 @@ loop. The report and NOVELTY.md keep the v1.0 numbers. Held-out set (168 inputs)
 Ablations in v1.1: context_off 38/118 exact match (unchanged; -56.8 pp from the v1.1
 baseline); forced_top1 wrong code 11/168 (6.5%) and ambiguity recall 14/25, both unchanged.
 Paraphrase failures: 13 rejected and 1 error in v1.0; 11 rejected and 2 errors in v1.1 (one
-input moved from rejected to a semantic error, still not wrong code). The synthetic blind
-set and the development fixtures score the same as in v1.0.
+input moved from rejected to a semantic error, still not wrong code). Commas and number
+words changed no held-out result. The synthetic blind set scores the same as in v1.0. The
+development fixtures (not evidence) grew from 23 to 33 valid fixtures with the v1.1
+vocabulary group (V24-V33), all exact matches, with no wrong code (0/72).
 
 ---
 

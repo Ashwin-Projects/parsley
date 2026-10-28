@@ -1,16 +1,47 @@
-"""CLI modes and options: one sentence, a file, or a REPL, all through pipeline.run."""
+"""CLI modes and options: one sentence, a file, or a REPL, all through pipeline.run.
+
+REPL lines that start with ``:`` are commands (``:help``, ``:run``, ``:program``, ``:undo``,
+``:reset``, ``:quit``), never English, so they cannot clash with a sentence.
+"""
 
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import sys
+import tomllib
 from pathlib import Path
 
 from parsley import pipeline
 from parsley.compiler import codegen
 from parsley.compiler.ast_nodes import Program
+from parsley.compiler.semantic import analyze
 from parsley.session import Session
 from parsley.verify import Verification
+from parsley.verify.interpreter import run as interpret
+
+PYPROJECT = Path(__file__).resolve().parents[2] / "pyproject.toml"
+
+# :help examples; they run in order as one session (tests/unit/test_cli_commands.py).
+HELP_EXAMPLES = (
+    "make a variable called score and set it to 10",
+    "add 5 to it",
+    "define bonus as 3",
+    "set score to score plus bonus",
+    "print score",
+    "if score is greater than 15 then print high else print low",
+    "repeat 2 times print hello",
+    "decrease score by 1",
+    "show me the score",
+)
+COMMANDS = (
+    (":run", "run the program so far and show what it prints"),
+    (":program", "show all accepted MiniLang so far"),
+    (":undo", "remove the last accepted statement"),
+    (":reset", "start a new, empty session"),
+    (":help", "show this help"),
+    (":quit", "leave the REPL (end of input also works)"),
+)
 
 
 def run_sentence(text: str, options: argparse.Namespace) -> int:
@@ -56,9 +87,94 @@ def run_sentence(text: str, options: argparse.Namespace) -> int:
     if result.verification is not None:
         print(_verification_summary(result.verification))
     if options.output is not None:
-        program = codegen.generate(Program(tuple(options.session.history)))
-        options.output.write_text(program + "\n", encoding="utf-8")
+        options.output.write_text(_program(options.session) + "\n", encoding="utf-8")
     return 0
+
+
+def _program(session: Session | None) -> str:
+    """The accepted MiniLang so far ("" when nothing was accepted)."""
+    if session is None or not session.history:
+        return ""
+    return codegen.generate(Program(tuple(session.history)))
+
+
+def run_program(session: Session | None) -> int:
+    """Run the program so far with the V3 interpreter; nonzero if it had a runtime error.
+
+    Code generation is unchanged: the interpreter runs exactly the MiniLang ``:program`` shows.
+    """
+    source = _program(session)
+    if not source:
+        print("Nothing to run yet.")
+        return 0
+    _, output, errors = interpret(source)
+    if output:
+        print("Output:")
+        for line in output:
+            print(f"  {line}")
+    else:
+        print("Output: (nothing printed)")
+    for error in errors:
+        print(f"runtime error: {error}", file=sys.stderr)
+    return 1 if errors else 0
+
+
+def _undo(session: Session) -> Session:
+    """A session without the last accepted statement.
+
+    The earlier statements are replayed through semantic analysis, the only writer of the
+    symbol table, reference stack and history, so the state is exactly as it was before.
+    """
+    restored = Session()
+    for statement in session.history[:-1]:
+        analyze(statement, restored)
+    return restored
+
+
+def _help() -> None:
+    print("Type one English sentence per line. Commands start with ':'.")
+    for command, meaning in COMMANDS:
+        print(f"  {command:<9} {meaning}")
+    print("Examples:")
+    for example in HELP_EXAMPLES:
+        print(f"    {example}")
+
+
+def _command(text: str, options: argparse.Namespace) -> int | None:
+    """Run one REPL command; returns its status, or None for ``:quit``."""
+    command = text.strip().lower()
+    if command == ":quit":
+        return None
+    if command == ":help":
+        _help()
+    elif command == ":run":
+        return run_program(options.session)
+    elif command == ":program":
+        print(_program(options.session) or "(no statements yet)")
+    elif command == ":undo":
+        if options.session is None or not options.session.history:
+            print("Nothing to undo.")
+        else:
+            removed = codegen.generate(Program((options.session.history[-1],)))
+            options.session = _undo(options.session)
+            print(f"Undid: {removed}")
+    elif command == ":reset":
+        options.session = Session()
+        print("Session cleared.")
+    else:
+        print(f"cli E507: Unknown command {text.strip()} (type :help)", file=sys.stderr)
+    return 0
+
+
+def _version() -> str:
+    """The version in pyproject.toml; the installed package metadata if the file is absent."""
+    try:
+        return tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))["project"]["version"]
+    except (OSError, KeyError, tomllib.TOMLDecodeError):
+        try:
+            return importlib.metadata.version("parsley")
+        except importlib.metadata.PackageNotFoundError:
+            return "unknown"
 
 
 def _verification_summary(verification: Verification) -> str:
@@ -164,7 +280,12 @@ def _repl(options: argparse.Namespace) -> int:
             text = input("parsley> ")
         except EOFError:
             return status
-        if text.strip():
+        if text.strip().startswith(":"):
+            result = _command(text, options)
+            if result is None:
+                return status
+            status = max(status, result)
+        elif text.strip():
             try:
                 status = max(status, _process(text, options))
             except EOFError:
@@ -198,6 +319,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--no-context", action="store_true", help="disable context resolution",
     )
+    parser.add_argument(
+        "--run", action="store_true", help="run the program afterwards and show its output",
+    )
+    parser.add_argument("--version", action="version", version=f"parsley {_version()}")
     options = parser.parse_args(argv)
     if options.sentence is not None and options.file is not None:
         parser.error("sentence and --file cannot be used together")
@@ -205,10 +330,14 @@ def main(argv: list[str] | None = None) -> int:
     options.session = None
     try:
         if options.file is not None:
-            return _run_file(options)
-        if options.sentence is not None:
-            return _process(options.sentence, options)
-        return _repl(options)
+            status = _run_file(options)
+        elif options.sentence is not None:
+            status = _process(options.sentence, options)
+        else:
+            return _repl(options)
+        if options.run:
+            status = max(status, run_program(options.session))
+        return status
     except KeyboardInterrupt:
         print("cli E504: Interrupted.", file=sys.stderr)
         return 130

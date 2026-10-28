@@ -119,3 +119,62 @@ def test_the_variable_is_still_a_pronoun():
 
 def test_please_alone_is_not_a_statement():
     assert compile_in_fresh_session("please", ()).status == "unsupported"
+
+
+# Commas (normalizer) and number words "zero" to "twenty" (LANGUAGE_SPEC.md 3, 4, 6.1)
+
+COMMAS_AND_NUMBER_WORDS = [
+    ("if x is equal to 1, then print hi", "if x is equal to 1 then print hi", X),
+    ("if x is greater than 0, then print big, otherwise print small",
+     "if x is greater than 0 then print big else print small", X),
+    ("set x to 5,", "set x to 5", X),
+    ("let y be ten", "let y be 10", ()),
+    ("add five to x", "add 5 to x", X),
+    ("set y to x plus twenty", "set y to x plus 20", X),
+    ("repeat three times print hi", "repeat 3 times print hi", ()),
+    ("print hi two times", "print hi 2 times", ()),
+    ("let y be zero", "let y be 0", ()),
+    ("if x is at least eleven then print big", "if x is at least 11 then print big", X),
+]
+
+
+@pytest.mark.parametrize(("phrasing", "canonical", "setup"), COMMAS_AND_NUMBER_WORDS,
+                         ids=[c[0] for c in COMMAS_AND_NUMBER_WORDS])
+def test_commas_and_number_words_give_the_canonical_minilang(phrasing, canonical, setup):
+    expected = compile_in_fresh_session(canonical, setup)
+    assert expected.status == "ok" and expected.minilang, canonical
+    got = compile_in_fresh_session(phrasing, setup)
+    assert (got.status, got.minilang) == ("ok", expected.minilang)
+
+
+def test_every_number_word_from_zero_to_twenty_is_its_number():
+    words = ("zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen "
+             "fifteen sixteen seventeen eighteen nineteen twenty").split()
+    for value, word in enumerate(words):
+        assert compile_in_fresh_session(f"let y be {word}", ()).minilang == f"LET y = {value};"
+
+
+def test_a_declared_variable_named_like_a_number_word_wins():
+    assert compile_in_fresh_session("print one", ("let one be 7",)).minilang == "PRINT one;"
+
+
+def test_quoted_number_words_and_commas_stay_text():
+    assert compile_in_fresh_session('print "ten, eleven"', ()).minilang == 'PRINT "ten, eleven";'
+
+
+def test_number_word_in_a_clarification_answer():
+    from parsley.pipeline import answer
+    session = Session()
+    run("let x be 1", session)
+    asked = run("increase x", session)
+    assert answer(asked, "four", session).minilang == "x = x + 4;"
+
+
+def test_a_comma_does_not_make_bare_is_a_comparison():
+    # Bare "is" stays unsupported (LANGUAGE_SPEC.md 6.2), with or without the comma.
+    assert compile_in_fresh_session("if x is 5, then print hi", X).status == "unsupported"
+
+
+def test_a_comma_inside_a_word_is_kept():
+    # Only a comma that ends a word (space or end of sentence after it) is ignored.
+    assert compile_in_fresh_session("print 1,000", ()).minilang == 'PRINT "1,000";'

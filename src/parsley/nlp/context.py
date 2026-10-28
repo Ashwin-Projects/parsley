@@ -18,7 +18,7 @@ from typing import Any, Literal
 
 from parsley.diagnostics import Diagnostic
 from parsley.nlp.candidates import Candidate
-from parsley.nlp.patterns import ARTICLE, COMMON_WORDS
+from parsley.nlp.patterns import ARTICLE, COMMON_WORDS, NUMBER_WORDS
 from parsley.session import Session
 
 STAGE = "context"
@@ -206,13 +206,16 @@ class _Resolver:
         return dict(slot)
 
     def _word(self, slot: Slot, path: str, operand: bool) -> Slot:
-        """LANGUAGE_SPEC.md 4: declared name (also after "the"), near miss (ask), operand, else text."""
+        """LANGUAGE_SPEC.md 4: declared name (also after "the"), number word, near miss (ask),
+        operand, else text."""
         text = slot["text"]
         if text in self._known:
             return {"kind": "name", "text": text}
         article, _, rest = text.partition(" ")
         if article.lower() == ARTICLE and rest in self._known:
             return {"kind": "name", "text": rest}
+        if text.lower() in NUMBER_WORDS:
+            return {"kind": "number", "text": NUMBER_WORDS[text.lower()]}
         match = near_miss(text, self._names)
         if match is not None:
             self._ask_typo(match, path)

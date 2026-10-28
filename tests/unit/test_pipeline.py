@@ -75,7 +75,8 @@ def test_semantic_fixture_through_pipeline(fixture):
 
 def test_context_dependent_fixtures_are_the_expected_ones():
     dependent = [f["id"] for f in load("valid") if needs_context(f)]
-    assert dependent == ["V04", "V06", "V12", "V14", "V15", "V16", "V17", "V18", "V19", "V20", "V21", "V22"]
+    assert dependent == ["V04", "V06", "V12", "V14", "V15", "V16", "V17", "V18", "V19", "V20", "V21", "V22",
+                         "V26", "V27", "V31", "V32", "V33"]
 
 
 @pytest.mark.parametrize("fixture", load("valid"), ids=lambda f: f["id"])

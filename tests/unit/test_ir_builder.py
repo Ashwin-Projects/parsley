@@ -25,6 +25,11 @@ EXPECTED = {
     "V11": Assign("total", BinOp("/", Var("total"), Num("2"))),
     "V13": Print(Str("Hello")),
     "V23": Assign("x", Neg(Num("5"))),
+    "V24": Let("x", Num("5")),
+    "V25": Assign("x", BinOp("+", Var("x"), Num("2"))),
+    "V28": Assign("x", BinOp("+", Var("x"), Num("2"))),
+    "V29": Assign("x", BinOp("-", Var("x"), Num("2"))),
+    "V30": Assign("x", Num("20")),
 }
 
 # Words fine, but the statement itself needs the symbol table (resolved in Phase 6).

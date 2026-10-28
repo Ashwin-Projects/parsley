@@ -36,6 +36,13 @@ ASTS = {
     "V20": Assign("score", BinOp("+", Var("score"), Num("5"))),
     "V21": Print(Str("y")),
     "V22": Print(Str("store")),
+    "V26": Print(Var("x")),
+    "V27": Assign("x", BinOp("+", Var("x"), Num("3"))),
+    "V31": If(
+        Compare(">=", Var("x"), Num("20")), (Print(Var("x")),), (Print(Str("small")),),
+    ),
+    "V32": Repeat(Num("2"), (Print(Var("x")),)),
+    "V33": Print(Var("x")),
 }
 
 

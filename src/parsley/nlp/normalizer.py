@@ -4,8 +4,9 @@
 aligned views of one sentence:
 
 - ``original``: the input exactly as typed (for the trace).
-- ``text``: whitespace collapsed outside quotes, trailing ``.``/``!``/``?`` stripped,
-  original case kept. Slot values are always sliced from this view.
+- ``text``: whitespace collapsed outside quotes, word-ending commas outside quotes dropped,
+  trailing ``.``/``!``/``?`` stripped, original case kept. Slot values are always sliced
+  from this view.
 - ``match_text``: same length as ``text``; lower-cased outside quotes and with quoted
   content masked, so patterns can match command words but never text inside quotes.
 
@@ -24,6 +25,7 @@ QUOTE = '"'
 SYMBOLS = frozenset("+-*/")
 MASK = "\x01"
 TRAILING_PUNCTUATION = " .!?"
+COMMA = ","  # dropped outside quotes when it ends a word (v1.1): "if x is 5, then ..."
 _NUMBER = re.compile(r"[0-9]+(?:\.[0-9]+)?")  # ASCII only, like MiniLang NUMBER
 
 
@@ -57,16 +59,22 @@ def normalize(raw: str) -> Normalized:
 
 
 def _clean(raw: str) -> tuple[str, bool]:
-    """Collapse whitespace outside quotes and strip trailing punctuation."""
+    """Collapse whitespace outside quotes, drop commas that end a word, strip trailing punctuation.
+
+    A comma followed by a space or the end of the sentence is punctuation and reads as a
+    space; a comma inside a word (``1,000``) is kept.
+    """
     out: list[str] = []
     in_quote = False
-    for ch in raw.strip():
+    text = raw.strip()
+    for i, ch in enumerate(text):
+        ends_word = ch == COMMA and (i + 1 == len(text) or text[i + 1].isspace())
         if ch == QUOTE:
             in_quote = not in_quote
             out.append(ch)
         elif in_quote:
             out.append(ch)
-        elif ch.isspace():
+        elif ch.isspace() or ends_word:
             if out and out[-1] != " ":
                 out.append(" ")
         else:

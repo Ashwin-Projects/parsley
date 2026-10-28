@@ -40,6 +40,7 @@ SOURCES: dict[str, tuple[Step, ...]] = {
     "valid/implicit-pronoun-score": (
         ("V06", {"x": "score", "5": "10"}), ("V20", {}), ("V19", {}),
     ),
+    "valid/vocabulary": tuple((f"V{n}", {}) for n in range(24, 34)),
     "invalid/undefined-variable": (("M02", {}),),
     "invalid/division-by-zero": (
         ("V06", {"x": "total", "5": "10"}), ("M08", {}),

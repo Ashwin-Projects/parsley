@@ -78,6 +78,14 @@ COMPARISONS: tuple[tuple[str, str], ...] = (
 )
 
 PRONOUNS: tuple[str, ...] = ("the variable", "it", "that")
+# Number words (v1.1): a REPEAT count, or a value word that is not a declared variable.
+NUMBER_WORDS: dict[str, str] = {
+    word: str(value)
+    for value, word in enumerate(
+        "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen "
+        "fifteen sixteen seventeen eighteen nineteen twenty".split()
+    )
+}
 ARTICLE = "the"  # "the NAME": ignored before a variable name (v1.1)
 LEADING_FILLER: tuple[str, ...] = ("please",)  # ignored at the start of a sentence (v1.1)
 UNARY_MINUS_WORD = "negative"
@@ -236,7 +244,7 @@ def _vocabulary() -> frozenset[str]:
     phrases: list[str] = [p.template for p in PATTERNS]
     phrases += [phrase for group in SYNONYMS.values() for phrase in group]
     phrases += [phrase for phrase, _ in COMPARISONS + BINARY_OPERATORS]
-    phrases += [*PRONOUNS, ARTICLE, *LEADING_FILLER, UNARY_MINUS_WORD, ALTERNATIVE_WORD, CONTINUATION_WORD]
+    phrases += [*NUMBER_WORDS, *PRONOUNS, ARTICLE, *LEADING_FILLER, UNARY_MINUS_WORD, ALTERNATIVE_WORD, CONTINUATION_WORD]
     words = {word for phrase in phrases for word in re.findall(r"[A-Za-z][A-Za-z']*|=", phrase)}  # "isn't", "="
     return frozenset(word for word in words if word not in _PLACEHOLDER_REGEX)
 

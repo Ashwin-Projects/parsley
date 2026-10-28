@@ -264,6 +264,8 @@ def _names(norm: Normalized, toks: Sequence[Token]) -> list[Slot]:
 def _counts(norm: Normalized, toks: Sequence[Token]) -> list[Slot]:
     if len(toks) == 1 and toks[0].kind == "number":
         return [{"kind": "count", "text": toks[0].text}]
+    if len(toks) == 1 and toks[0].kind == "word" and toks[0].lower in patterns.NUMBER_WORDS:
+        return [{"kind": "count", "text": patterns.NUMBER_WORDS[toks[0].lower]}]
     return []
 
 

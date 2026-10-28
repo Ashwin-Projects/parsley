@@ -96,11 +96,22 @@ Extracted identifiers, unquoted text and quoted text keep their original spellin
 The normalizer also collapses repeated spaces and strips trailing punctuation
 (`.`, `!`, `?`). The original input is always kept for the trace.
 
+**Commas (v1.1).** Outside quotes, a comma that ends a word (a space or the end of the
+sentence follows it) is ignored: `if x is equal to 5, then print hi` reads as
+`if x is equal to 5 then print hi`. Unquoted text therefore loses such commas
+(`print hello, world` prints `"hello world"`); quoted text keeps them, and so does a comma
+inside a word (`print 1,000` prints `"1,000"`). A comma never makes bare `is` a
+comparison (Section 6.2).
+
 ## 4. Variable vs. text policy (N1)
 
 When an English operand is a bare word, it is resolved by the first rule that applies:
 
 1. **Declared name.** An exact match to a declared variable becomes an identifier.
+   **Number word (v1.1).** Otherwise, `zero` to `twenty` becomes that number
+   (`add five to x` = `add 5 to x`). A declared variable named like a number word wins
+   (`let one be 7`, then `print one` prints the variable). With context resolution off,
+   a number word is an unresolved word like any other.
 2. **Quoted text.** Quoted text is always a string.
 3. **Near-miss of a declared name.** Ask to confirm (`Did you mean the variable score?`) when
    the word is close to a declared name, measured against the length of that declared name:
@@ -246,8 +257,9 @@ precedence (`negative` first, then `times`/`divided by`, then `plus`/`minus`):
 `minus` is always binary. A value that starts with `minus` is unsupported.
 
 Operands are a number (`20`, `2.5`), quoted text (`"Hello"`), a bare word resolved by the
-Section 4 policy, or a pronoun. Number words (`ten` -> `10`, for 0-20) are optional
-in Phase 2 ("if cheap") and are not used in the fixtures.
+Section 4 policy, or a pronoun. Number words `zero` to `twenty` are numbers (v1.1):
+in a value through the Section 4 policy, and as a REPEAT count (`repeat three times print
+hi`). They are on the common-English-word list, so they are never typo questions.
 
 ### 6.2 Conditions
 
@@ -452,6 +464,8 @@ canonical phrasing. The submitted report and NOVELTY.md describe v1.0.
 | conditions | `is bigger than`, `is larger than`, `is smaller than`, `is under`, `is no less than`, `is no more than`, `isn't`, `isn't equal to`; `otherwise` for `else`; `when` for `if` (`equals` and `is not equal to` were already supported) | 6.2, IF1, IF2 |
 | repeat | `loop N times STMT`; `STMT N times` | REP1, new REP4 |
 | fillers | leading `please`; `the` before a variable name | Section 6 |
+| commas | a comma that ends a word is ignored outside quotes | Section 3 |
+| number words | `zero` to `twenty` as numbers (values and REPEAT counts); they did not exist in v1.0 | Section 4 rule 1, 6.1 |
 
 Not added:
 
@@ -460,6 +474,10 @@ Not added:
   get no suggestion.
 - **Excluded by request:** `store VALUE in NAME` (stays rejected with the N4 suggestion
   `set NAME to VALUE`), `double`, `triple`, `quadruple`, `bump`, `exceed(s)`, `provided`.
+
+Commas and number words also change the meaning of some input v1.0 accepted:
+`print one` now prints `1` instead of `"one"`, `if x equals one then ...` compares with
+`1`, and `print hello, world` prints `"hello world"` instead of `"hello, world"`.
 
 Behaviour that changes for input v1.0 accepted: `show me` and `print out` with nothing
 after them now ask `What should be printed?` instead of printing `"me"` or `"out"`;
