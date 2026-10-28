@@ -2,6 +2,8 @@
 
 **A context-aware, self-verifying compiler from constrained English to MiniLang.**
 
+License: [MIT](LICENSE).
+
 Parsley turns plain English instructions into MiniLang, a small, formally specified
 programming language, and checks its own output instead of asking you to trust it.
 
@@ -180,10 +182,29 @@ Run the CLI:
 parsley "set age to 21"
 python -m parsley "set age to 21"
 parsley --file examples/valid/age.txt --output program.mini
+parsley --file examples/valid/vocabulary.txt --run
 parsley --confirm
+parsley --version
 ```
 
-With no sentence or file, the CLI starts a REPL. Answer clarification questions
+`--run` runs the accepted program after the last sentence and prints its output under
+`Output:`. Runtime errors (such as division by zero) go to stderr as `runtime error: ...`
+and make the exit code 1. Code generation is the same with or without `--run`.
+`--version` prints the version from `pyproject.toml`.
+
+With no sentence or file, the CLI starts a REPL. Lines that start with `:` are
+commands, never English:
+
+| Command | Effect |
+|---|---|
+| `:run` | Run the program so far and show what it prints, plus any runtime errors |
+| `:program` | Show all accepted MiniLang so far |
+| `:undo` | Remove the last accepted statement; variables and `it` go back to how they were |
+| `:reset` | Start a new, empty session |
+| `:help` | List the commands and example phrasings |
+| `:quit` | Leave the REPL (end of input also works) |
+
+Answer clarification questions
 with a value/name, an option's text or number, or `yes`/`no` for a typo. Invalid
 answers repeat the question; an empty answer cancels the sentence. `--confirm`
 asks before recording each error-free statement: `yes` accepts, `no` (or empty)
