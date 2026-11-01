@@ -18,6 +18,7 @@ Open http://127.0.0.1:5173. A fresh checkout defaults to the in-browser mock. Th
 npm run build       # strict TypeScript, then production build in dist/
 npm run preview     # serve the production build at http://127.0.0.1:4173
 npm run lint        # ESLint, zero warnings allowed
+npm run typecheck   # strict TypeScript without emitting files
 npm run format:check # consistent source and CSS formatting
 npm test            # Vitest mock, HTTP adapter and component tests
 npx playwright install chromium
@@ -37,7 +38,15 @@ VITE_API_URL=http://localhost:8000
 
 Set `VITE_USE_MOCK=true` for the demo. An absent setting also selects the mock. `VITE_API_URL` is the backend origin, without `/api`; leave it empty to use the frontend origin. A backend on a different origin must allow this frontend origin through CORS. These are public build settings; do not put secrets in them.
 
-The contract is reproduced verbatim in [API_CONTRACT.md](API_CONTRACT.md). The client uses POST JSON for mutations and GET for the program query. Switching transports does not change components. Sessions are created on page load; refreshing starts a new session. The HTTP adapter is tested with a stubbed fetch; a live backend is not part of this delivery.
+The compile contract and new health route are documented in [API_CONTRACT.md](API_CONTRACT.md). The client uses POST JSON for mutations and GET for health and program queries. Switching transports does not change components. Sessions are created on page load; refreshing starts a new session. The HTTP adapter is tested with fetch stubs and browser-local API fixtures; a live backend is not part of this branch.
+
+The health pill reports LLM configuration, with version/provider/model in its tooltip. The required health response has no mode field: the pill honestly labels the selected compile mode as **Requested**. If the backend supplies the optional `mode` extension, it shows **Backend** mode instead. Mock health identifies the simulated provider and model.
+
+Accepted LLM readings carry an inline amber **via LLM — check the reading** tag next to V1. W510–W514 diagnostics appear in trace and a polite, dismissible toast that closes after ten seconds; warnings never block input or use error styling. For `derived_value` questions the controls are always Yes and No, even if the backend omits option labels. In the mock, select LLM or Hybrid, send `set x to 10`, then `double x`: **Did you mean: multiply x by 2?** Yes appends the multiplication; No leaves the program unchanged. No real LLM or compiler verification runs in mock mode.
+
+HTTP requests have a 30-second deadline. Backend-down and gateway errors give connection guidance; 429 responses show `Retry-After` seconds or date guidance without automatic resubmission. Overlength input stays editable and is blocked before any API call; the 500-character limit counts Unicode code points, matching Python.
+
+If a mutation times out or loses its response, the server may already have committed it. Editing stays disabled. **Retry connection** reloads the saved program for inspection and export, with unavailable verification explicitly unreported. **Reset** then starts a fresh session, so a delayed response from the old session cannot affect new work. The contract cannot recover an unreturned pending question or verification report. A definite rate-limit response remains retryable normally.
 
 ## Try it
 
@@ -47,7 +56,7 @@ The contract is reproduced verbatim in [API_CONTRACT.md](API_CONTRACT.md). The c
 4. Send `increase age`; enter the missing amount in the clarification box.
 5. Send `store 50 in bonus`; click **Try: set bonus to 50** to fill the composer.
 
-The eight sidebar examples come from `LANGUAGE_SPEC.md` sections 4 and 6. Variable-dependent examples need a prior declaration; “it” refers to the last variable. The demo implements a limited fixture vocabulary: numeric/quoted-string creation and assignment, numeric increase/decrease/multiply/divide, print/show/display, numeric `set … or …` alternatives, `increase …` missing amounts, the exact sidebar IF and REPEAT examples, and the `store … in …` rewrite. It is not a second compiler. Unknown phrasing is rejected with a supported suggestion. No Python, LLM, paid API or real V1/V2/V3 verification runs in mock mode. All mock modes use the same fixtures; LLM mode simulates `source: llm`. Trace and the page footer identify simulated verification.
+The eight sidebar examples come from `LANGUAGE_SPEC.md` sections 4 and 6. Variable-dependent examples need a prior declaration; “it” refers to the last variable. The demo implements a limited fixture vocabulary: numeric/quoted-string creation and assignment, numeric increase/decrease/multiply/divide, print/show/display, numeric `set … or …` alternatives, `increase …` missing amounts, the exact sidebar IF and REPEAT examples, and the `store … in …` rewrite. It is not a second compiler. Unknown phrasing is rejected with a supported suggestion. LLM mode simulates `source: llm` and W513; Hybrid also simulates the derived `double x` fallback. No Python, LLM, paid API or real V1/V2/V3 verification runs in mock mode. Trace and the page footer identify simulated verification.
 
 ## Interaction and accessibility
 
@@ -61,26 +70,47 @@ The eight sidebar examples come from `LANGUAGE_SPEC.md` sections 4 and 6. Variab
 
 ## Screenshots
 
-Playwright regenerates [desktop](screenshots/workspace-desktop.png) and [mobile](screenshots/workspace-mobile.png) screenshots from a compiled, clarified and executed session. These are review artifacts, not pixel snapshot assertions.
+Playwright regenerates [desktop](screenshots/workspace-desktop.png) and [mobile](screenshots/workspace-mobile.png) screenshots showing an accepted LLM-tagged reading alongside a pending derived-value clarification. These are review artifacts, not pixel snapshot assertions. Tests run a mock Vite server on port 5173 and a real-HTTP-adapter Vite server on port 5174; browser route fixtures supply the latter's API, so no Python backend or provider keys are needed.
+
+## Docker
+
+From the repository root:
+
+```sh
+docker compose config --quiet
+docker compose up --build -d
+```
+
+Open http://localhost:8080. The multi-stage `docker/Dockerfile.web` builds with Node 22 and `VITE_USE_MOCK=false`, serves static assets with nginx, and proxies same-origin `/api` requests to the `api` service. `docker/Dockerfile.api` installs `.[web]` in Python slim and runs uvicorn. Both builds use explicit allowlist contexts that exclude `.env`, credentials, Git metadata and node_modules. Root `.env` is passed only to the API container at runtime; provider settings never enter frontend bundles or build arguments. Set `PARSLEY_WEB_PORT` there to change the loopback port and `PARSLEY_ASGI_APP` if the backend uses a different app import path.
+
+**Backend prerequisite:** this branch has no Python `web` extra or ASGI backend. The API build intentionally fails clearly until the backend supplies them. The default assumed ASGI target is `parsley.web.app:app`; it is configurable rather than a claim about an existing module. Docker Engine must also be running. Until integration, `docker compose up --build -d web` can serve the frontend with graceful backend-down errors; use local mock mode for the interactive demo. See [docker/README.md](../docker/README.md) for full setup and validation limits.
+
+## GitHub Actions
+
+`.github/workflows/web.yml` runs on pushes and pull requests affecting `web/**` or the workflow itself. It uses Node 22, runs `npm ci`, lint, explicit typecheck, unit tests and build, installs Chromium with Linux dependencies, then runs mock and browser-fixture Playwright checks. Reports and failure artifacts are uploaded for review. The job has read-only repository permissions and needs no backend or provider secrets. A GitHub-hosted run requires pushing; no push is part of this delivery.
 
 ## Implementation map
 
-| Files                                                                                     | Responsibility                                                        |
-| ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `src/App.tsx`                                                                             | Session lifecycle, requests, toolbar, composer and layout             |
-| `src/components/Conversation.tsx`                                                         | History, clarification and suggestion controls                        |
-| `src/components/VerificationBadges.tsx`                                                   | Accessible verification states                                        |
-| `src/components/ProgramPanel.tsx`                                                         | Highlighted code, source mapping and run results                      |
-| `src/components/HelpDialog.tsx`, `Icon.tsx`                                               | Help and local SVG icons                                              |
-| `src/api/types.ts`, `client.ts`                                                           | API types and fetch transport                                         |
-| `src/mock/api.ts`                                                                         | Session-scoped browser mock                                           |
-| `src/examples.ts`, `src/styles.css`, `src/main.tsx`                                       | Examples, themes/responsive styles and entry point                    |
-| `src/App.test.tsx`, `src/api/client.test.ts`, `src/mock/api.test.ts`, `src/test/setup.ts` | Component, HTTP and mock tests                                        |
-| `e2e/workspace.spec.ts`, `playwright.config.ts`                                           | Browser smoke tests and screenshots                                   |
-| `package.json`, `package-lock.json`, `.npmrc`                                             | Dependencies, scripts and deterministic install                       |
-| `index.html`, `public/parsley.svg`                                                        | HTML shell and favicon                                                |
-| `tsconfig.json`, `vite.config.ts`, `eslint.config.js`                                     | TypeScript, bundler, unit tests and lint configuration                |
-| `.prettierrc.json`, `.prettierignore`, `.gitignore`, `.env.example`                       | Formatting, generated-file exclusions and public environment template |
-| `API_CONTRACT.md`, `PLAN.md`, `README.md`, `VERIFICATION.md`                              | Contract, implementation record, usage and verification evidence      |
+| Files                                                                                           | Responsibility                                                        |
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `src/App.tsx`                                                                                   | Session lifecycle, requests, toolbar, composer and layout             |
+| `src/components/Conversation.tsx`                                                               | History, clarification and suggestion controls                        |
+| `src/components/VerificationBadges.tsx`                                                         | Accessible verification states                                        |
+| `src/components/ProgramPanel.tsx`                                                               | Highlighted code, source mapping and run results                      |
+| `src/components/HelpDialog.tsx`, `Icon.tsx`                                                     | Help and local SVG icons                                              |
+| `src/api/types.ts`, `client.ts`                                                                 | API types and fetch transport                                         |
+| `src/components/BackendStatus.tsx`, `WarningToast.tsx`, `src/diagnostics.ts`, `src/backend.css` | Backend health and amber warning presentation                         |
+| `src/backend-decisions.test.tsx`, `e2e/backend-decisions.spec.ts`                               | Backend decisions and network recovery regressions                    |
+| `src/mock/api.ts`                                                                               | Session-scoped browser mock                                           |
+| `src/examples.ts`, `src/styles.css`, `src/main.tsx`                                             | Examples, themes/responsive styles and entry point                    |
+| `src/App.test.tsx`, `src/api/client.test.ts`, `src/mock/api.test.ts`, `src/test/setup.ts`       | Component, HTTP and mock tests                                        |
+| `e2e/workspace.spec.ts`, `playwright.config.ts`                                                 | Browser smoke tests and screenshots                                   |
+| `package.json`, `package-lock.json`, `.npmrc`                                                   | Dependencies, scripts and deterministic install                       |
+| `index.html`, `public/parsley.svg`                                                              | HTML shell and favicon                                                |
+| `tsconfig.json`, `vite.config.ts`, `eslint.config.js`                                           | TypeScript, bundler, unit tests and lint configuration                |
+| `.prettierrc.json`, `.prettierignore`, `.gitignore`, `.env.example`                             | Formatting, generated-file exclusions and public environment template |
+| `API_CONTRACT.md`, `PLAN.md`, `README.md`, `VERIFICATION.md`                                    | Contract, implementation record, usage and verification evidence      |
+| `BACKEND_PLAN.md`, `BACKEND_VERIFICATION.md`                                                    | Follow-up plan, exact results and changed-file list                   |
+| `../docker/`, `../docker-compose.yml`, `../.github/workflows/web.yml`                           | Containers, runtime configuration and CI                              |
 
-The requested branch is `web-frontend`, based on `main` at `b7ed07c`. A concurrent process changed the original checkout's branch, so development continued in the separate worktree `C:\Parsley_web_frontend`. No push, merge, rebase or reset was performed. The final branch diff contains only `web/` additions.
+The requested branch is `web-frontend`, based on `main` at `b7ed07c`, in the worktree `C:\Parsley_web_frontend`. This follow-up changes only `web/`, new Docker/workflow files, and the explicitly requested root `docker-compose.yml`. No push, merge, rebase or git reset was performed. Current checks and the complete follow-up file list are in [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md).

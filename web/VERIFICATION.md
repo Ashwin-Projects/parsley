@@ -1,5 +1,7 @@
 # Frontend verification
 
+For the backend-decisions follow-up, see [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md). The results below record the initial frontend delivery.
+
 Run from `C:\Parsley_web_frontend\web` on `web-frontend`, 2026-11-01, Node v22.17.0 / npm 10.9.2.
 
 ## Final commands and output

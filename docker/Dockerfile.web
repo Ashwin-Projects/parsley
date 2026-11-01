@@ -1,0 +1,21 @@
+# syntax=docker/dockerfile:1
+FROM node:22-alpine AS build
+WORKDIR /app
+# Public frontend switches: use nginx's same-origin API proxy in this image.
+ENV VITE_USE_MOCK=false \
+    VITE_API_URL=""
+
+COPY web/package.json web/package-lock.json ./
+RUN npm ci --legacy-peer-deps --no-audit --no-fund
+COPY web/index.html web/tsconfig.json web/vite.config.ts ./
+COPY web/src ./src
+COPY web/public ./public
+RUN npm run build
+
+FROM nginx:1.28-alpine AS runtime
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget -q -O /dev/null http://127.0.0.1/ || exit 1
+CMD ["nginx", "-g", "daemon off;"]

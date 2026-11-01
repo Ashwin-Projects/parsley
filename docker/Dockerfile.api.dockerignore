@@ -1,0 +1,25 @@
+# Allow only Python package inputs; paths are relative to repo root.
+**
+!pyproject.toml
+!README.md
+!LICENSE
+!src/
+!src/**
+
+# Never send credentials, local artifacts or repository metadata to the builder.
+**/.env
+**/.env.*
+**/*.env
+**/*.pem
+**/*.key
+**/secrets
+**/secrets/**
+**/node_modules
+**/node_modules/**
+**/.git
+**/.git/**
+**/__pycache__
+**/__pycache__/**
+**/*.pyc
+**/*.egg-info
+**/*.egg-info/**
