@@ -126,7 +126,10 @@ stays the default, and `tests/integration/test_rules_regression.py` compares its
 output byte for byte with `tests/golden/`, captured before any LLM code existed, so the v1.1
 table above still holds. Only `tests/fixtures_llm/recorded.json` has been run through these
 modes, and its responses are hand-written: no real provider call has been made yet, and no
-accuracy is claimed. Regenerate the golden files only for a deliberate rules-mode change.
+accuracy is claimed. `run_eval --mode llm|hybrid` is built and was exercised over real HTTP
+against a local stub server, but the real-model run still needs a provider key. Regenerate the
+golden files only for a deliberate rules-mode change. `parsley/web/` adds the HTTP API for the
+frontend (ARCHITECTURE.md 2.12).
 
 ---
 

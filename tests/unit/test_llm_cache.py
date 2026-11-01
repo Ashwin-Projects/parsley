@@ -101,13 +101,50 @@ def test_a_cached_call_replays_its_original_latency(tmp_path):
     assert second.last_latency == pytest.approx(1.5)
 
 
-def test_a_failed_call_is_not_cached(tmp_path):
+def test_a_failed_call_is_not_saved_to_disk(tmp_path):
+    inner = Inner(ProviderError("down"), '{"readings": []}')
+    with pytest.raises(ProviderError):
+        metered(inner, tmp_path).propose("print x", EMPTY)
+    assert metered(inner, tmp_path).propose("print x", EMPTY)[0].text == '{"readings": []}'
+
+
+def test_a_failed_input_stays_failed_for_the_whole_run(tmp_path):
     inner = Inner(ProviderError("down"), '{"readings": []}')
     provider = metered(inner, tmp_path)
-    with pytest.raises(ProviderError):
-        provider.propose("print x", EMPTY)
+    for _ in range(2):
+        with pytest.raises(ProviderError):
+            provider.propose("print x", EMPTY)
+    assert inner.calls == 1
     assert provider.failures == 1 and provider.last_latency is None
-    assert provider.propose("print x", EMPTY)[0].text == '{"readings": []}'
+
+
+def test_the_key_depends_on_the_endpoint():
+    assert cache_key("m", "print x", EMPTY, "a") != cache_key("m", "print x", EMPTY, "b")
+
+
+def test_another_endpoint_with_the_same_model_name_does_not_replay(tmp_path):
+    first = Inner('{"readings": [1]}')
+    first.base_url = "https://one.example/v1"
+    metered(first, tmp_path).propose("print x", EMPTY)
+    second = Inner('{"readings": [2]}')
+    second.base_url = "https://two.example/v1"
+    assert metered(second, tmp_path).propose("print x", EMPTY)[0].text == '{"readings": [2]}'
+
+
+@pytest.mark.parametrize("entry", [
+    {"latency": 1, "texts": []},
+    {"latency": 1, "texts": ["x"]},
+    {"latency": 1, "texts": ["x"], "sentence": "print x"},
+    {"latency": 1, "texts": [3], "sentence": "print x", "context": {}},
+    {"texts": ["x"], "sentence": "print x", "context": {}},
+])
+def test_an_incomplete_cache_entry_is_a_miss(tmp_path, entry):
+    inner = Inner()
+    provider = metered(inner, tmp_path)
+    key = cache_key("m", "print x", EMPTY, provider.endpoint)
+    (tmp_path / f"{key}.json").write_text(json.dumps(entry), encoding="utf-8")
+    provider.propose("print x", EMPTY)
+    assert inner.calls == 1
 
 
 def test_a_timeout_passes_through(tmp_path):
@@ -116,9 +153,11 @@ def test_a_timeout_passes_through(tmp_path):
 
 
 def test_a_corrupt_cache_file_is_a_miss(tmp_path):
-    (tmp_path / f"{cache_key('m', 'print x', EMPTY)}.json").write_text("{broken", encoding="utf-8")
     inner = Inner()
-    metered(inner, tmp_path).propose("print x", EMPTY)
+    provider = metered(inner, tmp_path)
+    key = cache_key("m", "print x", EMPTY, provider.endpoint)
+    (tmp_path / f"{key}.json").write_text("{broken", encoding="utf-8")
+    provider.propose("print x", EMPTY)
     assert inner.calls == 1
 
 

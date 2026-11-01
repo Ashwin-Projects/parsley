@@ -207,7 +207,8 @@ def _summary(mode: str, model: str, results: dict[str, BY_CONDITION]) -> str:
         *[f"  - {change}" for change in PROMPT_CHANGES],
         "- Setup sentences use the rules. Mutation detection is not repeated: no model touches codegen.",
         "- A derived question on an item expected to compile counts as an unnecessary question and not as "
-        "an exact match, because nothing compiled unconfirmed.", "",
+        "an exact match: the baseline compiles nothing unconfirmed. `forced_top1` simulates a yes, as it "
+        "answers every question.", "",
     ]
     for name, by_condition in results.items():
         lines += _section(name, by_condition)

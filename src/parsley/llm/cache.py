@@ -1,10 +1,12 @@
 """Batch runs against a real model: a response cache, pacing and rate-limit backoff.
 
 ``MeteredProvider`` wraps any provider for the evaluation. Responses are stored on disk under
-a key of (model, prompt hash, input), where the input is the exact user message, so a re-run
-is free and reproducible, and a prompt change can never reuse an old answer. A cached response
-keeps the latency of the call that produced it, so a re-run reports the same numbers. Failures
-are not cached. Only model text is stored; nothing here sees a key.
+a key of (model, prompt hash, input), where the input is the exact user message, plus the
+endpoint, so a re-run is free and reproducible, and neither a prompt change nor another server
+with the same model name can reuse an old answer. A cached response keeps the latency of the
+call that produced it, so a re-run reports the same numbers. Failures are not saved, but an
+input that failed stays failed for the rest of the run, so conditions compare the same answers.
+Only model text is stored; nothing here sees a key.
 
 ``write_fixture`` saves the responses of this run in the format ``FakeProvider`` replays.
 """
@@ -24,9 +26,9 @@ from parsley.llm.provider import Provider, ProviderError, ProviderRateLimited, R
 DEFAULT_BACKOFFS: tuple[float, ...] = (5, 10, 20, 40, 60)  # seconds, after each 429
 
 
-def cache_key(model: str, sentence: str, context: LLMContext) -> str:
-    """The cache key of one request: (model, prompt hash, input)."""
-    fields = json.dumps([model, PROMPT_SHA256, user_message(sentence, context)], ensure_ascii=False)
+def cache_key(model: str, sentence: str, context: LLMContext, endpoint: str = "") -> str:
+    """The cache key of one request: (model, prompt hash, input), on one endpoint."""
+    fields = json.dumps([model, PROMPT_SHA256, user_message(sentence, context), endpoint], ensure_ascii=False)
     return hashlib.sha256(fields.encode("utf-8")).hexdigest()
 
 
@@ -46,6 +48,8 @@ class MeteredProvider:
         self._clock = clock
         self._last_call: float | None = None
         self._entries: dict[str, dict[str, Any]] = {}
+        self._failed: dict[str, ProviderError] = {}
+        self.endpoint = f"{inner.name} {getattr(inner, 'base_url', '')}".strip()
         self.model = model
         self.network_calls = 0
         self.cache_hits = 0
@@ -59,10 +63,16 @@ class MeteredProvider:
 
     def propose(self, sentence: str, context: LLMContext) -> list[RawProposal]:
         self.last_latency = None
-        key = cache_key(self.model, sentence, context)
+        key = cache_key(self.model, sentence, context, self.endpoint)
+        if key in self._failed:
+            raise self._failed[key]
         entry = self._read(key)
         if entry is None:
-            entry = self._call(key, sentence, context)
+            try:
+                entry = self._call(key, sentence, context)
+            except ProviderError as error:
+                self._failed[key] = error
+                raise
         else:
             self.cache_hits += 1
         self._entries[key] = entry
@@ -90,7 +100,10 @@ class MeteredProvider:
             entry = json.loads(self._path(key).read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return None  # not cached yet, or a damaged file: ask again
-        return entry if isinstance(entry, dict) and "texts" in entry and "latency" in entry else None
+        if not isinstance(entry, dict) or not {"texts", "latency", "sentence", "context"} <= entry.keys():
+            return None
+        texts = entry["texts"]
+        return entry if isinstance(texts, list) and texts and all(isinstance(t, str) for t in texts) else None
 
     def _call(self, key: str, sentence: str, context: LLMContext) -> dict[str, Any]:
         self._pace()

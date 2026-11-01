@@ -5,7 +5,9 @@ A thin adapter: every sentence goes through ``pipeline.run`` and every answer th
 analyzer changes a session (undo replays through it). ``run`` uses the V3 interpreter with its
 step budget. A provider is loaded the first time a session asks for ``llm`` or ``hybrid``, so a
 rules-only server never reads ``.env``. Errors never carry a stack trace, a request body or a
-key: unexpected failures are logged by type and answered with ``internal error``.
+key: ``_CatchAll`` logs an unexpected failure by type and answers ``internal error``. It is
+middleware and not an exception handler because Starlette re-raises after such a handler, and
+uvicorn would then log the message, which can hold a sentence.
 """
 
 from __future__ import annotations
@@ -141,6 +143,28 @@ class _BodyLimit:
         await self._app(scope, limited, send)
 
 
+class _CatchAll:
+    """Stop any unexpected exception here: log its type, answer 500, re-raise nothing."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self._app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        started = False
+
+        async def tracking(message: Message) -> None:
+            nonlocal started
+            started = started or message["type"] == "http.response.start"
+            await send(message)
+
+        try:
+            await self._app(scope, receive, tracking)
+        except Exception as error:
+            logger.error("request failed: %s", type(error).__name__)
+            if not started and scope["type"] == "http":
+                await JSONResponse({"detail": "internal error"}, status_code=500)(scope, receive, send)
+
+
 def _load_provider() -> object:
     from parsley.llm.config import load_provider
 
@@ -153,6 +177,7 @@ def create_app(
 ) -> FastAPI:
     """The API; ``provider`` overrides the configured one (tests pass a ``FakeProvider``)."""
     app = FastAPI(title="Parsley", docs_url=None, redoc_url=None, openapi_url=None)
+    app.add_middleware(_CatchAll)  # innermost, so a 500 still gets its CORS headers
     app.add_middleware(_BodyLimit, limit=MAX_BODY_BYTES)
     app.add_middleware(
         CORSMiddleware, allow_origins=list(ALLOWED_ORIGINS), allow_methods=["GET", "POST"],
@@ -165,9 +190,12 @@ def create_app(
 
     def get_provider() -> object:
         with provider_lock:
-            if app.state.provider is None:
-                app.state.provider = provider_factory()
-            return app.state.provider
+            if app.state.provider is not None:
+                return app.state.provider
+            built = provider_factory()
+            if getattr(built, "error", None) is None:  # a bad configuration is read again next time
+                app.state.provider = built
+            return built
 
     def session_for(session_id: str) -> WebSession:
         web = app.state.store.get(session_id)
@@ -180,11 +208,6 @@ def create_app(
         too_long = any(e["type"] == "string_too_long" and e["loc"][-1] == "sentence" for e in error.errors())
         detail = f"the sentence is longer than {MAX_INPUT_CHARS} characters" if too_long else "invalid request"
         return JSONResponse({"detail": detail}, status_code=422)
-
-    @app.exception_handler(Exception)
-    async def internal_error(request: Request, error: Exception) -> JSONResponse:
-        logger.error("request failed: %s", type(error).__name__)
-        return JSONResponse({"detail": "internal error"}, status_code=500)
 
     @app.post("/api/session", response_model=SessionResponse)
     def create_session() -> dict[str, str]:
@@ -199,6 +222,7 @@ def create_app(
             web.mode = body.mode or web.mode
             source = None if web.mode == "rules" else get_provider()
             result = pipeline.run(body.sentence, web.session, mode=web.mode, provider=source)
+            app.state.store.touch(web)
             return _respond(web, result, body.sentence)
 
     @app.post("/api/answer", response_model=CompileResponse, response_model_exclude_none=True)

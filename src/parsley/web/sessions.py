@@ -71,5 +71,9 @@ class SessionStore:
             web.used_at = now
             return web
 
+    def touch(self, web: WebSession) -> None:
+        """Renew a session after a request that may have outlasted the time-to-live."""
+        web.used_at = self._clock()
+
     def _is_expired(self, web: WebSession, now: float) -> bool:
-        return now - web.used_at > self._ttl
+        return now - web.used_at > self._ttl and not web.lock.locked()  # busy: a model call is running

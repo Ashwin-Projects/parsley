@@ -143,6 +143,13 @@ def test_the_summary_records_the_model_prompt_and_tuning_note(workspace):
     assert "held-out" in text
 
 
+def test_the_summary_says_forced_top1_simulates_a_yes(workspace):
+    evaluate(workspace, "--mode", "hybrid")
+    text = summary(workspace)
+    assert "nothing compiled unconfirmed" not in text
+    assert "`forced_top1` simulates a yes" in text
+
+
 def test_the_csv_carries_the_llm_columns(workspace):
     evaluate(workspace, "--mode", "hybrid")
     table = rows(workspace)

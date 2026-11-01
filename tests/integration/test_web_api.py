@@ -348,6 +348,45 @@ def test_an_internal_failure_leaks_nothing(client, sid, monkeypatch):
     assert response.json() == {"detail": "internal error"}
 
 
+def test_an_internal_failure_never_reaches_the_server_log(sid, client, monkeypatch, caplog):
+    """A strict client fails if the exception escapes the app, which is what uvicorn would log."""
+    def explode(*args, **kwargs):
+        raise RuntimeError("the sentence was sk-SECRET")
+
+    monkeypatch.setattr(pipeline, "run", explode)
+    strict = TestClient(client.app, raise_server_exceptions=True)
+    with caplog.at_level("ERROR"):
+        response = strict.post(
+            "/api/compile", json={"session_id": sid, "sentence": "print 1", "mode": "rules"},
+            headers={"origin": ORIGIN},
+        )
+    assert response.status_code == 500
+    assert response.headers["access-control-allow-origin"] == ORIGIN
+    assert "sk-SECRET" not in caplog.text
+    assert "RuntimeError" in caplog.text
+
+
+def test_a_provider_that_could_not_be_configured_is_tried_again():
+    class Unavailable:
+        name = "unavailable"
+        error = "no key yet"
+
+        def propose(self, sentence, context) -> list[RawProposal]:
+            raise ProviderError("no key yet")
+
+    built = []
+
+    def factory():
+        built.append(1)
+        return Unavailable()
+
+    client = TestClient(create_app(provider_factory=factory))
+    sid = client.post("/api/session", json={}).json()["session_id"]
+    compile_(client, sid, "store 50 in bonus", "hybrid")
+    compile_(client, sid, "store 50 in bonus", "hybrid")
+    assert len(built) == 2
+
+
 def test_no_api_key_reaches_a_response():
     class Leaky:
         name = "leaky"
@@ -413,6 +452,18 @@ def test_the_cap_removes_the_least_recently_used_session():
     assert store.get(second.id) is None
     assert store.get(first.id) is first and store.get(third.id) is third
     assert len(store) == 2
+
+
+def test_a_session_in_use_does_not_expire():
+    clock = Clock()
+    store = SessionStore(ttl=10, capacity=5, clock=clock)
+    web = store.create()
+    clock.now = 50
+    with web.lock:
+        store.create()
+        assert web.id in store._sessions
+        store.touch(web)
+    assert store.get(web.id) is web
 
 
 def test_expired_sessions_are_removed_before_a_new_one_is_made():
