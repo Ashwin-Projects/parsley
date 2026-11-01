@@ -2,15 +2,17 @@ import type { Api, Transport } from './types';
 
 export function createApi(transport: Transport): Api {
   // The backend owns this contract; UI components only consume the typed client.
-  const request = <T>(path: string, body?: Record<string, unknown>) => transport(path, body) as Promise<T>;
+  const request = <T>(path: string, body?: Record<string, unknown>) =>
+    transport(path, body) as Promise<T>;
   return {
     session: () => request('/api/session', {}),
-    compile: (session_id, sentence, mode) => request('/api/compile', { session_id, sentence, mode }),
+    compile: (session_id, sentence, mode) =>
+      request('/api/compile', { session_id, sentence, mode }),
     answer: (session_id, answer) => request('/api/answer', { session_id, answer }),
-    program: session_id => request(`/api/program?session_id=${encodeURIComponent(session_id)}`),
-    run: session_id => request('/api/run', { session_id }),
-    undo: session_id => request('/api/undo', { session_id }),
-    reset: session_id => request('/api/reset', { session_id }),
+    program: (session_id) => request(`/api/program?session_id=${encodeURIComponent(session_id)}`),
+    run: (session_id) => request('/api/run', { session_id }),
+    undo: (session_id) => request('/api/undo', { session_id }),
+    reset: (session_id) => request('/api/reset', { session_id }),
   };
 }
 

@@ -10,7 +10,9 @@ describe('mock contract', () => {
 
   it('accumulates statements, resolves it, runs, undoes and resets', async () => {
     const { api, id } = await session();
-    expect((await api.compile(id, 'make a variable called age and set it to 20', 'rules')).minilang).toBe('LET age = 20;');
+    expect(
+      (await api.compile(id, 'make a variable called age and set it to 20', 'rules')).minilang,
+    ).toBe('LET age = 20;');
     await api.compile(id, 'add 5 to it', 'hybrid');
     await api.compile(id, 'print age', 'llm');
     expect(await api.run(id)).toEqual({ output: ['25'], variables: { age: 25 } });
@@ -23,7 +25,10 @@ describe('mock contract', () => {
 
   it('clarifies alternatives and missing values without prematurely committing', async () => {
     const { api, id } = await session();
-    expect((await api.compile(id, 'set age to 10 or 20', 'rules')).question?.options).toEqual(['10', '20']);
+    expect((await api.compile(id, 'set age to 10 or 20', 'rules')).question?.options).toEqual([
+      '10',
+      '20',
+    ]);
     expect((await api.program(id)).statements).toHaveLength(0);
     expect((await api.answer(id, 'invalid')).status).toBe('clarify');
     expect((await api.answer(id, '20')).minilang).toBe('LET age = 20;');
@@ -43,5 +48,33 @@ describe('mock contract', () => {
     await api.compile(a, 'set bonus to 50', 'rules');
     expect((await api.program(b)).statements).toHaveLength(0);
     await expect(api.run('missing')).rejects.toThrow('Session not found');
+  });
+
+  it('treats an option button value as the value before considering option numbers', async () => {
+    const { api, id } = await session();
+    await api.compile(id, 'set age to 2 or 3', 'rules');
+    expect((await api.answer(id, '2')).minilang).toBe('LET age = 2;');
+  });
+
+  it('executes all sidebar examples in order and exposes simulated LLM provenance', async () => {
+    const { api, id } = await session();
+    const { examples } = await import('../examples');
+    for (const example of examples) {
+      expect((await api.compile(id, example.sentence, 'rules')).status).toBe('accepted');
+    }
+    expect(await api.run(id)).toEqual({
+      output: ['35', 'Hello', 'adult', 'hello', 'hello', 'hello'],
+      variables: { age: 35, total: 0 },
+    });
+    const result = await api.compile(id, 'print age', 'llm');
+    expect(result.source).toBe('llm');
+    expect(result.trace?.mock).toBe(true);
+  });
+
+  it('consumes a resolved question even when semantic checks reject the answer', async () => {
+    const { api, id } = await session();
+    await api.compile(id, 'increase age', 'rules');
+    expect((await api.answer(id, '3')).status).toBe('rejected');
+    expect((await api.compile(id, 'set age to 20', 'rules')).status).toBe('accepted');
   });
 });

@@ -6,5 +6,11 @@ import { createMockTransport } from './mock/api';
 import './styles.css';
 
 const mock = import.meta.env.VITE_USE_MOCK !== 'false';
-const api = createApi(mock ? createMockTransport() : createHttpTransport(import.meta.env.VITE_API_URL));
-createRoot(document.getElementById('root')!).render(<StrictMode><App api={api} mock={mock} /></StrictMode>);
+const api = createApi(
+  mock ? createMockTransport() : createHttpTransport(import.meta.env.VITE_API_URL),
+);
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App api={api} mock={mock} />
+  </StrictMode>,
+);

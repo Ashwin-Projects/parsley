@@ -12,13 +12,15 @@ Alternatives: a service worker adds an unnecessary dependency; component-local c
 
 - [x] 1. Scaffold configuration, exact API contract, typed client and mock. Write failing mock/client tests; implement fixtures, clarification, undo/reset and run. Verify then commit.
 - [x] 2. Write failing component tests; implement conversation, verification badges, questions, suggestion chips, mapped editor, toolbar, output, examples and help. Verify then commit.
-- [ ] 3. Write Playwright smoke and accessibility/responsive checks; refine layout, capture desktop/mobile screenshots, document commands and limitations, run lint/build/tests and review. Commit.
+- [x] 3. Write Playwright smoke and accessibility/responsive checks; refine layout, capture desktop/mobile screenshots, document commands and limitations, run lint/build/tests and review. Commit.
 
 Review focus: rejected/clarified inputs never alter the program; undo restores context; invalid clarification answers retain the question; request failures remain visible and recoverable; keyboard and narrow layouts retain every action.
 
 User constraints override skill defaults: use the requested branch in the current checkout, all documentation and test artifacts under web/, no cloud registration, no files under src/ or tests/. No Python changed, so Python review/pytest are inapplicable; review TypeScript correctness, types, errors and formatting instead.
 
 ## Progress
+
+Final step: `npm test` passed 13 tests across 3 files; `npm run test:e2e` passed all 4 desktop/mobile tests; lint, strict TypeScript build and formatting checks passed. Independent review found three defects, each reproduced with a failing regression before fixing; follow-up review confirmed all fixes. Exact results are in VERIFICATION.md. Keep the branch and isolated worktree; do not push or integrate.
 
 Initial state: clean main; branch created from main. No pre-existing web application or frontend-specific installed skills. Use the installed planning/TDD/verification skills and direct ESLint/Playwright tools.
 

@@ -11,8 +11,15 @@ export interface CompileResult {
   source?: 'rules' | 'llm';
   trace?: Record<string, unknown>;
 }
-export interface Program { minilang: string; statements: { english: string; minilang: string }[] }
-export interface RunResult { output: string[]; variables: Record<string, unknown>; error?: string }
+export interface Program {
+  minilang: string;
+  statements: { english: string; minilang: string }[];
+}
+export interface RunResult {
+  output: string[];
+  variables: Record<string, unknown>;
+  error?: string;
+}
 export type Transport = (path: string, body?: Record<string, unknown>) => Promise<unknown>;
 export interface Api {
   session(): Promise<{ session_id: string }>;

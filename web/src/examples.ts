@@ -5,7 +5,10 @@ export const examples = [
   { category: 'Use context', sentence: 'add 5 to it' },
   { category: 'Show a value', sentence: 'print age' },
   { category: 'Print text', sentence: 'show "Hello"' },
-  { category: 'Make a decision', sentence: 'if age is greater than 17 then print adult else print minor' },
+  {
+    category: 'Make a decision',
+    sentence: 'if age is greater than 17 then print adult else print minor',
+  },
   { category: 'Repeat an action', sentence: 'repeat 3 times print hello' },
   { category: 'Do arithmetic', sentence: 'define total as 0' },
 ];

@@ -6,7 +6,9 @@ import { createApi } from './api/client';
 import { createMockTransport } from './mock/api';
 import { VerificationBadges } from './components/VerificationBadges';
 
-function mount() { render(<App api={createApi(createMockTransport())} />); }
+function mount() {
+  render(<App api={createApi(createMockTransport())} />);
+}
 async function send(sentence: string) {
   const input = await screen.findByRole('textbox', { name: 'English sentence' });
   await waitFor(() => expect(input).toBeEnabled());
@@ -22,7 +24,9 @@ describe('workspace', () => {
     const line = await screen.findByRole('button', { name: 'Line 1: LET age = 20;' });
     fireEvent.focus(line);
     expect(screen.getByTestId('sentence-0')).toHaveClass('is-linked');
-    expect(screen.getByTestId('sentence-0')).toHaveTextContent('I understood: create variable age with value 20');
+    expect(screen.getByTestId('sentence-0')).toHaveTextContent(
+      'I understood: create variable age with value 20',
+    );
     const input = screen.getByRole('textbox', { name: 'English sentence' });
     fireEvent.keyDown(input, { key: 'ArrowUp' });
     expect(input).toHaveValue('set age to 20');
@@ -31,7 +35,9 @@ describe('workspace', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Run program' }));
     expect(await screen.findByTestId('run-output')).toHaveTextContent('20');
     await userEvent.click(screen.getByRole('button', { name: 'Undo last statement' }));
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Line 2: PRINT age;' })).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Line 2: PRINT age;' })).not.toBeInTheDocument(),
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Reset session' }));
     await waitFor(() => expect(screen.queryByText(/I understood:/)).not.toBeInTheDocument());
   });
@@ -42,11 +48,16 @@ describe('workspace', () => {
     await userEvent.click(await screen.findByRole('button', { name: '20' }));
     await screen.findByRole('button', { name: 'Line 1: LET age = 20;' });
     await send('increase age');
-    await userEvent.type(await screen.findByRole('textbox', { name: 'Clarification answer' }), '3{Enter}');
+    await userEvent.type(
+      await screen.findByRole('textbox', { name: 'Clarification answer' }),
+      '3{Enter}',
+    );
     await screen.findByRole('button', { name: 'Line 2: age = age + 3;' });
     await send('store 50 in bonus');
     await userEvent.click(await screen.findByRole('button', { name: 'Try: set bonus to 50' }));
-    expect(screen.getByRole('textbox', { name: 'English sentence' })).toHaveValue('set bonus to 50');
+    expect(screen.getByRole('textbox', { name: 'English sentence' })).toHaveValue(
+      'set bonus to 50',
+    );
   });
 
   it('provides eight examples, an accessible help dialog and theme control', async () => {
@@ -68,5 +79,38 @@ describe('workspace', () => {
     expect(screen.getByLabelText('V1: ok')).toBeVisible();
     expect(screen.getByLabelText('V2: fail')).toBeVisible();
     expect(screen.getByLabelText('V3: skipped')).toBeVisible();
+  });
+
+  it('locks mutations after refresh failure and reconciles mapping and undo on retry', async () => {
+    const mock = createMockTransport();
+    let failRefresh = true;
+    render(
+      <App
+        api={createApi(async (path, body) => {
+          if (path.startsWith('/api/program') && failRefresh) {
+            failRefresh = false;
+            throw new Error('Program refresh failed');
+          }
+          return mock(path, body);
+        })}
+      />,
+    );
+    await send('set age to 20');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Program refresh failed');
+    expect(screen.getByRole('textbox', { name: 'English sentence' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Retry connection' }));
+    await screen.findByRole('button', { name: 'Line 1: LET age = 20;' });
+    await send('print age');
+    const line = await screen.findByRole('button', { name: 'Line 2: PRINT age;' });
+    fireEvent.focus(line);
+    expect(screen.getByTestId('sentence-1')).toHaveClass('is-linked');
+    expect(screen.getByTestId('sentence-0')).not.toHaveClass('is-linked');
+    failRefresh = true;
+    await userEvent.click(screen.getByRole('button', { name: 'Undo last statement' }));
+    await screen.findByRole('alert');
+    expect(screen.getByRole('textbox', { name: 'English sentence' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Retry connection' }));
+    await waitFor(() => expect(screen.queryByTestId('sentence-1')).not.toBeInTheDocument());
+    expect(screen.getByRole('textbox', { name: 'English sentence' })).toBeEnabled();
   });
 });

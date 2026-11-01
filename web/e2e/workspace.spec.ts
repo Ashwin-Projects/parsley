@@ -1,0 +1,45 @@
+import { expect, test } from '@playwright/test';
+
+test('compile, clarify and run a mock session', async ({ page }, info) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/');
+  const input = page.getByRole('textbox', { name: 'English sentence' });
+  await expect(input).toBeEnabled();
+  await input.fill('make a variable called age and set it to 20');
+  await input.press('Enter');
+  await expect(page.getByRole('button', { name: 'Line 1: LET age = 20;' })).toBeVisible();
+  await input.fill('set age to 10 or 20');
+  await input.press('Enter');
+  await page.getByRole('button', { name: '20', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Line 2: age = 20;' })).toBeVisible();
+  await input.fill('print age');
+  await input.press('Enter');
+  await expect(page.getByRole('button', { name: 'Line 3: PRINT age;' })).toBeVisible();
+  await page.getByRole('button', { name: 'Run program' }).click();
+  await expect(page.getByTestId('run-output')).toHaveText('20');
+  await expect(page.getByRole('region', { name: 'Final variables' })).toContainText('20');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
+  await page.screenshot({ path: `screenshots/workspace-${info.project.name}.png`, fullPage: true });
+});
+
+test('keyboard help, theme, trace and program download', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'What can I say?' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+  await page.getByRole('button', { name: 'Toggle color theme' }).click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  const input = page.getByRole('textbox', { name: 'English sentence' });
+  await input.fill('print "Hello"');
+  await input.press('Enter');
+  await expect(page.getByRole('button', { name: 'Download MiniLang file' })).toBeEnabled();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download MiniLang file' }).click();
+  expect((await download).suggestedFilename()).toBe('program.ml');
+  await page.getByText('Trace', { exact: true }).click();
+  await expect(page.getByTestId('trace-content')).toContainText('accepted');
+});
