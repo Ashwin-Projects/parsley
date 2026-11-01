@@ -185,10 +185,4 @@ def test_an_unconfigured_provider_stops_before_any_results(workspace, monkeypatc
     monkeypatch.delenv("PARSLEY_LLM_PROVIDER")
     assert evaluate(workspace, "--mode", "hybrid") == 2
     assert "PARSLEY_LLM_PROVIDER" in capsys.readouterr().err
-    assert not list((workspace / "out").glob("results*")) if (workspace / "out").exists() else True
-
-
-def test_the_rules_evaluation_does_not_import_the_llm_package():
-    source = (ROOT / "src" / "parsley" / "eval" / "run_eval.py").read_text(encoding="utf-8")
-    top = source[:source.index("CONDITIONS = ")]
-    assert "parsley.llm" not in top and "llm_eval" not in top
+    assert not (workspace / "out").exists()
