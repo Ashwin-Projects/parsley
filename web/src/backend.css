@@ -1,0 +1,117 @@
+.backend-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 390px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--subtle);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+.backend-status.is-offline .status-dot {
+  background: #c59146;
+}
+.llm-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border: 1px solid #e8d6a8;
+  color: #805913;
+  background: #fbf1d9;
+  font-size: 9px;
+  line-height: 1.6;
+  vertical-align: baseline;
+}
+.warning-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 10;
+  display: flex;
+  gap: 14px;
+  width: min(360px, calc(100vw - 28px));
+  max-height: 38dvh;
+  overflow: auto;
+  padding: 14px 16px;
+  border: 1px solid #e8d6a8;
+  border-radius: 10px;
+  color: #75521a;
+  background: #fffbef;
+  box-shadow: 0 8px 24px #26383114;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.warning-toast strong {
+  font-weight: 600;
+}
+.warning-toast p {
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+.warning-toast p span {
+  font-family: monospace;
+  font-size: 10px;
+}
+.warning-toast button {
+  align-self: flex-start;
+  margin-left: auto;
+  padding: 0 4px;
+  font-size: 19px;
+  min-width: 28px;
+  min-height: 28px;
+}
+.input-limit,
+.input-too-long {
+  color: #b1503b;
+}
+.input-limit {
+  margin-top: 8px;
+  font-size: 11px;
+}
+:root[data-theme='dark'] .llm-tag,
+:root[data-theme='dark'] .warning-toast {
+  color: #ecd29a;
+  background: #3d321d;
+  border-color: #68552c;
+}
+@media (max-width: 600px) {
+  .site-header {
+    min-height: 84px;
+    height: auto;
+    gap: 8px;
+  }
+  .header-right {
+    gap: 8px;
+  }
+  .backend-status {
+    max-width: 165px;
+    gap: 3px 5px;
+    padding: 6px 8px;
+    font-size: 8px;
+    border-radius: 9px;
+  }
+  .status-separator {
+    display: none;
+  }
+  .brand {
+    font-size: 24px;
+  }
+  .brand-mark {
+    width: 29px;
+    height: 29px;
+  }
+  .warning-toast {
+    right: 14px;
+    bottom: 14px;
+    padding: 11px 12px;
+    font-size: 10px;
+  }
+  .llm-tag {
+    margin-top: 5px;
+    margin-left: 0;
+  }
+}

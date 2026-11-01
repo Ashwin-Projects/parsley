@@ -3,6 +3,30 @@ import { createMockTransport } from './api';
 import { createApi } from '../api/client';
 
 describe('mock contract', () => {
+  it('reports health and requires explicit derived-value confirmation', async () => {
+    const transport = createMockTransport();
+    expect(await transport('/api/health')).toMatchObject({
+      version: expect.any(String),
+      llm_configured: true,
+    });
+    const api = createApi(transport);
+    const id = (await api.session()).session_id;
+    const reading = await api.compile(id, 'set x to 10', 'llm');
+    expect(reading.diagnostics).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: 'W513' })]),
+    );
+    const result = await api.compile(id, 'double x', 'llm');
+    expect(result.question).toEqual({
+      kind: 'derived_value',
+      text: 'Did you mean: multiply x by 2?',
+      options: ['Yes', 'No'],
+    });
+    expect((await api.answer(id, 'no')).status).toBe('rejected');
+    expect((await api.program(id)).statements).toHaveLength(1);
+    await api.compile(id, 'double x', 'llm');
+    await api.answer(id, 'yes');
+    expect((await api.run(id)).variables).toEqual({ x: 20 });
+  });
   async function session() {
     const api = createApi(createMockTransport());
     return { api, id: (await api.session()).session_id };

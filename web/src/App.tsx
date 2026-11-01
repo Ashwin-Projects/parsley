@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Api, CompileResult, Mode, Program, RunResult } from './api/types';
 import { Conversation, type Message } from './components/Conversation';
 import { ProgramPanel } from './components/ProgramPanel';
 import { HelpDialog } from './components/HelpDialog';
 import { Icon } from './components/Icon';
 import { examples } from './examples';
+import { BackendStatus } from './components/BackendStatus';
+import { WarningToast } from './components/WarningToast';
+import { isLlmWarning, type Diagnostic } from './diagnostics';
 
 const emptyProgram: Program = { minilang: '', statements: [] };
 export default function App({ api, mock = true }: { api: Api; mock?: boolean }) {
@@ -19,6 +22,11 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
   const unavailable = busy || syncRequired;
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [warnings, setWarnings] = useState<Diagnostic[]>([]);
+  const dismissWarnings = useCallback(() => setWarnings([]), []);
+  const [healthRevision, setHealthRevision] = useState(0);
+  const sentenceLength = [...sentence].length;
+  const overlong = sentenceLength > 500;
   const [linked, setLinked] = useState<number | null>(null);
   const [output, setOutput] = useState<RunResult | null>(null);
   const [help, setHelp] = useState(false);
@@ -43,7 +51,8 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
         if (active) setSessionId(result.session_id);
       })
       .catch((cause) => {
-        if (active) setError(String(cause));
+        if (active)
+          setError(cause instanceof Error ? cause.message : 'Backend unavailable. Please retry.');
       });
     return () => {
       active = false;
@@ -81,6 +90,8 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
     inputRef.current?.focus();
   }
   function rememberResult(result: CompileResult, english: string, id?: number, answer?: string) {
+    setWarnings(result.diagnostics.filter(isLlmWarning));
+    setHealthRevision((revision) => revision + 1);
     const message: Message = {
       id: id ?? messageId.current++,
       english,
@@ -111,7 +122,8 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
     return updated;
   }
   async function send() {
-    if (!sentence.trim() || !sessionId || pending || syncRequired || lock.current) return;
+    if (overlong || !sentence.trim() || !sessionId || pending || syncRequired || lock.current)
+      return;
     const english = sentence.trim();
     await action(async () => {
       const result = await api.compile(sessionId, english, mode);
@@ -159,6 +171,7 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
       } else setSessionId((await api.session()).session_id);
       setProgram(emptyProgram);
       setMessages([]);
+      setWarnings([]);
       setOutput(null);
       setSentence('');
       setLastSentence('');
@@ -202,10 +215,7 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
         <div className="header-divider" />
         <span className="header-tagline">English, compiled.</span>
         <div className="header-right">
-          <span className="demo-label">
-            <span className="status-dot" />
-            {mock ? 'Mock sandbox' : 'API configured'}
-          </span>
+          <BackendStatus api={api} mode={mode} mock={mock} revision={healthRevision} />
           <button
             className="icon-button theme-button"
             aria-label="Toggle color theme"
@@ -364,7 +374,8 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
                     ref={inputRef}
                     rows={2}
                     value={sentence}
-                    maxLength={500}
+                    aria-invalid={overlong}
+                    aria-describedby={overlong ? 'sentence-limit' : undefined}
                     disabled={unavailable || !sessionId || pending}
                     placeholder={
                       syncRequired
@@ -392,7 +403,7 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
                   <button
                     className="send-button"
                     aria-label="Send sentence"
-                    disabled={unavailable || !sessionId || pending || !sentence.trim()}
+                    disabled={unavailable || !sessionId || pending || !sentence.trim() || overlong}
                   >
                     <Icon name="arrow" size={19} />
                   </button>
@@ -410,8 +421,13 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
                       </>
                     )}
                   </span>
-                  <span>{sentence.length}/500</span>
+                  <span className={overlong ? 'input-too-long' : ''}>{sentenceLength}/500</span>
                 </div>
+                {overlong && (
+                  <p id="sentence-limit" className="input-limit" role="alert">
+                    Use 500 characters or fewer.
+                  </p>
+                )}
               </form>
             </section>
             <ProgramPanel
@@ -438,6 +454,7 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
                 messages.map((message) => ({
                   sentence: message.english,
                   status: message.result.status,
+                  diagnostics: message.result.diagnostics,
                   trace: message.result.trace ?? 'No trace provided.',
                 })),
                 null,
@@ -458,6 +475,7 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
                 void action(async () => {
                   if (!sessionId) setSessionId((await api.session()).session_id);
                   else await refreshProgram();
+                  setHealthRevision((revision) => revision + 1);
                 })
               }
             >
@@ -476,6 +494,7 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
             : 'Verification results are provided by your compiler backend'}
         </span>
       </footer>
+      {warnings.length > 0 && <WarningToast warnings={warnings} onDismiss={dismissWarnings} />}
       {help && <HelpDialog onClose={() => setHelp(false)} />}
     </div>
   );

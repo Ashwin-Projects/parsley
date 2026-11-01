@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { CompileResult } from '../api/types';
 import { VerificationBadges } from './VerificationBadges';
 import { Icon } from './Icon';
+import { isLlmWarning } from '../diagnostics';
 export interface Message {
   id: number;
   english: string;
@@ -21,13 +22,14 @@ function Question({
   const [value, setValue] = useState('');
   const question = result.question;
   if (!question) return <p>Clarification is needed, but no question was provided.</p>;
+  const options = question.kind === 'derived_value' ? ['Yes', 'No'] : question.options;
   return (
     <div className="question">
       <span className="question-label">LET’S CLEAR ONE THING UP</span>
       <p>{question.text}</p>
-      {question.options.length ? (
+      {options.length ? (
         <div className="options">
-          {question.options.map((option, i) => (
+          {options.map((option, i) => (
             <button key={`${i}-${option}`} disabled={busy} onClick={() => onAnswer(option)}>
               {option}
               <Icon name="arrow" size={14} />
@@ -145,10 +147,13 @@ export function Conversation({
                   <p className="understood">
                     <strong>I understood:</strong>{' '}
                     {message.result.understood ?? 'No back-translation was provided.'}
+                    {(message.result.source === 'llm' ||
+                      message.result.diagnostics.some(
+                        (diagnostic) => diagnostic.code === 'W513',
+                      )) && <span className="llm-tag">via LLM — check the reading</span>}
                   </p>
                   <div className="response-meta">
                     <VerificationBadges checks={message.result.checks} />
-                    {message.result.source === 'llm' && <span className="llm-tag">✦ via LLM</span>}
                   </div>
                 </>
               )}
@@ -159,14 +164,16 @@ export function Conversation({
                   onAnswer={(answer) => onAnswer(message.id, answer)}
                 />
               )}
-              {message.result.diagnostics.map((diagnostic, i) => (
-                <p
-                  key={i}
-                  className={`diagnostic ${message.result.status === 'accepted' ? '' : 'diagnostic-error'}`}
-                >
-                  <span title={diagnostic.stage}>{diagnostic.code}</span> {diagnostic.message}
-                </p>
-              ))}
+              {message.result.diagnostics
+                .filter((diagnostic) => !isLlmWarning(diagnostic))
+                .map((diagnostic, i) => (
+                  <p
+                    key={i}
+                    className={`diagnostic ${message.result.status === 'accepted' ? '' : 'diagnostic-error'}`}
+                  >
+                    <span title={diagnostic.stage}>{diagnostic.code}</span> {diagnostic.message}
+                  </p>
+                ))}
               {message.result.suggestion && (
                 <button
                   className="suggestion"

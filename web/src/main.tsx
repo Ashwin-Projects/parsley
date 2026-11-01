@@ -4,6 +4,7 @@ import App from './App';
 import { createApi, createHttpTransport } from './api/client';
 import { createMockTransport } from './mock/api';
 import './styles.css';
+import './backend.css';
 
 const mock = import.meta.env.VITE_USE_MOCK !== 'false';
 const api = createApi(

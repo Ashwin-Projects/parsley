@@ -40,7 +40,8 @@ function compile(
   original = sentence,
 ): CompileResult {
   const text = sentence.trim().replace(/[.!?]+$/, '');
-  const source = mode === 'llm' ? 'llm' : 'rules';
+  const source =
+    mode === 'llm' || (mode === 'hybrid' && /^double /i.test(original)) ? 'llm' : 'rules';
   const variables = run(session.entries).variables;
   const last = session.entries.findLast((entry) => entry.ref)?.ref;
   const resolveName = (name: string) => (name === 'it' || name === 'that' ? (last ?? name) : name);
@@ -70,7 +71,16 @@ function compile(
       minilang: entry.minilang,
       understood,
       checks: { v1: 'ok', v2: 'ok', v3: 'ok' },
-      diagnostics: [],
+      diagnostics:
+        source === 'llm'
+          ? [
+              {
+                code: 'W513',
+                stage: 'llm',
+                message: 'This reading came from an LLM. Check the reading before continuing.',
+              },
+            ]
+          : [],
       source,
       trace: {
         mock: true,
@@ -81,7 +91,16 @@ function compile(
       },
     };
   };
-  let match = /^set (\w+) to (-?\d+(?:\.\d+)?) or (-?\d+(?:\.\d+)?)$/i.exec(text);
+  let match = /^double (\w+)$/i.exec(text);
+  if (match && mode !== 'rules') {
+    const name = resolveName(match[1]);
+    const result = ask(`Did you mean: multiply ${name} by 2?`, ['Yes', 'No'], (answer) =>
+      answer.toLowerCase() === 'yes' ? `multiply ${name} by 2` : undefined,
+    );
+    result.question!.kind = 'derived_value';
+    return result;
+  }
+  match = /^set (\w+) to (-?\d+(?:\.\d+)?) or (-?\d+(?:\.\d+)?)$/i.exec(text);
   if (match) {
     const [, name, a, b] = match;
     return ask(`What value should ${name} have?`, [a, b], (answer) => {
@@ -217,6 +236,13 @@ export function createMockTransport(): Transport {
   const sessions = new Map<string, Session>();
   return async (path, body) => {
     const url = new URL(path, 'http://mock.local');
+    if (url.pathname === '/api/health')
+      return {
+        version: '0.1.0-mock',
+        llm_configured: true,
+        provider: 'mock',
+        model: 'canned-readings',
+      };
     if (url.pathname === '/api/session') {
       const session_id = crypto.randomUUID();
       sessions.set(session_id, { entries: [] });
@@ -240,6 +266,20 @@ export function createMockTransport(): Transport {
             ],
           };
         const answer = String(body?.answer ?? '').trim();
+        if (pending.result.question?.kind === 'derived_value' && answer.toLowerCase() === 'no') {
+          session.pending = undefined;
+          return {
+            status: 'rejected',
+            diagnostics: [
+              {
+                code: 'E103',
+                stage: 'ambiguity',
+                message: 'Reading declined. No statement was added.',
+              },
+            ],
+            trace: { mock: true, decision: 'rejected', reason: 'derived_value_declined' },
+          };
+        }
         const resolved = pending.resolve(answer);
         if (!resolved) return pending.result;
         session.pending = undefined;

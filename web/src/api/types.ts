@@ -1,5 +1,12 @@
 export type Mode = 'rules' | 'llm' | 'hybrid';
 export type Check = 'ok' | 'fail' | 'skipped';
+export interface Health {
+  version: string;
+  llm_configured: boolean;
+  provider?: string;
+  model?: string;
+  mode?: Mode;
+}
 export interface CompileResult {
   status: 'accepted' | 'clarify' | 'rejected' | 'error';
   minilang?: string;
@@ -22,6 +29,7 @@ export interface RunResult {
 }
 export type Transport = (path: string, body?: Record<string, unknown>) => Promise<unknown>;
 export interface Api {
+  health(): Promise<Health>;
   session(): Promise<{ session_id: string }>;
   compile(id: string, sentence: string, mode: Mode): Promise<CompileResult>;
   answer(id: string, answer: string): Promise<CompileResult>;

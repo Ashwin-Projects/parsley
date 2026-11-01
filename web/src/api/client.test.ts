@@ -3,6 +3,50 @@ import { createApi, createHttpTransport } from './client';
 
 afterEach(() => vi.unstubAllGlobals());
 describe('real HTTP adapter', () => {
+  it('reports a retryable rate limit and never exposes the response body', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response('private provider error', { status: 429, headers: { 'Retry-After': '12' } }),
+        ),
+    );
+    await expect(createApi(createHttpTransport()).session()).rejects.toThrow(
+      'Rate limited. Please retry in 12 seconds.',
+    );
+  });
+
+  it('explains backend-down and timeout failures', async () => {
+    const fetcher = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+    vi.stubGlobal('fetch', fetcher);
+    await expect(createApi(createHttpTransport()).session()).rejects.toThrow('Backend unavailable');
+    fetcher.mockRejectedValueOnce(new DOMException('aborted', 'TimeoutError'));
+    await expect(createApi(createHttpTransport()).session()).rejects.toThrow('Request timed out');
+  });
+
+  it('aborts a stalled request at its configured deadline', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(
+        (_url, init: RequestInit) =>
+          new Promise((_resolve, reject) => {
+            init.signal?.addEventListener('abort', () =>
+              reject(new DOMException('aborted', 'AbortError')),
+            );
+          }),
+      ),
+    );
+    try {
+      const request = createApi(createHttpTransport('', 50)).session();
+      const assertion = expect(request).rejects.toThrow('Request timed out');
+      await vi.advanceTimersByTimeAsync(50);
+      await assertion;
+    } finally {
+      vi.useRealTimers();
+    }
+  });
   it('posts the exact compile payload and uses a GET with an encoded session query', async () => {
     const fetcher = vi
       .fn()
