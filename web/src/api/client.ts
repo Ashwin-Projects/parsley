@@ -1,5 +1,15 @@
 import type { Api, Transport } from './types';
 
+export class RequestError extends Error {
+  constructor(
+    message: string,
+    readonly outcomeUncertain = false,
+  ) {
+    super(message);
+    this.name = 'RequestError';
+  }
+}
+
 export function createApi(transport: Transport): Api {
   // The backend owns this contract; UI components only consume the typed client.
   const request = <T>(path: string, body?: Record<string, unknown>) =>
@@ -43,23 +53,31 @@ export function createHttpTransport(baseUrl = '', timeoutMs = 30_000): Transport
         );
       }
       if ([502, 503, 504].includes(response.status))
-        throw new Error(
+        throw new RequestError(
           `Backend unavailable (${response.status}). Check that the API is running, then retry.`,
+          true,
         );
       if (!response.ok)
-        throw new Error(`API request failed (${response.status}). Please try again.`);
+        throw new RequestError(
+          `API request failed (${response.status}). Please try again.`,
+          response.status >= 500,
+        );
       return (await response.json()) as unknown;
     } catch (cause) {
       if (
         controller.signal.aborted ||
         (cause instanceof DOMException && ['AbortError', 'TimeoutError'].includes(cause.name))
       ) {
-        throw new Error(
+        throw new RequestError(
           'Request timed out. The request was not retried; check the program before resending.',
+          true,
         );
       }
       if (cause instanceof TypeError)
-        throw new Error('Backend unavailable. Check that the API is running, then retry.');
+        throw new RequestError(
+          'Backend unavailable. Check that the API is running, then retry.',
+          true,
+        );
       throw cause;
     } finally {
       clearTimeout(timer);

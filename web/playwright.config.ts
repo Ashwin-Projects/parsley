@@ -21,10 +21,18 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: 'npm run dev -- --port 5173 --strictPort',
-    url: 'http://127.0.0.1:5173',
-    reuseExistingServer: !process.env.CI,
-    env: { VITE_USE_MOCK: 'true' },
-  },
+  webServer: [
+    {
+      command: 'node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5173 --strictPort',
+      url: 'http://127.0.0.1:5173',
+      reuseExistingServer: !process.env.CI,
+      env: { VITE_USE_MOCK: 'true', VITE_API_URL: '' },
+    },
+    {
+      command: 'node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5174 --strictPort',
+      url: 'http://127.0.0.1:5174',
+      reuseExistingServer: !process.env.CI,
+      env: { VITE_USE_MOCK: 'false', VITE_API_URL: '' },
+    },
+  ],
 });

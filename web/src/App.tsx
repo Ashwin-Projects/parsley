@@ -8,6 +8,7 @@ import { examples } from './examples';
 import { BackendStatus } from './components/BackendStatus';
 import { WarningToast } from './components/WarningToast';
 import { isLlmWarning, type Diagnostic } from './diagnostics';
+import { RequestError } from './api/client';
 
 const emptyProgram: Program = { minilang: '', statements: [] };
 export default function App({ api, mock = true }: { api: Api; mock?: boolean }) {
@@ -19,7 +20,8 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
   const [lastSentence, setLastSentence] = useState('');
   const [busy, setBusy] = useState(false);
   const [syncRequired, setSyncRequired] = useState(false);
-  const unavailable = busy || syncRequired;
+  const [mutationUncertain, setMutationUncertain] = useState(false);
+  const unavailable = busy || syncRequired || mutationUncertain;
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [warnings, setWarnings] = useState<Diagnostic[]>([]);
@@ -85,6 +87,20 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
       setBusy(false);
     }
   }
+  async function mutation<T>(work: () => Promise<T>): Promise<T> {
+    try {
+      return await work();
+    } catch (cause) {
+      setHealthRevision((revision) => revision + 1);
+      if (cause instanceof RequestError && cause.outcomeUncertain) {
+        setMutationUncertain(true);
+        setSyncRequired(true);
+        setOutput(null);
+        setWarnings([]);
+      }
+      throw cause;
+    }
+  }
   function insert(text: string) {
     setSentence(text);
     inputRef.current?.focus();
@@ -111,22 +127,50 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
     setProgram(updated);
     // A mutation may have succeeded even when the following refresh failed.
     // Reconcile only after the backend supplies the authoritative program.
-    setMessages((current) =>
-      current.filter(
+    setMessages((current) => {
+      const retained = current.filter(
         (message) =>
-          message.statementIndex === undefined ||
-          message.statementIndex < updated.statements.length,
-      ),
-    );
+          (!mutationUncertain || message.result.status !== 'clarify') &&
+          (message.statementIndex === undefined ||
+            message.statementIndex < updated.statements.length),
+      );
+      if (!mutationUncertain) return retained;
+      const recovered: Message[] = updated.statements.flatMap((statement, index) =>
+        retained.some((message) => message.statementIndex === index)
+          ? []
+          : [
+              {
+                id: -(index + 1),
+                english: statement.english,
+                statementIndex: index,
+                result: {
+                  status: 'accepted' as const,
+                  minilang: statement.minilang,
+                  diagnostics: [],
+                  trace: { recovered: true, verification: 'Not returned; response was lost.' },
+                },
+              },
+            ],
+      );
+      return [...retained, ...recovered];
+    });
     setSyncRequired(false);
     return updated;
   }
   async function send() {
-    if (overlong || !sentence.trim() || !sessionId || pending || syncRequired || lock.current)
+    if (
+      overlong ||
+      !sentence.trim() ||
+      !sessionId ||
+      pending ||
+      syncRequired ||
+      mutationUncertain ||
+      lock.current
+    )
       return;
     const english = sentence.trim();
     await action(async () => {
-      const result = await api.compile(sessionId, english, mode);
+      const result = await mutation(() => api.compile(sessionId, english, mode));
       rememberResult(result, english);
       setSyncRequired(true);
       setSentence('');
@@ -137,9 +181,9 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
   }
   async function answer(id: number, value: string) {
     const original = messages.find((message) => message.id === id);
-    if (!original || syncRequired) return;
+    if (!original || syncRequired || mutationUncertain) return;
     await action(async () => {
-      const result = await api.answer(sessionId, value);
+      const result = await mutation(() => api.answer(sessionId, value));
       rememberResult(result, original.english, id, value);
       setSyncRequired(true);
       await refreshProgram();
@@ -149,9 +193,9 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
     inputRef.current?.focus();
   }
   async function undo() {
-    if (syncRequired) return;
+    if (syncRequired || mutationUncertain) return;
     await action(async () => {
-      if (!(await api.undo(sessionId)).ok)
+      if (!(await mutation(() => api.undo(sessionId))).ok)
         throw new Error('Undo was not completed. Please try again.');
       setSyncRequired(true);
       setMessages((current) => current.filter((message) => message.result.status !== 'clarify'));
@@ -165,8 +209,8 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
   }
   async function reset() {
     await action(async () => {
-      if (sessionId) {
-        if (!(await api.reset(sessionId)).ok)
+      if (sessionId && !mutationUncertain) {
+        if (!(await mutation(() => api.reset(sessionId))).ok)
           throw new Error('Reset was not completed. Please try again.');
       } else setSessionId((await api.session()).session_id);
       setProgram(emptyProgram);
@@ -177,6 +221,7 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
       setLastSentence('');
       setLinked(null);
       setSyncRequired(false);
+      setMutationUncertain(false);
       setNotice('A fresh start. Your session is empty.');
     });
     inputRef.current?.focus();
@@ -378,11 +423,13 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
                     aria-describedby={overlong ? 'sentence-limit' : undefined}
                     disabled={unavailable || !sessionId || pending}
                     placeholder={
-                      syncRequired
-                        ? 'Reconnect to refresh your program…'
-                        : pending
-                          ? 'Answer the clarification above to continue…'
-                          : 'Tell Parsley what to do…'
+                      mutationUncertain
+                        ? 'Reset session to continue…'
+                        : syncRequired
+                          ? 'Reconnect to refresh your program…'
+                          : pending
+                            ? 'Answer the clarification above to continue…'
+                            : 'Tell Parsley what to do…'
                     }
                     onChange={(event) => setSentence(event.target.value)}
                     onKeyDown={(event) => {
@@ -412,6 +459,8 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
                   <span>
                     {busy ? (
                       'Working…'
+                    ) : mutationUncertain ? (
+                      'Reset session to continue'
                     ) : pending ? (
                       'Waiting for your clarification'
                     ) : (
@@ -437,7 +486,7 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
               onLink={setLinked}
               onCopy={() => void copy()}
               onDownload={download}
-              busy={unavailable}
+              busy={busy || syncRequired}
             />
           </div>
           <details className="trace-panel">
@@ -465,6 +514,13 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
         </div>
       </main>
       <div className="feedback" aria-live="polite">
+        {mutationUncertain && (
+          <p className="uncertain-note">
+            The last change could not be confirmed. Retry connection to inspect and export the saved
+            program, then Reset session before continuing. Verification for recovered statements is
+            not reported.
+          </p>
+        )}
         {notice && <span role="status">✓ {notice}</span>}
         {error && (
           <div role="alert">

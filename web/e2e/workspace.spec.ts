@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('compile, clarify and run a mock session', async ({ page }, info) => {
+test('compile, clarify and run a mock session', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/');
@@ -21,7 +21,7 @@ test('compile, clarify and run a mock session', async ({ page }, info) => {
   await expect(page.getByRole('region', { name: 'Final variables' })).toContainText('20');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
-  await page.screenshot({ path: `screenshots/workspace-${info.project.name}.png`, fullPage: true });
+  // The backend-decision flow owns the main workspace screenshots.
 });
 
 test('keyboard help, theme, trace and program download', async ({ page }) => {

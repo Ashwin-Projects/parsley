@@ -72,7 +72,17 @@
   margin-top: 8px;
   font-size: 11px;
 }
+.uncertain-note {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  border: 1px solid #e8d6a8;
+  border-radius: 8px;
+  background: #fffbef;
+  color: #75521a;
+  line-height: 1.7;
+}
 :root[data-theme='dark'] .llm-tag,
+:root[data-theme='dark'] .uncertain-note,
 :root[data-theme='dark'] .warning-toast {
   color: #ecd29a;
   background: #3d321d;
