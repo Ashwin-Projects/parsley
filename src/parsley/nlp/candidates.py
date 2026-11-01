@@ -49,6 +49,7 @@ Status = Literal["ok", "ambiguous", "unsupported"]
 MAX_INPUT_CHARS = 500
 MAX_ALTERNATIVES = 4
 MAX_READINGS = 64
+LLM_RULE_ID = "LLM"  # Candidate.rule_id of a reading proposed by the optional LLM source
 
 
 class Reason(StrEnum):

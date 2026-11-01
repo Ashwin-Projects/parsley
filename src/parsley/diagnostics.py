@@ -16,7 +16,7 @@ Level = Literal["error", "warning", "info"]
 LEVEL_LETTERS: dict[str, str] = {"error": "E", "warning": "W", "info": "I"}
 STAGES = frozenset({
     "normalizer", "candidates", "context", "ambiguity", "ir", "lexer", "parser",
-    "semantic", "codegen", "verify", "cli",
+    "semantic", "codegen", "verify", "cli", "llm",
 })
 CODE = re.compile(r"[EWI]\d{3}")
 

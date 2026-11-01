@@ -17,6 +17,11 @@ V2 and V3 call the teammates' modules ``parsley.verify.roundtrip``, ``ast_eval``
 ``interpreter`` through the interface in ARCHITECTURE.md 2.6; a layer whose module is
 not implemented yet is reported as skipped, and a verification layer never makes the
 pipeline fail or raise.
+
+``mode`` chooses the candidate source (ARCHITECTURE.md 2.11): ``rules`` (the default) never
+loads ``parsley.llm``; in ``llm`` and ``hybrid`` a model may propose candidates, which then
+pass every stage above exactly as rule candidates do. If the model fails, the rule result
+stands and a warning says so.
 """
 
 from __future__ import annotations
@@ -24,14 +29,14 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from parsley.compiler import codegen, semantic
 from parsley.compiler.ast_nodes import Program, Stmt
 from parsley.compiler.ir_builder import IRBuildError, UnresolvedSlotError, build
 from parsley.diagnostics import Diagnostic, has_errors
 from parsley.nlp.ambiguity import Clarification, apply_answer, gate, slot_at
-from parsley.nlp.candidates import Candidate, Reason, generate
+from parsley.nlp.candidates import LLM_RULE_ID, Candidate, NLPResult, Reason, generate
 from parsley.nlp.context import Resolution, resolve
 from parsley.nlp import suggest
 from parsley.nlp.normalizer import normalize
@@ -39,10 +44,16 @@ from parsley.session import Session
 from parsley.verify import STEP_LIMIT_ERROR, Verification, ast_eval, interpreter, roundtrip
 from parsley.verify.backtranslate import backtranslate
 
+if TYPE_CHECKING:
+    from parsley.llm.hybrid import Consultation
+    from parsley.llm.provider import Provider
+
 logger = logging.getLogger(__name__)
 
 Status = Literal["ok", "error", "needs_clarification", "unsupported"]
 Decision = Literal["ACCEPT", "CLARIFY", "REJECT"]
+Mode = Literal["rules", "llm", "hybrid"]
+MODES: tuple[str, ...] = ("rules", "llm", "hybrid")
 
 # Plain-English reasons for E101, keyed by NLPResult reason code (ARCHITECTURE.md 2.4).
 _UNSUPPORTED_MESSAGES: dict[str, str] = {
@@ -70,6 +81,7 @@ class Trace:
     chosen: Candidate | None = None
     ast: Stmt | None = None
     verification: Verification | None = None
+    llm: Consultation | None = None  # set only when the LLM was asked
 
 
 @dataclass(frozen=True)
@@ -94,24 +106,47 @@ Confirm = Callable[[str], bool]
 
 def run(
     text: str, session: Session, *, use_context: bool = True, confirm: Confirm | None = None,
+    mode: Mode = "rules", provider: Provider | None = None,
 ) -> PipelineResult:
     """Compile one sentence; ``use_context=False`` skips N1 (the ablation switch).
 
     ``confirm`` (strict mode, ``--confirm``) gets the back-translation of an error-free
     statement and returns whether the user agrees; the statement is recorded only if so.
+    ``mode`` and ``provider`` choose the candidate source; ``provider`` is ignored in
+    ``rules`` mode.
     """
+    if mode not in MODES:
+        raise ValueError(f"unknown mode {mode!r}; use one of {', '.join(MODES)}")
     normalized = normalize(text).text if isinstance(text, str) else ""
     nlp = generate(text)
     candidates = tuple(nlp.candidates)
-    if nlp.status == "unsupported":
-        trace = Trace(str(text), normalized, (), (), "REJECT")
+    consulted = None if mode == "rules" else _consult(text, nlp, session, use_context, mode, provider)
+    if consulted is not None and consulted.candidates:
+        candidates = consulted.candidates if mode == "llm" else candidates + consulted.candidates
+    if not candidates:
+        trace = Trace(str(text), normalized, (), (), "REJECT", llm=consulted)
         return PipelineResult(
-            "unsupported", trace, diagnostics=(_unsupported(nlp.notes, str(text)),), notes=tuple(nlp.notes),
-            suggestion=_suggestion(str(text), nlp.notes),
+            "unsupported", trace, diagnostics=(*_llm_warnings(trace), _unsupported(nlp.notes, str(text))),
+            notes=tuple(nlp.notes), suggestion=_suggestion(str(text), nlp.notes),
         )
     resolutions = _resolve(candidates, session, use_context, frozenset())
-    base = Trace(text, normalized, candidates, (), "ACCEPT")
+    base = Trace(text, normalized, candidates, (), "ACCEPT", llm=consulted)
     return _decide(base, resolutions, session, use_context, confirm, frozenset())
+
+
+def _consult(
+    text: str, nlp: NLPResult, session: Session, use_context: bool, mode: str, provider: Provider | None,
+) -> Consultation | None:
+    """Ask the LLM if ``mode`` calls for it for this sentence; the import keeps ``rules`` free of it."""
+    from parsley.llm import hybrid
+
+    resolved = _resolve(nlp.candidates, session, use_context, frozenset())
+    why = hybrid.trigger(mode, nlp.notes, resolved[0].candidate.score if resolved else None)
+    return None if why is None else hybrid.consult(text, session, provider, why)
+
+
+def _llm_warnings(trace: Trace) -> tuple[Diagnostic, ...]:
+    return () if trace.llm is None else trace.llm.warnings
 
 
 def answer(
@@ -151,12 +186,16 @@ def _decide(
         clarification = decision.clarification
         trace = replace(base, ranked=ranked, decision="CLARIFY", chosen=resolutions[0].candidate)
         return PipelineResult(
-            "needs_clarification", trace, question=clarification.question,
+            "needs_clarification", trace, diagnostics=_llm_warnings(base), question=clarification.question,
             options=clarification.options, clarification=clarification,
         )
     best = decision.resolution
     assert best is not None
-    diagnostics = list(best.diagnostics)
+    diagnostics = [*_llm_warnings(base), *best.diagnostics]
+    if best.candidate.rule_id == LLM_RULE_ID:
+        from parsley.llm.hybrid import accepted_warning
+
+        diagnostics.append(accepted_warning())
     try:
         stmt = build(best.candidate)
     except IRBuildError as error:
