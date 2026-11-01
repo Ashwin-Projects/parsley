@@ -119,6 +119,15 @@ words changed no held-out result. The synthetic blind set scores the same as in 
 development fixtures (not evidence) grew from 23 to 33 valid fixtures with the v1.1
 vocabulary group (V24-V33), all exact matches, with no wrong code (0/72).
 
+### Optional LLM source (branch `llm-hybrid`, 2026-11-01)
+
+`parsley/llm/` adds `--mode llm|hybrid` (ARCHITECTURE.md 2.11, LANGUAGE_SPEC.md 7.5). `rules`
+stays the default, and `tests/integration/test_rules_regression.py` compares its evaluation
+output byte for byte with `tests/golden/`, captured before any LLM code existed, so the v1.1
+table above still holds. Only `tests/fixtures_llm/recorded.json` has been run through these
+modes, and its responses are hand-written: no real provider call has been made yet, and no
+accuracy is claimed. Regenerate the golden files only for a deliberate rules-mode change.
+
 ---
 
 ## Phase 0 - Setup (Days 1-2)

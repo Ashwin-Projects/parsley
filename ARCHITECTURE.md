@@ -11,6 +11,7 @@ the feedback paths that make N1 work.
  [A] Normalizer ............ keywords matched in lowercase; identifier case kept
        |
  [B] Candidate generator ... pattern rules -> 0..k candidate intents, each with slots + score
+       |            ...      (optional, off by default: an LLM may add candidates here, 2.11)
        |            ^
        |            |  [N1] Context resolver: symbol table + reference stack
        |            |       (variable vs string, 'it', typos, implicit declare)
@@ -37,6 +38,7 @@ the feedback paths that make N1 work.
 |---|---|---|
 | [A] Normalizer | `parsley/nlp/normalizer.py` | 2 |
 | [B] Candidate generator | `parsley/nlp/patterns.py`, `parsley/nlp/candidates.py` | 2 |
+| [B] LLM candidate source (optional) | `parsley/llm/` | after v1.1 |
 | [N1] Context resolver | `parsley/nlp/context.py` | 6 |
 | [C] Ambiguity gate [N2] | `parsley/nlp/ambiguity.py` | 6 |
 | [N4] Suggestions | `parsley/nlp/suggest.py` | 6 |
@@ -80,6 +82,11 @@ the feedback paths that make N1 work.
     `suggest.split_guidance(text)` gives the block-splitting guidance, which the pipeline puts
     in the E101 message. Additive; affects `ast_eval.py`, `interpreter.py`, `suggest.py`
     and the pipeline. Requested by the project lead.
+  - 2026-11-01: optional LLM candidate source (2.11). `Candidate.rule_id` may be `LLM`;
+    `Diagnostic.stage` may be `llm`; `pipeline.run` gains keyword-only `mode` and `provider`;
+    `Trace` gains `llm`. All additive, with defaults that keep `rules` behaviour byte-identical;
+    no existing field, code or contract changes. Affects `pipeline.py`, `cli.py`,
+    `diagnostics.py` and `candidates.py`. Requested by the project lead.
 
 ### 2.2 Plan notation (verbatim)
 
@@ -103,7 +110,7 @@ evaluation [N5].
 | `intent` | `str` | yes | One of `declare`, `assign`, `increment`, `decrement`, `multiply`, `divide`, `print`, `if`, `repeat` (LANGUAGE_SPEC.md Section 6). |
 | `slots` | `dict[str, Slot \| None]` | yes | Keys fixed per intent (table below). `None` = required slot missing from the English, which triggers CLARIFY. |
 | `score` | `float` | yes | In `[0.0, 1.0]`; higher is better. Computed in Phase 2, re-scored in Phase 6. |
-| `rule_id` | `str` | yes | Stable pattern id from LANGUAGE_SPEC.md (`D1`, `INC2`, ...). |
+| `rule_id` | `str` | yes | Stable pattern id from LANGUAGE_SPEC.md (`D1`, `INC2`, ...), or `LLM` for a proposal of the optional LLM source (2.11). |
 | `notes` | `list[str]` | yes (may be empty) | Human-readable notes for the trace, e.g. implicit declaration. Never MiniLang text. |
 
 Slot keys per intent:
@@ -180,8 +187,8 @@ stage (design rule 1).
 | Field | Type | Semantics |
 |---|---|---|
 | `level` | `"error" \| "warning" \| "info"` | Any `error` makes the CLI exit non-zero. |
-| `stage` | `str` | One of `normalizer`, `candidates`, `context`, `ambiguity`, `ir`, `lexer`, `parser`, `semantic`, `codegen`, `verify`, `cli`. |
-| `code` | `str` | Letter (`E`/`W`/`I`, matching `level`) + 3 digits. Semantic codes `E201`-`E207`, `W208` and `E209` are listed in LANGUAGE_SPEC.md 2.2. Pipeline codes: `E101` (`candidates`: unsupported sentence), `W301` (`context`: implicit declaration), `E401` (`ir`: unresolved slot, e.g. with `--no-context`, or no valid statement), `E102` (`ambiguity`: a question outside the REPL), `E103` (`ambiguity`: interpretation not confirmed under `--confirm`). |
+| `stage` | `str` | One of `normalizer`, `candidates`, `context`, `ambiguity`, `ir`, `lexer`, `parser`, `semantic`, `codegen`, `verify`, `cli`, `llm`. |
+| `code` | `str` | Letter (`E`/`W`/`I`, matching `level`) + 3 digits. Semantic codes `E201`-`E207`, `W208` and `E209` are listed in LANGUAGE_SPEC.md 2.2. Pipeline codes: `E101` (`candidates`: unsupported sentence), `W301` (`context`: implicit declaration), `E401` (`ir`: unresolved slot, e.g. with `--no-context`, or no valid statement), `E102` (`ambiguity`: a question outside the REPL), `E103` (`ambiguity`: interpretation not confirmed under `--confirm`). LLM codes `W510`-`W514` (`llm`) are listed in LANGUAGE_SPEC.md 7.5. |
 | `message` | `str` | Plain English, user-facing. |
 
 ### 2.6 Verification
@@ -299,23 +306,25 @@ undeclared becoming `Let`) is decided by the context resolver, which changes the
 
 ### 2.10 Pipeline result
 
-`parsley/pipeline.py`: `run(text, session, *, use_context=True, confirm=None) -> PipelineResult`
-and `answer(result, reply, session, *, use_context=True, confirm=None) -> PipelineResult`
-(merges the reply to `result`'s question and re-runs; an answer that does not fit returns
-`result` unchanged). `confirm(back_translation) -> bool` is the `--confirm` hook: the
-statement is recorded only if it returns true. Consumers: CLI, evaluation, `tests/integration`.
+`parsley/pipeline.py`: `run(text, session, *, use_context=True, confirm=None, mode="rules",
+provider=None) -> PipelineResult` and `answer(result, reply, session, *, use_context=True,
+confirm=None) -> PipelineResult` (merges the reply to `result`'s question and re-runs; an
+answer that does not fit returns `result` unchanged, and it never calls an LLM).
+`confirm(back_translation) -> bool` is the `--confirm` hook: the statement is recorded only if
+it returns true. `mode` and `provider` are defined in 2.11. Consumers: CLI, evaluation,
+`tests/integration`.
 
 | Field | Type | Semantics |
 |---|---|---|
 | `status` | `"ok" \| "needs_clarification" \| "unsupported" \| "error"` | `ok`: code produced and the statement recorded. `needs_clarification`: the ambiguity gate's question (alternatives, operator scope, typo, empty-stack pronoun, missing slot). `unsupported`: no pattern matched. `error`: unresolved slot, semantic error, or not confirmed (`E103`). |
 | `clarification` | `Clarification \| None` | The open question for `answer` (`kind`, readings or the slot path the answer fills); set only for `needs_clarification`. |
 | `minilang`, `back_translation` | `str \| None` | Set only for `ok`. |
-| `diagnostics` | `tuple[Diagnostic, ...]` | Context warnings, IR/semantic diagnostics, or `E101`. |
+| `diagnostics` | `tuple[Diagnostic, ...]` | Context warnings, IR/semantic diagnostics, or `E101`; LLM warnings (2.11) come first and can accompany any status. |
 | `question`, `options` | `str \| None`, `tuple[str, ...]` | Set only for `needs_clarification` (LANGUAGE_SPEC.md 7.1 wording). |
 | `notes` | `tuple[str, ...]` | `NLPResult` reason codes (2.4); only for `unsupported`. |
 | `suggestion` | `str \| None` | N4 phrasing to try instead; only for `unsupported`. The CLI prints `Try: ...` after the E101 diagnostic. |
 | `verification` | `Verification \| None` | V1/V2/V3 results (2.6); set only for `ok`. The CLI prints `V1 ok \| V2 skipped \| V3 skipped`; `--trace` prints the details. |
-| `trace` | `Trace` | `input`, `normalized`, `candidates` (as generated), `ranked` (after context), `decision` (`ACCEPT`/`CLARIFY`/`REJECT`), `chosen`, `ast`, `verification`. |
+| `trace` | `Trace` | `input`, `normalized`, `candidates` (as generated), `ranked` (after context), `decision` (`ACCEPT`/`CLARIFY`/`REJECT`), `chosen`, `ast`, `verification`, `llm` (the `Consultation` of 2.11; `None` unless the LLM was asked). |
 
 **N4 suggestion interface** (the owner of `parsley/nlp/suggest.py` implements it):
 
@@ -333,6 +342,56 @@ gives `None`, as does a return value that is not a non-empty string. `split_guid
 follows the same rules; without a usable answer, E101 keeps its plain message. A suggestion
 never changes the status, the session or the CLI's stderr.
 
+### 2.11 LLM candidate source (optional)
+
+Off by default. The LLM only proposes candidates; it has no path around any stage. Rules
+mode never imports `parsley.llm` and never reads `.env` (a test checks this in a fresh
+interpreter). The modes, score range, threshold, codes and discard reasons are specified in
+LANGUAGE_SPEC.md 7.5.
+
+```
+ sentence --> [B] rules --> NLPResult
+                              | a rejection with a reason of its own stands: no LLM call
+                              v
+              hybrid.trigger(mode, reasons, top score after context)
+                              | asked                                 | not asked
+                              v                                       |
+    provider.propose --> RawProposal (unparsed text)                  |
+                              v                                       |
+    validate.validate --> Reading | Discard(reason)                   |
+                              v                                       |
+    hybrid.consult --> Candidate(rule_id="LLM", score below rules)    |
+                              v                                       v
+                      [N1] context resolver --> [N2] gate --> [D] [E] [F] --> [N3] verifier
+```
+
+| Module | Role |
+|---|---|
+| `llm/prompt.py` | `SYSTEM_PROMPT` (fixed, generated once from the pattern table), `user_message(sentence, context)` (JSON data), `LLMContext` (a copy of symbol names, types and the reference stack), `intent_slots()` (the slot schema). |
+| `llm/provider.py` | `Provider` protocol: `propose(sentence, context) -> list[RawProposal]`. `AnthropicProvider`, `OpenAICompatibleProvider` (`base_url` selects OpenAI, Groq, Ollama and others), `FakeProvider` (replays a fixtures file). Stdlib `urllib`; a per-attempt timeout and one retry on timeouts, connection failures, 429 and 5xx; redirects are not followed; a response is capped at 256 KiB. The only module that opens connections. |
+| `llm/config.py` | `load_provider()`: environment variables, then `.env`. A problem becomes a provider that reports it when called, so the compiler always runs. |
+| `llm/validate.py` | `validate(text, sentence) -> Validated`: parses model text as JSON and rebuilds valid readings key by key. Never evaluates model text. |
+| `llm/hybrid.py` | `trigger`, `score_of`, `consult(sentence, session, provider, why) -> Consultation`. |
+
+`Consultation` (frozen): `trigger: str`, `provider: str`, `candidates: tuple[Candidate, ...]`,
+`discarded: tuple[Discard, ...]`, `warnings: tuple[Diagnostic, ...]`. A `Discard` has `reason`
+and `detail`, printable and at most 200 characters.
+
+How each guarantee holds for a model's reading:
+
+| Guarantee | Mechanism |
+|---|---|
+| NLP never emits MiniLang (rule 3) | A reading is a `Candidate`. Model text is never written to the output; only the code generator writes code, and a test forbids `llm/` from importing it. |
+| N1 decides variable vs. text, pronouns, typos | In a value the model may write only `number`, quoted `string`, `word` and `pronoun`; a `name` is allowed only in a NAME position. The resolver treats these as it treats rule slots. |
+| Typo question for targets (D-12) | A model's `declare` becomes `assign`, so N1 picks implicit `LET` or the typo question, and a type cannot change through `W208`. |
+| Nothing is invented | Grounding: every name, word, pronoun, number and quoted string must come from the sentence. A hostile response can only rearrange the user's words. |
+| N2 asks, it does not guess | LLM candidates go through `gate()`. Readings within `CLARIFY_MARGIN` ask; in `llm` mode rule candidates stay in the pool whenever they alone would ask, so a model cannot remove a question. |
+| One statement per sentence (D-4) | Rejections with a reason of their own never reach the LLM; a reading that drops a second statement or a negation is discarded. |
+| N3 | Unchanged. `W513` marks an accepted LLM reading, because V1 is the layer that can catch a misreading, and only if a person reads it. |
+| Only `semantic.py` writes the session | `LLMContext` is a copy; `llm/` imports neither `semantic` nor `codegen`. |
+| Fallback | A provider problem never raises: the rule result stands, with `W510`, `W511`, `W512` or `W514`. Only a KeyboardInterrupt passes through. |
+| Secrets | Keys are excluded from `repr`, never quoted in a message, sent only over https or to loopback, and a `.env` cannot point a key from the real environment at another host. |
+
 ## 3. Design rules
 
 - No stage silently guesses. It returns a testable result or a diagnostic.
@@ -344,12 +403,14 @@ never changes the status, the session or the CLI's stderr.
 - `ast_eval.py` and `interpreter.py` share no evaluation code. The interpreter runs on
   parsed MiniLang, not on the original AST.
 - Mutation / corruption hooks exist only under `tests/`, never in the runtime pipeline.
+- Model output is untrusted data. It is validated at the boundary (`llm/validate.py`), and
+  afterwards it has no privileges a rule candidate lacks.
 
 ## 4. Ownership of boundaries
 
 | Boundary | Producer (owner) | Consumers (owners) |
 |---|---|---|
-| `Candidate`, `NLPResult` | NLP front end (Core) | IR builder (Core), suggest.py (Parser/Verifier), evaluation (Evaluation), optional `parsley_ml` scorer (Evaluation; may change `score` only) |
+| `Candidate`, `NLPResult` | NLP front end (Core); optional LLM source (`parsley/llm/`, Candidates with `rule_id="LLM"` only) | IR builder (Core), suggest.py (Parser/Verifier), evaluation (Evaluation), optional `parsley_ml` scorer (Evaluation; may change `score` only) |
 | `Diagnostic` | all stages | CLI (Core), evaluation (Evaluation) |
 | `Session` / symbol table | semantic.py (Core) | context.py (Core), ast_eval (Evaluation), interpreter (Parser/Verifier) |
 | AST nodes | ast_nodes.py (Core) | parser (Parser/Verifier), codegen (Core), verifiers (Parser/Verifier, Evaluation) |

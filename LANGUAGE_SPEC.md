@@ -1,6 +1,6 @@
 # MiniLang and Constrained-English Specification
 
-Status: **frozen for Phase 2 (2026-10-25); v1.1 vocabulary added 2026-10-28 (see the [changelog](#changelog-v11-vocabulary)).** Source of truth: plan v2.1, Section 4
+Status: **frozen for Phase 2 (2026-10-25); v1.1 vocabulary added 2026-10-28 (see the [changelog](#changelog-v11-vocabulary)); optional LLM modes added 2026-11-01 (Section 7.5).** Source of truth: plan v2.1, Section 4
 ([`docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf`](docs/Clarix_NL_MiniLang_Compiler_Plan_Final.pdf);
 "Clarix" in the PDF = Parsley), plus the team decisions recorded in
 [Section 9](#9-decision-log).
@@ -407,6 +407,70 @@ Every binary expression is parenthesized and every unary operand is enclosed in
 parentheses, so operator scope is explicit. Blocks use `begin ... end`, joining
 their statements with `; `, with no internal sentence-ending periods.
 
+### 7.5 Candidate source modes and LLM proposals
+
+The grammar, the pattern table and every section above are unchanged. These modes only add
+a second source of candidates; `rules` is the default and is byte-identical to v1.1.
+
+| Mode | Candidates | LLM called |
+|---|---|---|
+| `rules` | Pattern rules. | Never. |
+| `hybrid` | Rule candidates plus any LLM candidates. | Only when the rules give `NO_MATCH`, or the top rule score after context resolution is below `CONSULT_THRESHOLD`. |
+| `llm` | LLM candidates only, unless the rule candidates alone would ask a question: then both, so the question stands. If there are no LLM candidates, the rule result. | For every sentence except the rejections below. |
+
+**Never sent to the LLM, in any mode:** a sentence rejected for a reason other than `NO_MATCH`
+(for example `REJECT_AND_CONTINUATION`, `UNTERMINATED_QUOTE`, `INPUT_TOO_LONG`,
+`TOO_MANY_ALTERNATIVES`). The rejection stands.
+
+**Scores** (`parsley/llm/hybrid.py`). These are derived from the rule score and `CLARIFY_MARGIN`,
+and were fixed without using any evaluation data.
+
+| Constant | Value | Meaning |
+|---|---|---|
+| Rule score | above 0.5 | `0.5 + 0.5 * share of command words`, and every rule has a command word. |
+| `LLM_SCORE_MIN`, `LLM_SCORE_MAX` | 0.35, 0.50 | `score = 0.35 + 0.15 * confidence`, so every LLM reading starts below every rule match. Context re-scoring (Section 5) then applies as usual. |
+| `MIN_CONFIDENCE` | 0.5 | A reading below this is discarded, so accepted confidence gives scores from 0.425 to 0.50. |
+| `CONSULT_THRESHOLD` | 0.55 | `LLM_SCORE_MAX + CLARIFY_MARGIN`. At or above it no LLM reading could come within the margin of the rule reading, so a call could change nothing. |
+
+The range is narrow on purpose: model confidence is not calibrated, and two readings stay
+within `CLARIFY_MARGIN` (a question) until their confidences differ by a third. A rule reading
+just above 0.5 and a confident LLM reading are also close, so a weak rule match the LLM
+disputes becomes a question, using the Section 7.1 `alternatives` wording.
+
+**What a reading may contain.** A response is exactly `{"readings": [...]}` with at most 3
+readings, each exactly `intent`, `slots`, `confidence`, in the ARCHITECTURE.md 2.3 slot shapes:
+
+- Intents and slot keys come from the pattern table. A slot may be `null` only if a rule marks
+  it optional (Section 6). Block bodies follow Section 6.3.
+- In a value: `number`, a quoted `string`, `word`, `pronoun`, `binop`, `neg`. A `name` is
+  allowed only in a NAME position, so N1 still decides variable vs. text, pronouns and typos.
+- **Grounding:** every name, word, pronoun, number and quoted string must come from the
+  sentence, spelled the same way; a quoted word cannot become a bare word. A number word
+  grounds its number (`five` grounds `5`). Nothing else does, so `double x` has no reading
+  (`2` is not in the sentence).
+- **Coverage:** a reading may not drop a negation (`not`, `never`, `no`, `don't`, `dont`,
+  `cannot`, `can't`, `won't`), except in an `if`, whose comparison can express it, or drop a
+  second statement after `and` or `then` when that clause matches a supported pattern.
+- A model's `declare` is treated as `assign`, so Section 4 rule 3 and Section 5 decide what
+  happens to the name: implicit `LET` with `W301`, or the typo question.
+
+**Discard reasons** (`--trace` prints each one): `too_long`, `malformed_json`, `bad_shape`,
+`too_many_readings` (the first 3 are kept), `unknown_intent`, `bad_confidence`,
+`low_confidence`, `bad_slots`, `not_grounded`, `not_covered`. A response with no readings is
+the model declining, not a failure, so it gets no warning.
+
+**Warning codes** (stage `llm`). In `W510`, `W511`, `W512` and `W514` the rule result stands:
+compiled code, a question or `E101`. The numbers start at 510 because the CLI already uses
+`W506` and `E502`-`E507`.
+
+| Code | Condition | Example message |
+|---|---|---|
+| `W510` | The provider failed: connection, HTTP status, refusal, or an unusable response envelope. | `the LLM call failed (the provider answered HTTP 500), so this uses the rule result` |
+| `W511` | The provider timed out, after the retry. | `the LLM did not answer in time (no answer within 20 seconds), so this uses the rule result` |
+| `W512` | The response held readings, but none survived validation. | `no LLM reading was usable (not_grounded), so this uses the rule result` |
+| `W513` | The accepted reading came from the LLM. Not a failure: V1 is the check that can catch a misreading, so it asks a person to read V1. | `this reading came from the LLM, not a rule; check the back-translation` |
+| `W514` | No provider is configured, or its configuration is invalid. | `the LLM is not configured (set PARSLEY_LLM_PROVIDER to anthropic, openai or fake), so this uses the rule result` |
+
 ## 8. Rejected English patterns
 
 Rejected input returns `unsupported` with an N4 suggestion where one is close enough.
@@ -443,6 +507,9 @@ applied throughout this document.
 | D-10 | String comparison | Strings support only `==` and `!=`. | §2 |
 | D-11 | REPEAT count | Integer literal from 1 to 1000. | §2 |
 | D-12 | Typo in an assignment/update target | Asks the rule 3 typo question instead of an implicit `LET`; explicit declarations do not ask. *Accepted 2026-10-25.* | §4 |
+| D-13 | May an LLM extend what is accepted? | Only by proposing candidates that pass N1, N2 and N3; `rules` stays the default. *2026-11-01.* | §7.5 |
+| D-14 | May an LLM reading add a value the sentence does not state? | No: grounding covers numbers too, so `double x` stays rejected. Safe, at the cost of some paraphrases. *2026-11-01, flagged for review.* | §7.5 |
+| D-15 | Is a model's `declare` an explicit declaration? | No. It is treated as `assign`, because D-12's exemption is for a user who said so. *2026-11-01.* | §7.5 |
 
 Edit distance in D-2 is optimal string alignment (an adjacent swap counts as one edit), so
 the plan's demo case `print scroe` stays a typo question for the 5-letter name `score`.

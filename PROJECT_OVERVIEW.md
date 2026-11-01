@@ -24,18 +24,19 @@ code, and output a single guess. That causes three problems:
 - Verify every accepted statement three ways: back-translation, structural round-trip,
   execution equivalence (N3).
 - Measure all of this on a held-out set, with an ablation (N5).
-- Stay deterministic, offline and reproducible: Python standard library plus pytest.
+- Stay deterministic, offline and reproducible by default: Python standard library plus pytest.
 
 ## Non-goals
 
-- Unconstrained English, or a general-purpose language model front end. An LLM could plug
-  into the candidate interface later, but it is out of scope.
+- Unconstrained English, or a general-purpose language model front end. An optional LLM can
+  propose candidates (`--mode llm|hybrid`, off by default), but it is not part of the goals
+  above, and every proposal still passes N1, N2 and N3.
 - MiniLang features beyond the spec: no functions, lists, user input, `while` loops, or
   booleans as values.
 - Claiming that NL-to-code, clarification, back-translation or round-trip are new on their
   own (NOVELTY.md, "What we do NOT claim").
 - Proving that an interpretation is correct. Verification checks against defined checks.
-- Paid APIs, network access, or heavy dependencies.
+- Paid APIs, network access, or heavy dependencies, in the default mode.
 - A GUI or web backend (optional, Phase 9, only if everything else is done).
 
 ## Success criteria (definition of done)

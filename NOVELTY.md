@@ -30,7 +30,9 @@ verification layer detects which class of generation error.
 ## The novelty package (N1-N5)
 
 N1-N3 are core (must ship), N4 is core-light, and N5 is the evidence. All are
-deterministic, use no paid API, and are built with the standard library only.
+deterministic, use no paid API, and are built with the standard library only. An optional
+LLM candidate source exists outside this package, off by default
+([below](#optional-llm-candidate-source-not-part-of-the-contribution)).
 
 | Id | Feature | Phase | Module(s) |
 |---|---|---|---|
@@ -67,10 +69,49 @@ as proof** that every English interpretation is correct.
 - Any percentage in advance. We report the measured numbers, including failures.
 - Anything from the optional learned scorer (`parsley_ml/`). It is off by default, outside the
   core, and not part of the contribution; all headline numbers are reported with it off.
+- Anything from the optional LLM modes. All headline numbers are `rules` mode. No real model has
+  been evaluated, so there is no measured accuracy for `llm` or `hybrid`.
 
 The defensible claim is the **specific combination**: a compiler symbol table feeding back
 into English interpretation, explicit ambiguity handling, and layered verification inside a
 formally specified mini-language, with measured results.
+
+## Optional LLM candidate source (not part of the contribution)
+
+`--mode llm` and `--mode hybrid` let a language model propose candidates for sentences the rules
+miss. This tests the design more than it extends it: the pipeline's checks do not depend on
+where a candidate came from, so a model can be added without being trusted. The model is one
+more generator in stage [B], and N1-N3 stay in control (mechanisms in ARCHITECTURE.md 2.11,
+rules in LANGUAGE_SPEC.md 7.5):
+
+- **N1 decides.** The validator will not let a model settle what N1 owns. In a value it can
+  write a `word` or a `pronoun` but not a `name`, so the symbol table still decides variable vs.
+  text, the reference stack still resolves `it`, and typos still ask. A model's `declare` is
+  treated as `assign`, so it cannot skip the typo check.
+- **N2 asks.** LLM readings have scores below every rule match and pass the same gate. Two close
+  readings, or a weak rule match the model disputes, become a question. A question the rules
+  would ask survives in `llm` mode.
+- **N3 verifies.** Every accepted reading gets V1, V2 and V3, and `W513` tells the user that V1
+  deserves a look.
+- **Grounding** is the new mechanism: every name, word, number and quoted string in a reading
+  must come from the sentence, so a sentence that tells the model to output code can at worst
+  produce a rearrangement of its own words, and never new content. Model text is parsed as
+  data and never evaluated.
+
+What this does not give:
+
+- **A wrong reading of the right words can pass.** All three layers can be satisfied by a
+  statement the user did not mean: `set a to b` read as `set b to a` is grounded, valid and
+  verifiable. V1 is the only layer that can catch it, and only if the user reads it. Rule-only
+  mode has this risk too, but its readings come from a fixed table.
+- **Coverage is partial.** Checks catch a dropped negation and a dropped second statement that
+  matches a supported pattern. A second clause the rules cannot read (`put 5 in x and bump y`)
+  can still be dropped by a model.
+- **Determinism and offline use do not hold** in these modes, and a sentence, the variable
+  names and their types are sent to the configured provider.
+- **No measured benefit yet.** Tests replay hand-written responses, so they show that bad
+  output is contained, not that a real model helps. Measuring that needs a real model and a
+  new blind set, since the existing paraphrase failures have already been seen.
 
 ## Metrics (Section 8)
 

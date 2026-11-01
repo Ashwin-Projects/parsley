@@ -17,8 +17,16 @@ tests/
 |   |-- invalid.json    English -> expected "unsupported"
 |   |-- ambiguous.json  English + given session -> expected clarification question
 |   `-- semantic.json   English + given session -> expected semantic diagnostic codes (Phase 4)
+|-- fixtures_llm/   hand-written model responses replayed by FakeProvider; not evaluation data
+|-- golden/         run_eval output from before any LLM code; rules mode must match it byte for byte
 `-- eval_data/      held-out evaluation set (Phase 8); written after Phase 7 by a teammate, frozen before running
 ```
+
+LLM tests never open a socket: providers take a scripted transport or replay
+`tests/fixtures_llm/recorded.json`. `test_rules_regression.py` is the one suite that compiles
+held-out English, because the requirement is that rules mode stays identical on it. It pins
+behaviour, failures included, and asserts nothing about what a score should be, so it is not a
+tuning target.
 
 Mutation / corruption hooks for the Phase 7 mutation suite live **only** under `tests/`,
 never in `src/` (CLAUDE.md rule 6).

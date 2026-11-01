@@ -20,8 +20,9 @@ programming language, and checks its own output instead of asking you to trust i
   Did you mean the variable score?
 ```
 
-It is deterministic and runs offline. It uses only the Python standard library, with no
-LLMs and no external APIs.
+By default it is deterministic and runs offline, using only the Python standard library,
+with no LLMs and no external APIs. An [optional LLM mode](#optional-llm-modes) can propose
+readings for sentences the rules miss; every proposal goes through the same checks.
 
 > **Status (2026-10-27):** the English pipeline, standalone MiniLang lexer/parser,
 > N4 rewrite suggestions, V2 structural comparison and V3 execution checks are working.
@@ -226,6 +227,90 @@ phrasing is close.
 
 ---
 
+## Optional LLM modes
+
+The default, `--mode rules`, never uses a model, never reads `.env` and never touches the
+network. Two other modes let a language model propose readings:
+
+| Mode | When the model is asked | What is compared |
+|---|---|---|
+| `rules` (default) | Never | Pattern rules only |
+| `hybrid` | When no rule matches, or the best rule match is weak (score below 0.55) | Rule readings and model readings |
+| `llm` | For every sentence | Model readings; the rule result if the model fails, and rule readings too if the rules would ask a question |
+
+```
+parsley --mode hybrid "store 50 in bonus"
+parsley --mode hybrid --file examples/valid/age.txt --trace
+parsley --mode hybrid
+```
+
+The model only proposes. Each reading must fit the same data structure as a rule's, may use
+only words and numbers from your sentence, and then goes through context resolution, the
+ambiguity gate, semantic checks and all three verification layers. If two readings are close,
+Parsley asks. If the model fails or times out, you get the rule result and a warning. An
+accepted model reading always carries `W513`, so read the `I understood:` line.
+
+### Configure a provider
+
+Copy [.env.example](.env.example) to `.env` (it is git-ignored) and set a provider. Real
+environment variables win over `.env`.
+
+| Variable | Meaning |
+|---|---|
+| `PARSLEY_LLM_PROVIDER` | `anthropic`, `openai` (any OpenAI-compatible server) or `fake` |
+| `PARSLEY_LLM_MODEL` | The model; optional for `anthropic` (default `claude-opus-5-5`), required for `openai` |
+| `PARSLEY_LLM_BASE_URL` | Server URL, for `openai` servers other than OpenAI |
+| `PARSLEY_LLM_TIMEOUT` | Seconds per attempt (default 20); a failed call is retried once |
+| `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `PARSLEY_LLM_API_KEY` | The key; the last one wins over the vendor names |
+| `PARSLEY_LLM_FIXTURES` | For `fake`: a file of recorded responses |
+
+```
+# Anthropic
+PARSLEY_LLM_PROVIDER=anthropic
+ANTHROPIC_API_KEY=...
+
+# Groq
+PARSLEY_LLM_PROVIDER=openai
+PARSLEY_LLM_BASE_URL=https://api.groq.com/openai/v1
+PARSLEY_LLM_MODEL=your-model
+PARSLEY_LLM_API_KEY=...
+
+# Ollama (local, no key)
+PARSLEY_LLM_PROVIDER=openai
+PARSLEY_LLM_BASE_URL=http://localhost:11434/v1
+PARSLEY_LLM_MODEL=your-model
+```
+
+To try the modes without a key or a network, replay the recorded responses:
+
+```
+PARSLEY_LLM_PROVIDER=fake
+PARSLEY_LLM_FIXTURES=tests/fixtures_llm/recorded.json
+```
+
+With `--trace`, candidates from the model show as `LLM`, and the trace says why the model was
+asked and why any reading was discarded.
+
+| Warning | Meaning |
+|---|---|
+| `W510` | The model call failed; the rule result stands |
+| `W511` | The model timed out; the rule result stands |
+| `W512` | No proposed reading passed validation; the rule result stands |
+| `W513` | The accepted reading came from the model, so check the back-translation |
+| `W514` | No provider is configured; the rule result stands |
+
+Good to know:
+
+- Your sentence, your variable names and their types are sent to the provider you configure.
+- These modes are not deterministic, and each model call adds time and may cost money.
+- A reading can only use what the sentence says, so `double x` stays rejected: `2` is not in
+  the sentence.
+- A model can still misread a sentence in a way that passes every check, such as swapping two
+  variables. No accuracy has been measured for these modes, and the evaluation below is
+  `rules` mode only.
+
+---
+
 ## Evaluation
 
 Run from the repository root (after `pip install -e .`):
@@ -265,8 +350,9 @@ src/parsley/
 ├── nlp/        normalizer, pattern table, candidates, context, ambiguity, suggestions
 ├── compiler/   AST nodes, IR builder, lexer, parser, semantic analysis, symbols, codegen
 ├── verify/     back-translation, round-trip, AST evaluator, interpreter
-└── eval/       dataset, metrics, evaluation runner
-tests/          unit/  integration/  fixtures/  eval_data/
+├── eval/       dataset, metrics, evaluation runner
+└── llm/        optional model providers, prompt, validation, hybrid mode
+tests/          unit/  integration/  fixtures/  fixtures_llm/  golden/  eval_data/
 examples/       valid/  invalid/  ambiguous/
 ```
 
