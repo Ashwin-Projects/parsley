@@ -14,6 +14,7 @@ from parsley.llm.provider import (
     FakeProvider,
     OpenAICompatibleProvider,
     ProviderError,
+    ProviderRateLimited,
     ProviderTimeout,
     RawProposal,
 )
@@ -116,6 +117,13 @@ def test_url_error_wrapping_a_timeout_counts_as_a_timeout():
 def test_retries_a_server_error_once():
     wire = Wire((503, b""), (200, OPENAI_OK))
     assert len(openai(wire).propose("print x", CONTEXT)) == 1
+    assert len(wire.calls) == 2
+
+
+def test_a_rate_limit_after_the_retry_is_its_own_error():
+    wire = Wire((429, b""), (429, b""))
+    with pytest.raises(ProviderRateLimited):
+        openai(wire).propose("print x", CONTEXT)
     assert len(wire.calls) == 2
 
 

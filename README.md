@@ -336,6 +336,19 @@ Results on the held-out set (2026-10-27):
 - Injected code-generation bugs: V2 caught 188/188 and V3 173/188; V3 caught none that V2 missed.
 - Weak spots: paraphrase consistency 1/15 groups and N4 suggestion usefulness 0/13.
 
+To evaluate a model on the same inputs, add `--mode hybrid` or `--mode llm`:
+
+```
+python -m parsley.eval.run_eval --mode hybrid --delay 2 --record results/recorded_hybrid.json
+```
+
+Those runs write `results_<mode>_<model>.csv` and `summary_<mode>_<model>.md`, so the rules
+results are never overwritten, and report wrong code first. Responses are cached on disk by
+model, prompt hash and input in `results/llm_cache/` (`--cache DIR`), so a re-run is free and
+gives the same output. `--delay` paces real calls and a 429 backs off automatically. `--record`
+saves the responses as a fixture for the `fake` provider. `--sets development --limit 5` is a
+small smoke test, which never touches held-out inputs.
+
 [NOVELTY.md](NOVELTY.md) has the results and their limitations, including data provenance.
 Do not tune on the held-out inputs. `python scripts/validate_paraphrases.py` checks the
 paraphrase file's freeze and gold programs; `python scripts/demo.py --with-mutations` runs

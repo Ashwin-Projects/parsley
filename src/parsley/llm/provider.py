@@ -42,6 +42,10 @@ class ProviderTimeout(ProviderError):
     """The provider did not answer in time, after the retry."""
 
 
+class ProviderRateLimited(ProviderError):
+    """The provider answered 429, after the retry; a batch run may wait and try again."""
+
+
 class ConfigError(ProviderError):
     """The provider is not configured; the message names what to set."""
 
@@ -108,7 +112,8 @@ def _post_json(
         else:
             if status == 200:
                 return _decode(reply)
-            failure = ProviderError(f"the provider answered HTTP {status}")
+            kind = ProviderRateLimited if status == 429 else ProviderError
+            failure = kind(f"the provider answered HTTP {status}")
             if not _retryable(status):
                 raise failure
     raise failure
@@ -203,24 +208,37 @@ class OpenAICompatibleProvider:
         return [RawProposal(text, self.name)]
 
 
+def context_json(context: LLMContext) -> dict[str, list[Any]]:
+    """``context`` as plain JSON data, for fixtures and the response cache."""
+    return {"symbols": [list(symbol) for symbol in context.symbols], "reference_stack": list(context.ref_stack)}
+
+
 class FakeProvider:
     """Replays recorded responses from a JSON file, keyed by the exact sentence.
 
     Each entry has ``sentence`` and one of ``readings`` (serialized as the model's JSON),
     ``raw`` (the model's text, unchanged) or ``error`` (``timeout`` or any other word, which
-    fails like a provider error). Never used unless configured.
+    fails like a provider error). An optional ``context`` (``symbols`` and ``reference_stack``,
+    as ``context_json`` writes them) limits an entry to that session state; it wins over an
+    entry without one. The file's ``model`` names the model that produced it. Never used
+    unless configured.
     """
 
     name: ClassVar[str] = "fake"
 
     def __init__(self, path: Path | str) -> None:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
-        self._responses: dict[str, dict[str, Any]] = {entry["sentence"]: entry for entry in data["responses"]}
+        self.model: str = data.get("model", self.name)
+        self._responses: dict[tuple[str, str], dict[str, Any]] = {
+            (entry["sentence"], json.dumps(entry.get("context"), sort_keys=True)): entry
+            for entry in data["responses"]
+        }
         self.calls: list[str] = []
 
     def propose(self, sentence: str, context: LLMContext) -> list[RawProposal]:
         self.calls.append(sentence)
-        entry = self._responses.get(sentence)
+        exact = (sentence, json.dumps(context_json(context), sort_keys=True))
+        entry = self._responses.get(exact) or self._responses.get((sentence, "null"))
         if entry is None:
             raise ProviderError("no recorded response for this sentence")
         if "error" in entry:

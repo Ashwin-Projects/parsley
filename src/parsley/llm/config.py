@@ -40,10 +40,10 @@ class UnavailableProvider:
     name: ClassVar[str] = "unavailable"
 
     def __init__(self, error: ConfigError) -> None:
-        self._error = error
+        self.error = error
 
     def propose(self, sentence: str, context: LLMContext) -> list[RawProposal]:
-        raise self._error
+        raise self.error
 
 
 def load_dotenv(path: Path) -> dict[str, str]:

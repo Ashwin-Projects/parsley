@@ -44,6 +44,22 @@ class Metric:
 
 
 @dataclass(frozen=True)
+class LLMFacts:
+    """What the LLM did for one item; only set in ``llm`` and ``hybrid`` runs."""
+
+    asked: bool  # the model was consulted
+    accepted: bool  # the result is ok and the chosen reading came from the model
+    discarded: tuple[str, ...]  # discard reasons
+    derived_question: bool  # the gate asked to confirm a derived amount
+    confirmed_minilang: str | None  # the code a "yes" to that question gives
+    failed: bool  # W510 or W511: the rule result stands because the call failed
+    latency: float | None  # seconds, of the call behind this answer
+    proposed: str  # the model's readings as JSON, before context resolution
+    rule_id: str  # rule of the chosen candidate; "" if none
+    back_translation: str  # V1 text of an accepted statement
+
+
+@dataclass(frozen=True)
 class Outcome:
     """What the real pipeline did with one item under one condition."""
 
@@ -64,6 +80,7 @@ class Outcome:
     suggestion_useful: bool | None  # None: the intended meaning is unknown
     codes: tuple[str, ...]  # diagnostic codes produced
     expected_codes: tuple[str, ...]
+    llm: LLMFacts | None = None
 
 
 @dataclass(frozen=True)

@@ -1,6 +1,11 @@
 """Run the evaluation and ablations; write CSV and summary table (Phase 8, N5).
 
     python -m parsley.eval.run_eval [--root DIR] [--data DIR] [--fixtures DIR] [--out DIR]
+                                    [--mode rules|llm|hybrid] [--sets all|held_out|development]
+
+``--mode llm|hybrid`` runs the same items with a real model and reports in separate files
+(``parsley/eval/llm_eval.py``); the default, ``rules``, writes ``results.csv`` and
+``summary.md`` as always and never loads ``parsley.llm``.
 
 Every item runs through the real pipeline in a fresh session after its setup sentences,
 under three conditions that differ in one switch each:
@@ -42,7 +47,7 @@ from parsley.compiler.parser import ParseError, parse
 from parsley.eval import metrics
 from parsley.eval.dataset import DatasetError, Item, digest, load_development, load_held_out
 from parsley.eval.metrics import Metric, MutationResult, Outcome
-from parsley.pipeline import PipelineResult, answer, run
+from parsley.pipeline import MODES, PipelineResult, answer, run
 from parsley.session import Session
 from parsley.verify import STEP_LIMIT_ERROR, ast_eval, interpreter, roundtrip
 
@@ -58,17 +63,22 @@ CSV_FIELDS = (
 # Running one item
 
 
-def evaluate(item: Item, condition: str) -> Outcome:
-    """Run ``item`` under ``condition``; never raises."""
+def evaluate(item: Item, condition: str, mode: str = "rules", provider: object = None) -> Outcome:
+    """Run ``item`` under ``condition``; never raises. Setup sentences always use the rules."""
     use_context = condition != "context_off"
     try:
         session = _setup(item)
         if session is None:
             return _outcome(item, condition, "setup_failed")
-        result = run(item.input, session, use_context=use_context)
+        result = run(item.input, session, use_context=use_context, mode=mode, provider=provider)
+        facts = None
+        if mode != "rules":
+            from parsley.eval import llm_eval
+
+            facts = llm_eval.facts(result, session, provider)
         if condition == "forced_top1":
             result = _force_top1(result, session, use_context)
-        return _outcome(item, condition, result.status, result, _judge_suggestion(item, result, use_context))
+        return _outcome(item, condition, result.status, result, _judge_suggestion(item, result, use_context), facts)
     except Exception:  # an evaluation records a crash; it never stops on one
         return _outcome(item, condition, "crash")
 
@@ -120,7 +130,7 @@ def _judge_suggestion(item: Item, result: PipelineResult, use_context: bool) -> 
 
 
 def _outcome(item: Item, condition: str, status: str, result: PipelineResult | None = None,
-             useful: bool | None = None) -> Outcome:
+             useful: bool | None = None, llm: metrics.LLMFacts | None = None) -> Outcome:
     ast = result.trace.ast if result is not None and result.status == "ok" else None
     return Outcome(
         item_id=item.id, source=item.source, subset=item.subset, group=item.group,
@@ -131,7 +141,7 @@ def _outcome(item: Item, condition: str, status: str, result: PipelineResult | N
         context_dependent=item.context_dependent,
         suggestion=result.suggestion if result is not None else None, suggestion_useful=useful,
         codes=tuple(d.code for d in result.diagnostics) if result is not None else (),
-        expected_codes=item.expected_codes,
+        expected_codes=item.expected_codes, llm=llm,
     )
 
 
@@ -418,8 +428,8 @@ def write_results(out: Path, outcomes: Sequence[Outcome], mutations: Sequence[Mu
     (out / "summary.md").write_text(text, encoding="utf-8", newline="\n")
 
 
-def _run_all(items: Sequence[Item]) -> dict[str, list[Outcome]]:
-    return {condition: [evaluate(item, condition) for item in items] for condition in CONDITIONS}
+def _run_all(items: Sequence[Item], mode: str = "rules", provider: object = None) -> dict[str, list[Outcome]]:
+    return {condition: [evaluate(item, condition, mode, provider) for item in items] for condition in CONDITIONS}
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -430,15 +440,27 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--data", type=Path, help="held-out data (default: ROOT/tests/eval_data)")
     parser.add_argument("--fixtures", type=Path, help="development fixtures (default: ROOT/tests/fixtures)")
     parser.add_argument("--out", type=Path, help="output directory (default: ROOT/results)")
+    parser.add_argument("--mode", choices=MODES, default="rules", help="candidate source (default: rules)")
+    parser.add_argument("--sets", choices=("all", "held_out", "development"), default="all",
+                        help="which data to run (default: all)")
+    parser.add_argument("--limit", type=int, help="llm/hybrid: only the first N items of each set (a smoke test)")
+    parser.add_argument("--cache", type=Path, help="llm/hybrid: response cache (default: OUT/llm_cache)")
+    parser.add_argument("--delay", type=float, default=0.0, help="llm/hybrid: seconds between real calls")
+    parser.add_argument("--record", type=Path, help="llm/hybrid: save the responses as a FakeProvider fixture")
     args = parser.parse_args(argv)
     data = args.data or args.root / "tests" / "eval_data"
     fixtures = args.fixtures or args.root / "tests" / "fixtures"
     out = args.out or args.root / "results"
     try:
-        held_items, dev_items = load_held_out(data), load_development(fixtures)
+        held_items = [] if args.sets == "development" else load_held_out(data)
+        dev_items = [] if args.sets == "held_out" else load_development(fixtures)
     except DatasetError as error:
         print(f"run_eval: {error}", file=sys.stderr)
         return 2
+    if args.mode != "rules":
+        from parsley.eval import llm_eval
+
+        return llm_eval.run(args, held_items, dev_items, out)
     blind_items = [i for i in held_items if i.subset == "human_blind"]
     synthetic_items = [i for i in held_items if i.subset == "synthetic_blind"]
     held_items = [i for i in held_items if i.subset not in ("human_blind", "synthetic_blind")]

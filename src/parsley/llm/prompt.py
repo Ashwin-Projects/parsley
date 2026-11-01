@@ -10,6 +10,7 @@ candidate shape only: the model never sees or writes MiniLang.
 from __future__ import annotations
 
 import functools
+import hashlib
 import json
 import re
 from dataclasses import dataclass
@@ -142,6 +143,16 @@ pronoun with a variable. Write it as word or pronoun; the compiler decides.
 - Use null for a slot marked "may be null" when the sentence does not give it. Never invent a \
 value.
 """
+
+
+PROMPT_SHA256 = hashlib.sha256(SYSTEM_PROMPT.encode("utf-8")).hexdigest()
+
+# Every prompt change and the data it was checked against; evaluation summaries print this.
+# Held-out data must never appear here: the prompt is not tuned on it.
+PROMPT_CHANGES: tuple[str, ...] = (
+    "2026-11-01: first version, written from the pattern table; no data used.",
+    "2026-11-01: derived amounts added (decision D-14); no data used.",
+)
 
 
 def user_message(sentence: str, context: LLMContext) -> str:

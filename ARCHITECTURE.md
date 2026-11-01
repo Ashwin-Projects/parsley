@@ -375,6 +375,8 @@ LANGUAGE_SPEC.md 7.5.
 | `llm/config.py` | `load_provider()`: environment variables, then `.env`. A problem becomes a provider that reports it when called, so the compiler always runs. |
 | `llm/validate.py` | `validate(text, sentence) -> Validated`: parses model text as JSON and rebuilds valid readings key by key. Never evaluates model text. |
 | `llm/hybrid.py` | `trigger`, `score_of`, `consult(sentence, session, provider, why) -> Consultation`. |
+| `llm/cache.py` | `MeteredProvider`: for batch runs, a disk cache keyed by (model, prompt SHA-256, user message), pacing, 429 backoff, and `write_fixture` for `FakeProvider`. Failures are not cached. |
+| `eval/llm_eval.py` | `run_eval --mode llm\|hybrid`. Writes `results_<mode>_<model>.csv` and `summary_<mode>_<model>.md`; imported only for those modes. |
 
 `Consultation` (frozen): `trigger: str`, `provider: str`, `candidates: tuple[Candidate, ...]`,
 `discarded: tuple[Discard, ...]`, `warnings: tuple[Diagnostic, ...]`. A `Discard` has `reason`
