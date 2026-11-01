@@ -24,7 +24,7 @@ from parsley.verify.interpreter import run as interpret
 if TYPE_CHECKING:
     from parsley.llm.provider import Provider
 
-PYPROJECT =Path(__file__).resolve().parents[2] / "pyproject.toml"
+PYPROJECT = Path(__file__).resolve().parents[2] / "pyproject.toml"
 
 # :help examples; they run in order as one session (tests/unit/test_cli_commands.py).
 HELP_EXAMPLES = (

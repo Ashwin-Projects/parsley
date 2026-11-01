@@ -274,6 +274,56 @@ def test_only_real_pronouns_are_pronouns():
     assert reasons(run("put them in x", assignment(value={"kind": "pronoun", "text": "them"}))) == [Discarded.BAD_SLOTS]
 
 
+# Coverage: a reading may not drop a second statement or a negation
+
+
+@pytest.mark.parametrize("sentence", [
+    "first set x to 5 and then print x",
+    "put 5 in x and print x",
+    "put 5 in x then print x",
+    "put 5 in x and then increase x by 1",
+])
+def test_a_reading_cannot_drop_a_second_statement(sentence):
+    assert reasons(run(sentence, assignment())) == [Discarded.NOT_COVERED]
+
+
+@pytest.mark.parametrize("sentence", [
+    "never put 5 in x", "do not put 5 in x", "don't put 5 in x", "no 5 in x please",
+])
+def test_a_reading_cannot_drop_a_negation(sentence):
+    assert reasons(run(sentence, assignment())) == [Discarded.NOT_COVERED]
+
+
+def test_and_between_values_is_not_a_second_statement():
+    value = {"kind": "binop", "op": "+", "left": {"kind": "word", "text": "bonus"},
+             "right": {"kind": "word", "text": "tax"}}
+    assert run("show the sum of bonus and tax", reading("print", {"value": value})).readings
+
+
+def test_a_negator_the_reading_uses_is_covered():
+    assert run("reveal no", reading("print", {"value": {"kind": "word", "text": "no"}})).readings
+
+
+def test_a_condition_may_carry_the_negation():
+    slots = {"condition": condition("!="), "then": print_body()}
+    assert run("say hi when x is not 5", reading("if", slots)).readings
+
+
+def test_then_inside_an_if_is_not_a_second_statement():
+    slots = {"condition": condition(), "then": print_body()}
+    assert run("when x tops 5 then print hi", reading("if", slots)).readings
+
+
+def test_a_second_statement_after_an_if_is_still_dropped():
+    slots = {"condition": condition(), "then": print_body()}
+    assert reasons(run("when x tops 5 say hi 5 and print x", reading("if", slots))) == [Discarded.NOT_COVERED]
+
+
+def test_quoted_text_is_not_a_clause_or_a_negation():
+    value = {"kind": "string", "text": "never and print x", "quoted": True}
+    assert run('reveal "never and print x"', reading("print", {"value": value})).readings
+
+
 # Injection: output produced by a sentence that tells the model to emit code
 
 

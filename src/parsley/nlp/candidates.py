@@ -145,6 +145,11 @@ def parse_count(text: str) -> Slot | None:
     return readings[0] if readings else None
 
 
+def is_statement(norm: Normalized, start: int) -> bool:
+    """Whether ``norm.text`` from ``start`` to its end is a whole supported statement."""
+    return _is_statement(norm, start, len(norm.text))
+
+
 def _answer_text(text: str) -> Normalized | None:
     """The normalized answer, or None if it breaks the input limits ``generate`` enforces."""
     if not isinstance(text, str) or len(text) > MAX_INPUT_CHARS or not text.isprintable():

@@ -15,6 +15,10 @@ Three rules keep the model below the deterministic stages:
   words. A number word grounds its number. Operators and intents are the model's reading.
 - **One statement.** Block bodies follow LANGUAGE_SPEC.md 6.3, and a reading holds one
   statement: no extra fields and no lists of statements.
+- **Coverage.** Grounding checks what a reading says, not what it leaves out, and a full
+  check would refuse every paraphrase (the point of asking a model). So two omissions that
+  change the meaning are checked: a reading that drops a negation, and one that drops a
+  second statement after ``and`` or ``then`` when that clause matches a supported pattern.
 """
 
 from __future__ import annotations
@@ -30,6 +34,7 @@ from parsley.compiler.ir_builder import ARITH_OPS, COMPARE_OPS
 from parsley.keywords import is_reserved
 from parsley.llm.prompt import MAX_READINGS, SlotSpec, intent_slots
 from parsley.nlp import patterns
+from parsley.nlp.candidates import is_statement
 from parsley.nlp.normalizer import normalize
 
 MAX_OUTPUT_CHARS = 64 * 1024
@@ -40,6 +45,8 @@ MAX_DETAIL_CHARS = 200
 _NUMBER = re.compile(r"[0-9]+(?:\.[0-9]+)?")
 _COUNT = re.compile(r"[0-9]+")
 _READING_KEYS = frozenset({"intent", "slots", "confidence"})
+_NEGATORS = frozenset({"not", "never", "no", "don't", "dont", "cannot", "can't", "won't"})
+_THEN = "then"
 
 Slot = dict[str, Any]
 
@@ -56,6 +63,7 @@ class Discarded(StrEnum):
     LOW_CONFIDENCE = "low_confidence"
     BAD_SLOTS = "bad_slots"
     NOT_GROUNDED = "not_grounded"
+    NOT_COVERED = "not_covered"
 
 
 @dataclass(frozen=True)
@@ -159,14 +167,49 @@ def _reading(item: Any, grounds: _Grounds) -> Reading:
         raise _Reject(Discarded.BAD_CONFIDENCE, _short(confidence))
     if confidence < MIN_CONFIDENCE:
         raise _Reject(Discarded.LOW_CONFIDENCE, f"{confidence} is below {MIN_CONFIDENCE}")
-    return Reading(intent, _slots(intent, item["slots"], grounds, 0), float(confidence))
+    slots = _slots(intent, item["slots"], grounds, 0)
+    _check_coverage(intent, slots, grounds)
+    return Reading(intent, slots, float(confidence))
+
+
+def _slot_words(value: Any) -> list[str]:
+    """Every word of the slot texts under ``value``."""
+    if not isinstance(value, dict):
+        return []
+    text = value.get("text")
+    own = text.split() if isinstance(text, str) else []
+    return [*own, *(word for item in value.values() for word in _slot_words(item))]
+
+
+def _check_coverage(intent: str, slots: dict[str, Slot | None], grounds: _Grounds) -> None:
+    """Refuse a reading that drops a negation or a second statement (see the module docstring).
+
+    An ``if`` may express a negation through its comparison, and its ``then`` is its own.
+    """
+    tokens = [t for t in grounds.norm.tokens if t.kind == "word"]
+    used = {word.lower() for word in _slot_words(slots)}
+    if intent != "if":
+        dropped = sorted({t.lower for t in tokens if t.lower in _NEGATORS} - used)
+        if dropped:
+            raise _Reject(Discarded.NOT_COVERED, f"the reading drops {_short(dropped[0])}")
+    joins = {patterns.CONTINUATION_WORD} if intent == "if" else {patterns.CONTINUATION_WORD, _THEN}
+    everything = grounds.norm.tokens
+    for position, token in enumerate(everything):
+        if token.kind != "word" or token.lower not in joins:
+            continue
+        rest = position + 1
+        if rest < len(everything) and everything[rest].lower == _THEN:
+            rest += 1
+        if rest < len(everything) and is_statement(grounds.norm, everything[rest].start):
+            raise _Reject(Discarded.NOT_COVERED, "the reading drops a second statement")
 
 
 class _Grounds:
     """What the sentence actually says; a slot's text must come from here."""
 
     def __init__(self, sentence: str) -> None:
-        tokens = normalize(sentence).tokens
+        self.norm = normalize(sentence)
+        tokens = self.norm.tokens
         self.words = {t.text for t in tokens if t.kind in ("word", "number")}
         self.lower_words = {t.lower for t in tokens if t.kind == "word"}
         self.quoted = {t.text for t in tokens if t.kind == "string"}

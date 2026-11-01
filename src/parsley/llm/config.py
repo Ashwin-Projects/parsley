@@ -31,6 +31,7 @@ __all__ = ["ConfigError", "UnavailableProvider", "load_dotenv", "load_provider",
 DEFAULT_ANTHROPIC_MODEL = "claude-opus-5-5"
 DEFAULT_OPENAI_BASE_URL = "https://api.openai.com/v1"
 _LOOPBACK = frozenset({"localhost", "127.0.0.1", "::1"})
+_KEY_NAMES = ("PARSLEY_LLM_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY")
 
 
 class UnavailableProvider:
@@ -66,10 +67,21 @@ def load_dotenv(path: Path) -> dict[str, str]:
 
 def load_provider(dotenv: Path = Path(".env")) -> Provider:
     """The configured provider; any problem is reported when it is first called."""
+    file_values = load_dotenv(dotenv)
     try:
-        return provider_from_env({**load_dotenv(dotenv), **os.environ})
+        provider = provider_from_env({**file_values, **os.environ})
+        if "PARSLEY_LLM_BASE_URL" in file_values and "PARSLEY_LLM_BASE_URL" not in os.environ:
+            _refuse_redirect(provider)
+        return provider
     except ConfigError as error:
         return UnavailableProvider(error)
+
+
+def _refuse_redirect(provider: Provider) -> None:
+    """A ``.env`` (it may come with a cloned repo) cannot send a real environment key elsewhere."""
+    key = getattr(provider, "api_key", None)
+    if key and key in {os.environ.get(name, "").strip() for name in _KEY_NAMES}:
+        raise ConfigError("PARSLEY_LLM_BASE_URL in .env cannot be used with an API key from the environment")
 
 
 def provider_from_env(environ: Mapping[str, str]) -> Provider:
@@ -87,7 +99,7 @@ def provider_from_env(environ: Mapping[str, str]) -> Provider:
 
 
 def _anthropic(environ: Mapping[str, str]) -> Provider:
-    key = environ.get("PARSLEY_LLM_API_KEY") or environ.get("ANTHROPIC_API_KEY")
+    key = _key(environ, "PARSLEY_LLM_API_KEY", "ANTHROPIC_API_KEY")
     if not key:
         raise ConfigError("set ANTHROPIC_API_KEY or PARSLEY_LLM_API_KEY")
     return AnthropicProvider(
@@ -102,7 +114,7 @@ def _openai(environ: Mapping[str, str]) -> Provider:
     model = environ.get("PARSLEY_LLM_MODEL")
     if not model:
         raise ConfigError("set PARSLEY_LLM_MODEL to a model of your OpenAI-compatible server")
-    key = environ.get("PARSLEY_LLM_API_KEY") or environ.get("OPENAI_API_KEY") or None
+    key = _key(environ, "PARSLEY_LLM_API_KEY", "OPENAI_API_KEY")
     return OpenAICompatibleProvider(
         model=model,
         base_url=_base_url(environ.get("PARSLEY_LLM_BASE_URL") or DEFAULT_OPENAI_BASE_URL, key),
@@ -119,6 +131,17 @@ def _fake(environ: Mapping[str, str]) -> Provider:
         return FakeProvider(path)
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise ConfigError(f"could not read PARSLEY_LLM_FIXTURES: {type(error).__name__}") from error
+
+
+def _key(environ: Mapping[str, str], *names: str) -> str | None:
+    """The first key set among ``names``, trimmed; never quoted in an error."""
+    for name in names:
+        key = environ.get(name, "").strip()
+        if key:
+            if not key.isprintable():
+                raise ConfigError(f"{name} contains a control character")
+            return key
+    return None
 
 
 def _base_url(url: str, key: str | None) -> str:

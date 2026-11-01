@@ -433,6 +433,27 @@ def test_any_provider_error_is_contained(error):
     assert codes(result) == ["W510", "E101"]
 
 
+def test_an_unexpected_error_message_never_reaches_the_diagnostic():
+    error = ValueError("Invalid header value b'sk-SECRET'")
+    result = pipeline.run("store 50 in bonus", Session(), mode="hybrid", provider=Scripted(error=error))
+    assert "sk-SECRET" not in result.diagnostics[0].message
+    assert "ValueError" in result.diagnostics[0].message
+
+
+def test_a_dropped_second_statement_never_compiles():
+    reading = {"intent": "assign", "slots": {"name": name("x"), "value": number("5")}, "confidence": 0.9}
+    session = Session()
+    result = pipeline.run("first set x to 5 and then print x", session, mode="hybrid", provider=Scripted(reading))
+    assert result.minilang is None
+    assert not session.history
+    assert [d.reason for d in result.trace.llm.discarded] == ["not_covered"]
+
+
+def test_a_dropped_negation_never_compiles():
+    result = pipeline.run("never print x", Session(), mode="hybrid", provider=Scripted(printing(word("x"))))
+    assert result.minilang is None
+
+
 def test_ctrl_c_is_not_swallowed():
     with pytest.raises(KeyboardInterrupt):
         pipeline.run("store 50 in bonus", Session(), mode="hybrid", provider=Scripted(error=KeyboardInterrupt()))

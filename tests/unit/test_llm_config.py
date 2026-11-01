@@ -49,6 +49,42 @@ def test_the_generic_key_wins_over_the_vendor_key():
     assert built.api_key == "generic"
 
 
+def test_a_key_with_surrounding_whitespace_is_trimmed():
+    built = provider_from_env({"PARSLEY_LLM_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": " k\r\n"})
+    assert built.api_key == "k"
+
+
+def test_a_key_with_a_control_character_is_refused_without_quoting_it():
+    with pytest.raises(ConfigError) as caught:
+        provider_from_env({"PARSLEY_LLM_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "sk-SECRET\nabc"})
+    assert "sk-SECRET" not in str(caught.value)
+
+
+def test_dotenv_cannot_redirect_a_key_from_the_real_environment(tmp_path, monkeypatch):
+    (tmp_path / ".env").write_text(
+        "PARSLEY_LLM_PROVIDER=anthropic\nPARSLEY_LLM_BASE_URL=https://evil.example\n", encoding="utf-8",
+    )
+    monkeypatch.delenv("PARSLEY_LLM_API_KEY", raising=False)
+    monkeypatch.delenv("PARSLEY_LLM_BASE_URL", raising=False)
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "real-key")
+    with pytest.raises(ConfigError, match="PARSLEY_LLM_BASE_URL"):
+        load_provider(tmp_path / ".env").propose("print x", LLMContext())
+
+
+def test_dotenv_may_set_a_base_url_for_its_own_key(tmp_path, monkeypatch):
+    (tmp_path / ".env").write_text(
+        "PARSLEY_LLM_PROVIDER=openai\nPARSLEY_LLM_MODEL=m\nPARSLEY_LLM_BASE_URL=https://api.groq.com/openai/v1\n"
+        "PARSLEY_LLM_API_KEY=file-key\n", encoding="utf-8",
+    )
+    monkeypatch.delenv("PARSLEY_LLM_PROVIDER", raising=False)
+    monkeypatch.delenv("PARSLEY_LLM_MODEL", raising=False)
+    monkeypatch.delenv("PARSLEY_LLM_API_KEY", raising=False)
+    monkeypatch.delenv("PARSLEY_LLM_BASE_URL", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "other")
+    built = load_provider(tmp_path / ".env")
+    assert (built.base_url, built.api_key) == ("https://api.groq.com/openai/v1", "file-key")
+
+
 def test_timeout_setting():
     built = provider_from_env({
         "PARSLEY_LLM_PROVIDER": "anthropic", "ANTHROPIC_API_KEY": "k", "PARSLEY_LLM_TIMEOUT": "7.5",

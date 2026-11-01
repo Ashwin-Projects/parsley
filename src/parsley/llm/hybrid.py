@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from parsley.diagnostics import Diagnostic
 from parsley.llm.config import ConfigError
 from parsley.llm.prompt import LLMContext
-from parsley.llm.provider import Provider, ProviderTimeout
+from parsley.llm.provider import Provider, ProviderError, ProviderTimeout
 from parsley.llm.validate import Discard, Reading, validate
 from parsley.nlp.ambiguity import CLARIFY_MARGIN
 from parsley.nlp.candidates import LLM_RULE_ID, Candidate, Reason
@@ -90,10 +90,12 @@ def consult(sentence: str, session: Session, provider: Provider | None, why: str
     except ProviderTimeout as error:
         return Consultation(why, provider.name, warnings=(_warning(
             "W511", f"the LLM did not answer in time ({_cut(error)}), {_FALLBACK}"),))
+    except ProviderError as error:
+        return Consultation(why, provider.name, warnings=(_failed(_cut(error)),))
     except (Exception, SystemExit) as error:
-        logger.debug("LLM call failed: %s: %s", type(error).__name__, _cut(error))
-        return Consultation(why, provider.name, warnings=(_warning(
-            "W510", f"the LLM call failed ({type(error).__name__}: {_cut(error)}), {_FALLBACK}"),))
+        # Only the type: urllib quotes header values, which can hold an API key.
+        logger.debug("LLM call failed: %s", type(error).__name__)
+        return Consultation(why, provider.name, warnings=(_failed(type(error).__name__),))
     readings.sort(key=lambda reading: reading.confidence, reverse=True)
     candidates = tuple(_candidate(reading) for reading in readings)
     warnings = ()
@@ -125,6 +127,10 @@ def _candidate(reading: Reading) -> Candidate:
 
 def _warning(code: str, message: str) -> Diagnostic:
     return Diagnostic("warning", STAGE, code, message)
+
+
+def _failed(reason: str) -> Diagnostic:
+    return _warning("W510", f"the LLM call failed ({reason}), {_FALLBACK}")
 
 
 def _unconfigured(reason: str) -> Diagnostic:
