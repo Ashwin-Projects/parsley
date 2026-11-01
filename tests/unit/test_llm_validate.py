@@ -42,13 +42,36 @@ def test_an_empty_list_of_readings_is_not_a_discard():
 
 
 @pytest.mark.parametrize("text", [
-    "", "   ", "not json", "PRINT 1;", '{"readings": [', "```json\n{\"readings\": []}\n```",
+    "", "   ", "not json", "PRINT 1;", '{"readings": [',
     'Sure! {"readings": []}', '{"readings": [NaN]}', '{"readings": [], "readings": []}',
 ])
 def test_malformed_output_is_discarded_with_a_reason(text):
     result = validate(text, "put 5 in x")
     assert result.readings == ()
     assert reasons(result) == [Discarded.MALFORMED_JSON]
+
+
+@pytest.mark.parametrize("wrap", [
+    "```\n{}\n```", "```json\n{}\n```", "  ```json\n{}\n```\n", "```json\r\n{}\r\n```", "```{}```",
+])
+def test_exactly_one_surrounding_fence_is_stripped(wrap):
+    text = wrap.replace("{}", json.dumps({"readings": [reading()]}))
+    result = validate(text, "put 5 in x")
+    assert len(result.readings) == 1 and result.discarded == ()
+
+
+@pytest.mark.parametrize("text", [
+    '```python\n{"readings": []}\n```',
+    '```JSON\n{"readings": []}\n```',
+    '```json\n{"readings": []}',
+    '{"readings": []}\n```',
+    '```json\n```json\n{"readings": []}\n```\n```',
+    '```\n{"readings": []}\n```\n```\n{"readings": []}\n```',
+    'Here you go:\n```json\n{"readings": []}\n```',
+    '```json\n{"readings": []}\n```\nHope that helps',
+])
+def test_anything_else_with_a_fence_is_malformed(text):
+    assert reasons(validate(text, "put 5 in x")) == [Discarded.MALFORMED_JSON]
 
 
 def test_deep_nesting_does_not_crash():
@@ -239,6 +262,62 @@ def test_a_number_must_appear_in_the_sentence():
 
 def test_a_number_word_grounds_its_number():
     assert run("put five in x", assignment()).readings
+
+
+def derived(text="2", kind="number"):
+    return {"kind": kind, "text": text, "derived": True}
+
+
+def test_a_marked_amount_need_not_be_in_the_sentence():
+    slots = {"name": {"kind": "name", "text": "x"}, "amount": derived()}
+    assert run("double x", reading("multiply", slots)).readings[0].slots["amount"] == derived()
+
+
+def test_a_marked_count_need_not_be_in_the_sentence():
+    slots = {"count": derived(kind="count"), "body": print_body()}
+    assert run("say hi twice", reading("repeat", slots)).readings[0].slots["count"] == derived(kind="count")
+
+
+def test_an_unmarked_amount_outside_the_sentence_is_still_discarded():
+    slots = {"name": {"kind": "name", "text": "x"}, "amount": {"kind": "number", "text": "2"}}
+    assert reasons(run("double x", reading("multiply", slots))) == [Discarded.NOT_GROUNDED]
+
+
+def test_a_mark_on_a_number_in_the_sentence_is_dropped():
+    slots = {"name": {"kind": "name", "text": "x"}, "amount": derived("5")}
+    result = run("grow x 5", reading("multiply", slots))
+    assert result.readings[0].slots["amount"] == {"kind": "number", "text": "5"}
+
+
+@pytest.mark.parametrize("mark", [False, "true", 1, None])
+def test_the_mark_must_be_exactly_true(mark):
+    slots = {"name": {"kind": "name", "text": "x"}, "amount": {"kind": "number", "text": "2", "derived": mark}}
+    assert reasons(run("double x", reading("multiply", slots))) == [Discarded.BAD_SLOTS]
+
+
+@pytest.mark.parametrize("text", ["2; PRINT x", "-2", "1e3", ""])
+def test_a_marked_amount_must_still_be_a_number(text):
+    slots = {"name": {"kind": "name", "text": "x"}, "amount": derived(text)}
+    assert reasons(run("double x", reading("multiply", slots))) == [Discarded.BAD_SLOTS]
+
+
+def test_a_marked_count_must_still_be_digits():
+    slots = {"count": derived("2.5", "count"), "body": print_body()}
+    assert reasons(run("say hi twice", reading("repeat", slots))) == [Discarded.BAD_SLOTS]
+
+
+@pytest.mark.parametrize("slot", [
+    {"kind": "word", "text": "rm", "derived": True},
+    {"kind": "string", "text": "rm", "quoted": True, "derived": True},
+    {"kind": "pronoun", "text": "it", "derived": True},
+])
+def test_only_numbers_can_be_marked(slot):
+    assert reasons(run("reveal it", reading("print", {"value": slot}))) == [Discarded.BAD_SLOTS]
+
+
+def test_a_name_cannot_be_marked():
+    slots = {"name": {"kind": "name", "text": "x", "derived": True}, "amount": derived()}
+    assert reasons(run("double x", reading("multiply", slots))) == [Discarded.BAD_SLOTS]
 
 
 def test_a_quoted_string_must_be_quoted_in_the_sentence():

@@ -118,6 +118,29 @@ def test_the_repl_answers_an_llm_question(recorded, capsys, monkeypatch):
     assert "MiniLang: LET bonus = 60;" in capsys.readouterr().out
 
 
+def test_a_derived_amount_is_e102_in_batch_mode(recorded, capsys):
+    assert main(["--mode", "hybrid", "double visits"]) == 1
+    out, err = capsys.readouterr()
+    assert "ambiguity E102: Did you mean: multiply visits by 2? (yes / no)" in err
+    assert "MiniLang" not in out
+
+
+def test_a_derived_amount_is_confirmed_in_the_repl(recorded, capsys, monkeypatch):
+    replies = iter(["let visits be 1", "double visits", "yes", ":quit"])
+    monkeypatch.setattr("builtins.input", lambda prompt="": next(replies))
+    assert main(["--mode", "hybrid"]) == 0
+    captured = capsys.readouterr()
+    assert "MiniLang: visits = visits * 2;" in captured.out
+    assert "llm W513:" in captured.err
+
+
+def test_refusing_a_derived_amount_in_the_repl_reports_e103(recorded, capsys, monkeypatch):
+    replies = iter(["let visits be 1", "double visits", "no", ":quit"])
+    monkeypatch.setattr("builtins.input", lambda prompt="": next(replies))
+    assert main(["--mode", "hybrid"]) == 1
+    assert "ambiguity E103:" in capsys.readouterr().err
+
+
 def test_file_mode_uses_the_mode_for_every_line(recorded, capsys, tmp_path):
     path = tmp_path / "program.txt"
     path.write_text("store 50 in bonus\nprint bonus\n", encoding="utf-8")

@@ -12,6 +12,8 @@ the top one or returns a ``Clarification`` (LANGUAGE_SPEC.md 7). Checks, in orde
 3. ``operator_scope``: a multiply/divide whose amount has ``plus``/``minus`` at the top
    (``multiply x by 2 plus 3``), at any depth; the two groupings become two readings.
 4. ``missing_slot``: a required slot the English left out (what is missing).
+5. ``derived_value``: an amount an LLM reading inferred (``double x``). Always asked, and
+   last, so the question can show the whole reading. Rule candidates never carry the mark.
 
 Names the user confirmed as new (a "no" to a typo question) travel with every later
 clarification of the same sentence, so a refused typo question is never asked again.
@@ -38,8 +40,9 @@ from parsley.nlp.patterns import IDENTIFIER
 # candidate that type hints moved ahead by a full nudge is accepted.
 CLARIFY_MARGIN = 0.05
 
-Kind = Literal["missing_slot", "alternatives", "operator_scope", "typo", "pronoun"]
+Kind = Literal["missing_slot", "alternatives", "operator_scope", "typo", "pronoun", "derived_value"]
 Slot = dict[str, Any]
+YES_NO = ("yes", "no")
 
 _YES = frozenset({"yes", "y"})
 _NO = frozenset({"no", "n"})
@@ -104,6 +107,7 @@ class Merged:
 
     candidate: Candidate
     accepted: frozenset[str] = frozenset()
+    refused: bool = False  # the user said no to the whole reading: record nothing
 
 
 def gate(resolutions: Sequence[Resolution], accepted: frozenset[str] = frozenset()) -> GateDecision:
@@ -134,6 +138,9 @@ def _clarification(top: Resolution, resolutions: Sequence[Resolution]) -> Clarif
     if missing is not None:
         path, question = missing
         return Clarification("missing_slot", question, candidate=source, path=path)
+    if _has_derived(top.candidate.slots):
+        reading = _describe_statement(top.candidate.intent, top.candidate.slots)
+        return Clarification("derived_value", f"Did you mean: {reading}?", YES_NO, candidate=source)
     return None
 
 
@@ -158,6 +165,11 @@ def _merge(clarification: Clarification, reply: str) -> Merged | None:
     candidate, path = clarification.candidate, clarification.path
     if candidate is None:
         return None
+    if clarification.kind == "derived_value":
+        word = reply.lower().rstrip(".!?")
+        if word in _YES:
+            return Merged(replace(candidate, slots=_confirmed(candidate.slots)))
+        return Merged(candidate, refused=True) if word in _NO else None
     if clarification.kind == "missing_slot":
         key = path.rsplit(".", 1)[-1]
         slot = parse_count(reply) if key == "count" else parse_value(reply)
@@ -374,6 +386,22 @@ def _first_missing(intent: str, slots: Mapping[str, Any], prefix: str) -> tuple[
             if nested is not None:
                 return nested
     return None
+
+
+# 5. Derived amounts
+
+
+def _has_derived(value: Any) -> bool:
+    if isinstance(value, Mapping):
+        return "derived" in value or any(_has_derived(item) for item in value.values())
+    return False
+
+
+def _confirmed(value: Any) -> Any:
+    """A copy of ``value`` with every ``derived`` mark removed: the user confirmed the amounts."""
+    if isinstance(value, Mapping):
+        return {key: _confirmed(item) for key, item in value.items() if key != "derived"}
+    return value
 
 
 # Plain-English descriptions of slots (for questions and options; never MiniLang)

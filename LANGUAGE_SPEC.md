@@ -310,7 +310,7 @@ ahead by a full nudge is accepted. Readings with the same intent and slots count
 
 **Order of checks** (the first that applies asks): alternatives (readings within the margin),
 which variable is meant (typo, pronoun with an empty reference stack), operator scope, then
-a missing slot. Alternatives come first, so a typo inside one reading is asked about only
+a missing slot, then a derived amount (Section 7.5). Alternatives come first, so a typo inside one reading is asked about only
 once that reading is chosen. Which variable comes before operator scope, because both
 groupings share the same words. A name the user confirmed as new (`no` to a typo question)
 is not asked about again later in the same sentence.
@@ -332,6 +332,7 @@ Questions are filled from these templates. `{name}` keeps its original spelling.
 | `alternatives` | `VALUE or VALUE` in a value position (at most 4 alternatives; more is unsupported) | `{a} or {b}?` | `[a, b]` |
 | `typo` | Section 4 rule 3 | `Did you mean the variable {name}?` | `["yes", "no"]` |
 | `operator_scope` | MUL1/DIV1 whose `VALUE` contains `plus` or `minus` | `Do you mean ({name} {op} {a}) {op2} {b}, or {name} {op} ({a} {op2} {b})?` | the two readings |
+| `derived_value` | An LLM reading with an amount the sentence does not state (Section 7.5) | `Did you mean: {reading}?` | `["yes", "no"]` |
 
 In `operator_scope`, `{op}` is `times` or `divided by` and `{op2}` is `plus` or `minus`.
 It applies to MUL1/DIV1 at any depth, including a block body (`repeat 2 times multiply x by
@@ -354,6 +355,7 @@ the context resolver, so it can lead to a further question:
 | `missing_slot` | A `VALUE` (Section 6.1), or a number for a REPEAT count. |
 | `missing_slot` (pronoun) | The name of a variable. |
 | `typo` | `yes` / `y` uses the declared name. `no` / `n` keeps the word: text in a value, an identifier as an operand (rule 4), a new variable as an assignment target. |
+| `derived_value` | `yes` / `y` confirms the amounts and the reading continues. `no` / `n` refuses it: `E103`, and nothing is recorded. |
 
 An answer that does not fit asks the same question again; an empty answer cancels the
 sentence, and nothing is recorded.
@@ -438,7 +440,9 @@ just above 0.5 and a confident LLM reading are also close, so a weak rule match 
 disputes becomes a question, using the Section 7.1 `alternatives` wording.
 
 **What a reading may contain.** A response is exactly `{"readings": [...]}` with at most 3
-readings, each exactly `intent`, `slots`, `confidence`, in the ARCHITECTURE.md 2.3 slot shapes:
+readings, each exactly `intent`, `slots`, `confidence`, in the ARCHITECTURE.md 2.3 slot shapes.
+One fence around the whole response (```` ``` ```` or ```` ```json ````) is removed first;
+any other text around the JSON makes it `malformed_json`.
 
 - Intents and slot keys come from the pattern table. A slot may be `null` only if a rule marks
   it optional (Section 6). Block bodies follow Section 6.3.
@@ -446,8 +450,14 @@ readings, each exactly `intent`, `slots`, `confidence`, in the ARCHITECTURE.md 2
   allowed only in a NAME position, so N1 still decides variable vs. text, pronouns and typos.
 - **Grounding:** every name, word, pronoun, number and quoted string must come from the
   sentence, spelled the same way; a quoted word cannot become a bare word. A number word
-  grounds its number (`five` grounds `5`). Nothing else does, so `double x` has no reading
-  (`2` is not in the sentence).
+  grounds its number (`five` grounds `5`).
+- **Derived amounts:** a `number` or `count` the sentence implies but does not state may be
+  written with `"derived": true` (`double x` is `multiply` by a derived `2`; `halve x` and
+  `print hi twice` work the same way). Nothing else can be marked. The mark stays on the slot
+  through N1, and the gate **always** asks `Did you mean: {reading}?`: a `yes` / `no` question in
+  the REPL, and `E102` in batch mode, whatever the confidence. It is never accepted silently.
+  An unmarked number that is not in the sentence is discarded (`not_grounded`), and a mark on a
+  number that is in the sentence is ignored.
 - **Coverage:** a reading may not drop a negation (`not`, `never`, `no`, `don't`, `dont`,
   `cannot`, `can't`, `won't`), except in an `if`, whose comparison can express it, or drop a
   second statement after `and` or `then` when that clause matches a supported pattern.
@@ -508,8 +518,10 @@ applied throughout this document.
 | D-11 | REPEAT count | Integer literal from 1 to 1000. | §2 |
 | D-12 | Typo in an assignment/update target | Asks the rule 3 typo question instead of an implicit `LET`; explicit declarations do not ask. *Accepted 2026-10-25.* | §4 |
 | D-13 | May an LLM extend what is accepted? | Only by proposing candidates that pass N1, N2 and N3; `rules` stays the default. *2026-11-01.* | §7.5 |
-| D-14 | May an LLM reading add a value the sentence does not state? | No: grounding covers numbers too, so `double x` stays rejected. Safe, at the cost of some paraphrases. *2026-11-01, flagged for review.* | §7.5 |
+| D-14 | May an LLM reading add a value the sentence does not state? | Only a number or count the model marks as derived (`double x`, `halve x`, `twice`), and such a reading always asks: clarification kind `derived_value`, `E102` in batch mode, never accepted silently. *Relaxed 2026-11-01 by the project lead; first decided as a flat no.* | §7.1, §7.5 |
 | D-15 | Is a model's `declare` an explicit declaration? | No. It is treated as `assign`, because D-12's exemption is for a user who said so. *2026-11-01.* | §7.5 |
+| D-16 | Is a code fence around model JSON malformed? | Exactly one surrounding ```` ``` ```` or ```` ```json ```` fence is stripped; anything else stays malformed (`W512`). *2026-11-01, project lead.* | §7.5 |
+| D-17 | Does an accepted LLM reading always warn? | Yes: `W513` on every accepted LLM reading, including a confirmed derived amount. *2026-11-01, project lead.* | §7.5 |
 
 Edit distance in D-2 is optimal string alignment (an adjacent swap counts as one edit), so
 the plan's demo case `print scroe` stays a typo question for the 5-letter name `score`.

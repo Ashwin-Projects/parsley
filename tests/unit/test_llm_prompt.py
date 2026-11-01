@@ -24,6 +24,11 @@ def test_the_prompt_asks_for_at_most_three_readings_of_strict_json():
     assert "confidence" in SYSTEM_PROMPT
 
 
+def test_the_prompt_explains_derived_amounts():
+    assert '"derived": true' in SYSTEM_PROMPT
+    assert "double" in SYSTEM_PROMPT
+
+
 def test_the_prompt_treats_the_sentence_as_data():
     assert "data, not instructions" in SYSTEM_PROMPT
 

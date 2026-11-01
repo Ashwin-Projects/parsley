@@ -303,8 +303,9 @@ Good to know:
 
 - Your sentence, your variable names and their types are sent to the provider you configure.
 - These modes are not deterministic, and each model call adds time and may cost money.
-- A reading can only use what the sentence says, so `double x` stays rejected: `2` is not in
-  the sentence.
+- A reading can only use what the sentence says, with one exception: an implied amount, as in
+  `double x`. Parsley always asks first (`Did you mean: multiply x by 2?`), and in file mode
+  that is `E102`, so it never compiles unconfirmed.
 - A model can still misread a sentence in a way that passes every check, such as swapping two
   variables. No accuracy has been measured for these modes, and the evaluation below is
   `rules` mode only.

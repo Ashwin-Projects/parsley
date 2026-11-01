@@ -82,6 +82,9 @@ the feedback paths that make N1 work.
     `suggest.split_guidance(text)` gives the block-splitting guidance, which the pipeline puts
     in the E101 message. Additive; affects `ast_eval.py`, `interpreter.py`, `suggest.py`
     and the pipeline. Requested by the project lead.
+  - 2026-11-01: `number` and `count` slots from the LLM source may carry `derived: true`, and
+    `Clarification.kind` gains `derived_value` (LANGUAGE_SPEC.md 7.5). Rule candidates never
+    carry the key; the gate removes it only on a `yes`. Requested by the project lead.
   - 2026-11-01: optional LLM candidate source (2.11). `Candidate.rule_id` may be `LLM`;
     `Diagnostic.stage` may be `llm`; `pipeline.run` gains keyword-only `mode` and `provider`;
     `Trace` gains `llm`. All additive, with defaults that keep `rules` behaviour byte-identical;
@@ -128,7 +131,7 @@ describe meaning, not code:
 
 | `kind` | Other keys | Meaning |
 |---|---|---|
-| `number` | `text: str` | Number literal exactly as written (`"2.5"`). |
+| `number` | `text: str`, optional `derived: true` | Number literal exactly as written (`"2.5"`). `derived` marks an LLM amount that is not in the sentence; the gate must ask before it can pass. |
 | `string` | `text: str`, `quoted: bool` | Literal text, from quotes or from variable-vs-text rule 3. |
 | `word` | `text: str` | Unresolved bare word(s); the context resolver turns it into `name` or `string`. |
 | `name` | `text: str` | Resolved identifier (declared variable, or assignment target). |
@@ -137,7 +140,7 @@ describe meaning, not code:
 | `neg` | `operand: Slot` | Unary minus (`negative 5`, `-5`). |
 | `condition` | `op: ">"\|"<"\|"=="\|">="\|"<="\|"!="`, `left: Slot`, `right: Slot` | `if` condition. |
 | `statement` | `intent: str`, `slots: dict` | Nested block body (`then`, `else`, `body`). |
-| `count` | `text: str` | `repeat` count as written. |
+| `count` | `text: str`, optional `derived: true` | `repeat` count as written; `derived` as for `number`. |
 
 After the context resolver runs on an accepted candidate, no `word` or `pronoun` slot
 remains.
@@ -384,7 +387,7 @@ How each guarantee holds for a model's reading:
 | NLP never emits MiniLang (rule 3) | A reading is a `Candidate`. Model text is never written to the output; only the code generator writes code, and a test forbids `llm/` from importing it. |
 | N1 decides variable vs. text, pronouns, typos | In a value the model may write only `number`, quoted `string`, `word` and `pronoun`; a `name` is allowed only in a NAME position. The resolver treats these as it treats rule slots. |
 | Typo question for targets (D-12) | A model's `declare` becomes `assign`, so N1 picks implicit `LET` or the typo question, and a type cannot change through `W208`. |
-| Nothing is invented | Grounding: every name, word, pronoun, number and quoted string must come from the sentence. A hostile response can only rearrange the user's words. |
+| Nothing is invented | Grounding: every name, word, pronoun, number and quoted string must come from the sentence. A hostile response can only rearrange the user's words, plus numbers marked `derived`, which always ask. |
 | N2 asks, it does not guess | LLM candidates go through `gate()`. Readings within `CLARIFY_MARGIN` ask; in `llm` mode rule candidates stay in the pool whenever they alone would ask, so a model cannot remove a question. |
 | One statement per sentence (D-4) | Rejections with a reason of their own never reach the LLM; a reading that drops a second statement or a negation is discarded. |
 | N3 | Unchanged. `W513` marks an accepted LLM reading, because V1 is the layer that can catch a misreading, and only if a person reads it. |

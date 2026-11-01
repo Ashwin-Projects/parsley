@@ -95,8 +95,9 @@ rules in LANGUAGE_SPEC.md 7.5):
   deserves a look.
 - **Grounding** is the new mechanism: every name, word, number and quoted string in a reading
   must come from the sentence, so a sentence that tells the model to output code can at worst
-  produce a rearrangement of its own words, and never new content. Model text is parsed as
-  data and never evaluated.
+  produce a rearrangement of its own words, and never new content. The one exception, an implied
+  amount such as `double x`, must be marked as derived and always goes to N2 as a question.
+  Model text is parsed as data and never evaluated.
 
 What this does not give:
 

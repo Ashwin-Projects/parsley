@@ -169,8 +169,14 @@ def answer(
     merged = apply_answer(result.clarification, reply)
     if merged is None:
         return result
+    if merged.refused:
+        return PipelineResult("error", result.trace, diagnostics=(*result.diagnostics, _not_confirmed()))
     resolutions = _resolve((merged.candidate,), session, use_context, merged.accepted)
     return _decide(result.trace, resolutions, session, use_context, confirm, merged.accepted)
+
+
+def _not_confirmed() -> Diagnostic:
+    return Diagnostic("error", "ambiguity", "E103", "the interpretation was not confirmed, so nothing was recorded")
 
 
 def _resolve(
@@ -215,9 +221,7 @@ def _decide(
         return PipelineResult("error", trace, diagnostics=tuple(diagnostics + checked))
     back_translation = backtranslate(stmt)
     if confirm is not None and not confirm(back_translation):
-        diagnostics.append(Diagnostic(
-            "error", "ambiguity", "E103", "the interpretation was not confirmed, so nothing was recorded",
-        ))
+        diagnostics.append(_not_confirmed())
         return PipelineResult("error", trace, diagnostics=tuple(diagnostics))
     diagnostics.extend(semantic.analyze(stmt, session))
     minilang = codegen.generate(stmt)

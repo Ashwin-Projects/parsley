@@ -132,7 +132,11 @@ variable
 Rules:
 - Copy every name, word and quoted text exactly as the sentence spells it, keeping its case. \
 Do not correct spelling.
-- A number must be in the sentence, as digits or as a number word such as "five".
+- A number must be in the sentence, as digits or as a number word such as "five". The only \
+exception is an amount the sentence implies but does not state, such as "double" (multiply by \
+2), "halve" (divide by 2) or "twice" (a count of 2): write it with "derived": true, for example \
+{{"kind": "number", "text": "2", "derived": true}}. The compiler always asks the user to \
+confirm a derived amount. Never mark anything else as derived.
 - Never decide whether a bare word in a value is a variable or text, and never replace a \
 pronoun with a variable. Write it as word or pronoun; the compiler decides.
 - Use null for a slot marked "may be null" when the sentence does not give it. Never invent a \

@@ -387,6 +387,113 @@ def test_the_provider_gets_a_copy_of_the_session_facts():
     assert seen["context"].ref_stack == ("a", "b")
 
 
+# Derived amounts: never accepted without a question
+
+
+def derived(text="2", kind="number"):
+    return {"kind": kind, "text": text, "derived": True}
+
+
+def doubling(target="x"):
+    return {"intent": "multiply", "slots": {"name": name(target), "amount": derived()}, "confidence": 0.9}
+
+
+def test_a_derived_amount_always_asks():
+    session = session_after("let x be 3")
+    result = pipeline.run("double x", session, mode="hybrid", provider=Scripted(doubling()))
+    assert result.status == "needs_clarification"
+    assert result.clarification.kind == "derived_value"
+    assert result.question == "Did you mean: multiply x by 2?"
+    assert result.options == ("yes", "no")
+    assert result.minilang is None
+    assert len(session.history) == 1
+
+
+@pytest.mark.parametrize("confidence", [0.5, 0.75, 1.0])
+def test_confidence_cannot_buy_a_derived_amount_past_the_question(confidence):
+    reading = {**doubling(), "confidence": confidence}
+    result = pipeline.run("double x", session_after("let x be 3"), mode="llm", provider=Scripted(reading))
+    assert result.clarification.kind == "derived_value"
+
+
+def test_yes_compiles_the_derived_reading_with_w513():
+    session = session_after("let x be 3")
+    asked = pipeline.run("double x", session, mode="hybrid", provider=Scripted(doubling()))
+    done = pipeline.answer(asked, "yes", session)
+    assert done.status == "ok"
+    assert done.minilang == "x = x * 2;"
+    assert "W513" in codes(done)
+    assert (done.verification.v2_match, done.verification.v3_match) == (True, True)
+
+
+def test_no_records_nothing_and_says_so():
+    session = session_after("let x be 3")
+    asked = pipeline.run("double x", session, mode="hybrid", provider=Scripted(doubling()))
+    done = pipeline.answer(asked, "no", session)
+    assert done.status == "error"
+    assert "E103" in codes(done)
+    assert len(session.history) == 1
+
+
+def test_an_answer_that_does_not_fit_asks_again():
+    session = session_after("let x be 3")
+    asked = pipeline.run("double x", session, mode="hybrid", provider=Scripted(doubling()))
+    assert pipeline.answer(asked, "maybe", session) is asked
+
+
+def test_a_derived_count_asks_with_the_whole_statement():
+    reading = {"intent": "repeat", "confidence": 0.9, "slots": {
+        "count": derived(kind="count"),
+        "body": {"kind": "statement", "intent": "print", "slots": {"value": word("hi")}},
+    }}
+    session = Session()
+    asked = pipeline.run("say hi twice", session, mode="hybrid", provider=Scripted(reading))
+    assert asked.question == "Did you mean: repeat 2 times print hi?"
+    assert pipeline.answer(asked, "y", session).minilang == 'REPEAT 2 TIMES { PRINT "hi"; }'
+
+
+def test_a_derived_amount_nested_in_a_block_still_asks():
+    reading = {"intent": "if", "confidence": 0.9, "slots": {
+        "condition": {"kind": "condition", "op": ">", "left": word("x"), "right": number("5")},
+        "then": {"kind": "statement", "intent": "multiply", "slots": {"name": name("x"), "amount": derived()}},
+    }}
+    result = pipeline.run("when x tops 5 double x", session_after("let x be 3"), mode="hybrid",
+                          provider=Scripted(reading))
+    assert result.clarification.kind == "derived_value"
+
+
+def test_a_typo_is_settled_before_the_derived_question():
+    session = session_after("let score be 3")
+    asked = pipeline.run("double scroe", session, mode="hybrid", provider=Scripted(doubling("scroe")))
+    assert asked.clarification.kind == "typo"
+    next_question = pipeline.answer(asked, "yes", session)
+    assert next_question.question == "Did you mean: multiply score by 2?"
+    assert pipeline.answer(next_question, "yes", session).minilang == "score = score * 2;"
+
+
+def test_alternatives_are_settled_before_the_derived_question():
+    other = {"intent": "divide", "slots": {"name": name("x"), "amount": derived()}, "confidence": 0.85}
+    session = session_after("let x be 3")
+    asked = pipeline.run("fold x", session, mode="llm", provider=Scripted(doubling(), other))
+    assert asked.clarification.kind == "alternatives"
+    chosen = pipeline.answer(asked, "2", session)
+    assert chosen.clarification.kind == "derived_value"
+
+
+def test_a_derived_amount_with_context_off_still_asks():
+    result = pipeline.run("double x", session_after("let x be 3"), mode="hybrid", provider=Scripted(doubling()),
+                          use_context=False)
+    assert result.clarification.kind == "derived_value"
+
+
+def test_a_derived_amount_never_reaches_the_ast():
+    session = session_after("let x be 3")
+    asked = pipeline.run("double x", session, mode="hybrid", provider=Scripted(doubling()))
+    assert asked.trace.ast is None
+    done = pipeline.answer(asked, "yes", session)
+    assert "derived" not in repr(done.trace.chosen.slots)
+
+
 # Failure and fallback
 
 

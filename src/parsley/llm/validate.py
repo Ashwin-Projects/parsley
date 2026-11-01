@@ -13,6 +13,8 @@ Three rules keep the model below the deterministic stages:
 - **Grounding.** Every name, word, pronoun, number and quoted string must come from the
   sentence, spelled the same way, so a hostile response can only rearrange the user's own
   words. A number word grounds its number. Operators and intents are the model's reading.
+  The one exception is an amount the model marks ``"derived": true`` (``double x``): the mark
+  stays on the slot, and the gate always asks about it (LANGUAGE_SPEC.md 7.5).
 - **One statement.** Block bodies follow LANGUAGE_SPEC.md 6.3, and a reading holds one
   statement: no extra fields and no lists of statements.
 - **Coverage.** Grounding checks what a reading says, not what it leaves out, and a full
@@ -44,6 +46,7 @@ MAX_DETAIL_CHARS = 200
 
 _NUMBER = re.compile(r"[0-9]+(?:\.[0-9]+)?")
 _COUNT = re.compile(r"[0-9]+")
+_FENCE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL)  # one fence around the whole response
 _READING_KEYS = frozenset({"intent", "slots", "confidence"})
 _NEGATORS = frozenset({"not", "never", "no", "don't", "dont", "cannot", "can't", "won't"})
 _THEN = "then"
@@ -147,8 +150,11 @@ def _no_constant(name: str) -> NoReturn:
 
 
 def _envelope(text: str) -> list[Any]:
+    fenced = _FENCE.fullmatch(text.strip())
     try:
-        data = json.loads(text, object_pairs_hook=_no_duplicates, parse_constant=_no_constant)
+        data = json.loads(
+            fenced.group(1) if fenced else text, object_pairs_hook=_no_duplicates, parse_constant=_no_constant,
+        )
     except (ValueError, RecursionError) as error:
         raise _Reject(Discarded.MALFORMED_JSON, type(error).__name__) from error
     if not isinstance(data, dict) or set(data) != {"readings"} or not isinstance(data["readings"], list):
@@ -318,13 +324,24 @@ def _operator(fields: Mapping[str, Any], allowed: frozenset[str]) -> str:
     return op
 
 
-def _number(slot: Any, grounds: _Grounds) -> Slot:
-    text = _text(_keys(slot, "text"))
-    if not _NUMBER.fullmatch(text):
-        _bad_slots(f"{_short(text)} is not a number")
-    if text not in grounds.numbers:
+def _amount(slot: Any, shape: re.Pattern[str], grounds: _Grounds) -> Slot:
+    """A number or count: from the sentence, or marked as derived by the model."""
+    marked = isinstance(slot, dict) and "derived" in slot
+    fields = _keys(slot, "text", "derived") if marked else _keys(slot, "text")
+    if marked and fields["derived"] is not True:
+        _bad_slots(f"derived is true or absent, not {_short(fields['derived'])}")
+    text = _text(fields)
+    if not shape.fullmatch(text):
+        _bad_slots(f"{_short(text)} is not a {slot['kind']}")
+    if text in grounds.numbers:
+        return {"kind": slot["kind"], "text": text}
+    if not marked:
         _not_grounded(text)
-    return {"kind": "number", "text": text}
+    return {"kind": slot["kind"], "text": text, "derived": True}
+
+
+def _number(slot: Any, grounds: _Grounds) -> Slot:
+    return _amount(slot, _NUMBER, grounds)
 
 
 def _string(slot: Any, grounds: _Grounds) -> Slot:
@@ -368,9 +385,4 @@ def _statement(slot: Any, grounds: _Grounds, depth: int) -> Slot:
 def _count(slot: Any, grounds: _Grounds) -> Slot:
     if _kind(slot) != "count":
         _bad_slots(f"expected a count, not {_short(_kind(slot))}")
-    text = _text(_keys(slot, "text"))
-    if not _COUNT.fullmatch(text):
-        _bad_slots(f"{_short(text)} is not a whole number")
-    if text not in grounds.numbers:
-        _not_grounded(text)
-    return {"kind": "count", "text": text}
+    return _amount(slot, _COUNT, grounds)
