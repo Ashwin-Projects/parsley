@@ -20,6 +20,9 @@ htmlcov/
 # Evaluation outputs (regenerate with run_eval.py)
 results/
 
+# LLM provider settings and API keys
+.env
+
 # Claude Code local settings
 .claude/
 
