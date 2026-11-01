@@ -122,7 +122,8 @@ def run(
     candidates = tuple(nlp.candidates)
     consulted = None if mode == "rules" else _consult(text, nlp, session, use_context, mode, provider)
     if consulted is not None and consulted.candidates:
-        candidates = consulted.candidates if mode == "llm" else candidates + consulted.candidates
+        keep_rules = mode == "hybrid" or _rules_ask(candidates, session, use_context)
+        candidates = candidates + consulted.candidates if keep_rules else consulted.candidates
     if not candidates:
         trace = Trace(str(text), normalized, (), (), "REJECT", llm=consulted)
         return PipelineResult(
@@ -143,6 +144,11 @@ def _consult(
     resolved = _resolve(nlp.candidates, session, use_context, frozenset())
     why = hybrid.trigger(mode, nlp.notes, resolved[0].candidate.score if resolved else None)
     return None if why is None else hybrid.consult(text, session, provider, why)
+
+
+def _rules_ask(candidates: Sequence[Candidate], session: Session, use_context: bool) -> bool:
+    """Whether the rule candidates alone lead to a question, which ``llm`` mode must not lose."""
+    return bool(candidates) and gate(_resolve(candidates, session, use_context, frozenset())).clarification is not None
 
 
 def _llm_warnings(trace: Trace) -> tuple[Diagnostic, ...]:

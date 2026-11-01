@@ -315,6 +315,42 @@ def test_n1_implicit_declaration_applies_to_llm_assignments():
     assert "W301" in codes(result)
 
 
+def test_an_llm_declare_cannot_skip_the_typo_question():
+    reading = {"intent": "declare", "slots": {"name": name("scroe"), "value": number("5")}, "confidence": 0.9}
+    session = session_after("let score be 1")
+    result = pipeline.run("put 5 in scroe", session, mode="hybrid", provider=Scripted(reading))
+    assert result.question == "Did you mean the variable score?"
+    assert "scroe" not in session.symbols
+
+
+def test_an_llm_declare_of_a_new_name_is_an_implicit_declaration():
+    reading = {"intent": "declare", "slots": {"name": name("x"), "value": number("5")}, "confidence": 0.9}
+    result = pipeline.run("put 5 in x", Session(), mode="hybrid", provider=Scripted(reading))
+    assert result.minilang == "LET x = 5;"
+    assert "W301" in codes(result)
+
+
+def test_an_llm_declare_cannot_change_a_variable_type():
+    value = {"kind": "string", "text": "hi", "quoted": True}
+    reading = {"intent": "declare", "slots": {"name": name("x"), "value": value}, "confidence": 0.9}
+    session = session_after("let x be 1")
+    result = pipeline.run('put "hi" in x', session, mode="hybrid", provider=Scripted(reading))
+    assert "E209" in codes(result)
+
+
+@pytest.mark.parametrize(("sentence", "question"), [
+    ("set x to 10 or 20", "10 or 20?"),
+    ("increase x", "By how much should x increase?"),
+    ("print scroe", "Did you mean the variable score?"),
+    ("multiply x by 2 plus 3", "Do you mean (x times 2) plus 3, or x times (2 plus 3)?"),
+])
+def test_llm_mode_keeps_a_question_the_rules_would_ask(sentence, question):
+    provider = Scripted(printing(word("x")))
+    result = pipeline.run(sentence, session_after("let x be 1", "let score be 2"), mode="llm", provider=provider)
+    assert result.question == question
+    assert provider.calls == 1
+
+
 def test_the_semantic_analyzer_still_rejects_an_llm_reading():
     session = session_after('let name be "ann"')
     provider = Scripted(increasing("name", "5"))

@@ -98,8 +98,8 @@ def consult(sentence: str, session: Session, provider: Provider | None, why: str
     candidates = tuple(_candidate(reading) for reading in readings)
     warnings = ()
     if discarded and not candidates:
-        count = f"{len(discarded)} response{'s' if len(discarded) != 1 else ''}"
-        warnings = (_warning("W512", f"no LLM reading was usable ({count} discarded), {_FALLBACK}"),)
+        reasons = ", ".join(sorted({str(d.reason) for d in discarded}))
+        warnings = (_warning("W512", f"no LLM reading was usable ({reasons}), {_FALLBACK}"),)
     return Consultation(why, provider.name, candidates, tuple(discarded), warnings)
 
 
@@ -114,8 +114,11 @@ def _context(session: Session) -> LLMContext:
 
 
 def _candidate(reading: Reading) -> Candidate:
+    # "declare" is exempt from the typo check (D-12) and may replace a variable (W208). That
+    # is for a user who said so, not a model's guess, so N1 decides: new name or near miss.
+    intent = "assign" if reading.intent == "declare" else reading.intent
     return Candidate(
-        reading.intent, reading.slots, score_of(reading.confidence), LLM_RULE_ID,
+        intent, reading.slots, score_of(reading.confidence), LLM_RULE_ID,
         [f"LLM reading, confidence {reading.confidence:g}"],
     )
 
