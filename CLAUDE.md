@@ -20,6 +20,10 @@ truth, together with the decision log in LANGUAGE_SPEC.md Section 9.
    third-party libraries listed in requirements-ml.txt, and only there.
    Core code (src/parsley/) never imports parsley_ml; the scorer is off
    by default and plugs in only through the Candidate scoring interface.
+   Exception: the optional LLM source in src/parsley/llm/ may call provider
+   APIs (stdlib urllib only, keys from the environment or .env). It is off
+   by default, rules mode never imports it, tests never use the network,
+   and its proposals enter only as Candidates that pass N1, N2 and N3.
 8. Add a test for every new behaviour and bug fix. Run tests;
    report the exact command and output.
 9. Never claim tests passed unless they were run.
