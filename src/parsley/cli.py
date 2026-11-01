@@ -11,6 +11,7 @@ import importlib.metadata
 import sys
 import tomllib
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from parsley import pipeline
 from parsley.compiler import codegen
@@ -20,7 +21,10 @@ from parsley.session import Session
 from parsley.verify import Verification
 from parsley.verify.interpreter import run as interpret
 
-PYPROJECT = Path(__file__).resolve().parents[2] / "pyproject.toml"
+if TYPE_CHECKING:
+    from parsley.llm.provider import Provider
+
+PYPROJECT =Path(__file__).resolve().parents[2] / "pyproject.toml"
 
 # :help examples; they run in order as one session (tests/unit/test_cli_commands.py).
 HELP_EXAMPLES = (
@@ -61,13 +65,17 @@ def run_sentence(text: str, options: argparse.Namespace) -> int:
         options.session = Session()
     use_context = not options.no_context
     confirm = _confirmer(options)
-    result = pipeline.run(text, options.session, use_context=use_context, confirm=confirm)
+    result = pipeline.run(
+        text, options.session, use_context=use_context, confirm=confirm, mode=options.mode, provider=options.provider,
+    )
     while result.status == "needs_clarification":
         if not options.interactive:
+            _print_diagnostics(result)
             print(f"ambiguity E102: {result.question}{_choices(result.options)}", file=sys.stderr)
             return 1
         reply = input(_question_prompt(result))
         if not reply.strip():
+            _print_diagnostics(result)
             print("clarify: cancelled; nothing was recorded", file=sys.stderr)
             return 1
         answered = pipeline.answer(result, reply, options.session, use_context=use_context, confirm=confirm)
@@ -76,8 +84,7 @@ def run_sentence(text: str, options: argparse.Namespace) -> int:
         result = answered
     if options.trace:
         _print_trace(result.trace)
-    for diagnostic in result.diagnostics:
-        print(f"{diagnostic.stage} {diagnostic.code}: {diagnostic.message}", file=sys.stderr)
+    _print_diagnostics(result)
     if result.suggestion is not None:
         print(f"Try: {result.suggestion}", file=sys.stderr)
     if result.status != "ok":
@@ -89,6 +96,11 @@ def run_sentence(text: str, options: argparse.Namespace) -> int:
     if options.output is not None:
         options.output.write_text(_program(options.session) + "\n", encoding="utf-8")
     return 0
+
+
+def _print_diagnostics(result: pipeline.PipelineResult) -> None:
+    for diagnostic in result.diagnostics:
+        print(f"{diagnostic.stage} {diagnostic.code}: {diagnostic.message}", file=sys.stderr)
 
 
 def _program(session: Session | None) -> str:
@@ -228,6 +240,12 @@ def _print_trace(trace: pipeline.Trace) -> None:
     print("candidates:")
     for c in trace.candidates:
         print(f"  {c.rule_id} {c.intent} score {c.score:.4g}")
+    if trace.llm is not None:
+        print(f"llm: asked {trace.llm.provider or 'nothing'} because {trace.llm.trigger}")
+        if not (trace.llm.candidates or trace.llm.discarded or trace.llm.warnings):
+            print("  no readings")
+        for discard in trace.llm.discarded:
+            print(f"  discarded {discard.reason}: {discard.detail}")
     if trace.ranked != trace.candidates:
         print("after context:")
         for c in trace.ranked:
@@ -292,6 +310,15 @@ def _repl(options: argparse.Namespace) -> int:
                 return max(status, 1)  # the open question was never answered
 
 
+def _provider(mode: str) -> Provider | None:
+    """The configured LLM provider; ``rules`` mode loads nothing and reads no ``.env``."""
+    if mode == "rules":
+        return None
+    from parsley.llm.config import load_provider
+
+    return load_provider()
+
+
 def main(argv: list[str] | None = None) -> int:
     """Parse arguments and run sentence, file or REPL mode.
 
@@ -322,12 +349,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--run", action="store_true", help="run the program afterwards and show its output",
     )
+    parser.add_argument(
+        "--mode", choices=pipeline.MODES, default="rules",
+        help="candidate source: rules only (default), an LLM, or an LLM when rules are unsure",
+    )
     parser.add_argument("--version", action="version", version=f"parsley {_version()}")
     options = parser.parse_args(argv)
     if options.sentence is not None and options.file is not None:
         parser.error("sentence and --file cannot be used together")
     options.interactive = options.sentence is None and options.file is None
     options.session = None
+    options.provider = _provider(options.mode)
     try:
         if options.file is not None:
             status = _run_file(options)
