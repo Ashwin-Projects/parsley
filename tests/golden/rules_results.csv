@@ -1,0 +1,987 @@
+source,condition,subset,group,item_id,input,expected_status,status,category,exact_match,expected_minilang,minilang,suggestion,suggestion_useful,codes,context_dependent
+held_out,baseline,ambiguous,,HA01,increase lanternCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA02,lower voucherCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA03,multiply parcelWeight,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA04,divide paintVolume,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA05,set orchardCount to,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA06,change ticketPrice to,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA07,update reserveLevel to,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA08,display,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,baseline,ambiguous,,HA09,"repeat print ""lunch ready""",ambiguous,needs_clarification,correct,,,,,,,False
+held_out,baseline,ambiguous,,HA10,subtract 8 from it,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,baseline,ambiguous,,HA11,multiply that by 7,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,baseline,ambiguous,,HA12,set the variable to 14,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,baseline,ambiguous,,HA13,set queueLimit to 14 or 28,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA14,show 6 or 11,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,baseline,ambiguous,,HA15,change sailCount to 2 or 4 or 8,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA16,"print ""copper"" or ""silver""",ambiguous,needs_clarification,correct,,,,,,,False
+held_out,baseline,ambiguous,,HA17,set beaconLevel to 3 or 6 or 9 or 12,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA18,print lantrenCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA19,set voucehrCount to 19,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA20,increase parcelWieght by 2,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA21,multiply ribbonLength by 3 plus 4,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA22,divide tankVolume by 2 minus 5,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA23,repeat 4 times multiply batchSize by 2 plus 7,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,ambiguous,,HA24,raise it,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,baseline,ambiguous,,HA25,if crateCount is greater than 3 then increase crateCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,paraphrase,H01,H01-1,create a variable called seedCount and set it to 0,ok,ok,correct,True,LET seedCount = 0;,LET seedCount = 0;,,,,False
+held_out,baseline,paraphrase,H01,H01-2,declare a new variable named seedCount with value 0,ok,ok,correct,True,LET seedCount = 0;,LET seedCount = 0;,,,,False
+held_out,baseline,paraphrase,H01,H01-3,let seedCount be 0,ok,ok,correct,True,LET seedCount = 0;,LET seedCount = 0;,,,,False
+held_out,baseline,paraphrase,H01,H01-4,initialize seedCount with zero,ok,unsupported,rejected,False,LET seedCount = 0;,,,False,E101,False
+held_out,baseline,paraphrase,H02,H02-1,set unitPrice to 2.75,ok,ok,correct,True,unitPrice = 2.75;,unitPrice = 2.75;,,,,True
+held_out,baseline,paraphrase,H02,H02-2,change unitPrice to 2.75,ok,ok,correct,True,unitPrice = 2.75;,unitPrice = 2.75;,,,,True
+held_out,baseline,paraphrase,H02,H02-3,assign 2.75 to unitPrice,ok,ok,correct,True,unitPrice = 2.75;,unitPrice = 2.75;,,,,True
+held_out,baseline,paraphrase,H02,H02-4,replace the value of unitPrice with 2.75,ok,unsupported,rejected,False,unitPrice = 2.75;,,,False,E101,True
+held_out,baseline,paraphrase,H03,H03-1,increment visits by 3,ok,ok,correct,True,visits = visits + 3;,visits = visits + 3;,,,,True
+held_out,baseline,paraphrase,H03,H03-2,raise visits by 3,ok,ok,correct,True,visits = visits + 3;,visits = visits + 3;,,,,True
+held_out,baseline,paraphrase,H03,H03-3,add 3 to visits,ok,ok,correct,True,visits = visits + 3;,visits = visits + 3;,,,,True
+held_out,baseline,paraphrase,H03,H03-4,bump visits up by 3,ok,unsupported,rejected,False,visits = visits + 3;,,,False,E101,True
+held_out,baseline,paraphrase,H04,H04-1,reduce tickets by 2,ok,ok,correct,True,tickets = tickets - 2;,tickets = tickets - 2;,,,,True
+held_out,baseline,paraphrase,H04,H04-2,lower tickets by 2,ok,ok,correct,True,tickets = tickets - 2;,tickets = tickets - 2;,,,,True
+held_out,baseline,paraphrase,H04,H04-3,subtract 2 from tickets,ok,ok,correct,True,tickets = tickets - 2;,tickets = tickets - 2;,,,,True
+held_out,baseline,paraphrase,H04,H04-4,take 2 away from tickets,ok,error,error,False,tickets = tickets - 2;,,,,E203,True
+held_out,baseline,paraphrase,H05,H05-1,multiply subtotal by 4,ok,ok,correct,True,subtotal = subtotal * 4;,subtotal = subtotal * 4;,,,,True
+held_out,baseline,paraphrase,H05,H05-2,set subtotal to subtotal times 4,ok,ok,correct,True,subtotal = subtotal * 4;,subtotal = subtotal * 4;,,,,True
+held_out,baseline,paraphrase,H05,H05-3,change subtotal to subtotal multiplied by 4,ok,ok,correct,True,subtotal = subtotal * 4;,subtotal = subtotal * 4;,,,,True
+held_out,baseline,paraphrase,H05,H05-4,quadruple subtotal,ok,unsupported,rejected,False,subtotal = subtotal * 4;,,,False,E101,True
+held_out,baseline,paraphrase,H06,H06-1,divide budget by 5,ok,ok,correct,True,budget = budget / 5;,budget = budget / 5;,,,,True
+held_out,baseline,paraphrase,H06,H06-2,set budget to budget divided by 5,ok,ok,correct,True,budget = budget / 5;,budget = budget / 5;,,,,True
+held_out,baseline,paraphrase,H06,H06-3,update budget to budget / 5,ok,ok,correct,True,budget = budget / 5;,budget = budget / 5;,,,,True
+held_out,baseline,paraphrase,H06,H06-4,make budget one fifth of its current value,ok,unsupported,rejected,False,budget = budget / 5;,,,False,E101,True
+held_out,baseline,paraphrase,H07,H07-1,"print ""Launch Ready""",ok,ok,correct,True,"PRINT ""Launch Ready"";","PRINT ""Launch Ready"";",,,,False
+held_out,baseline,paraphrase,H07,H07-2,"show ""Launch Ready""",ok,ok,correct,True,"PRINT ""Launch Ready"";","PRINT ""Launch Ready"";",,,,False
+held_out,baseline,paraphrase,H07,H07-3,"display ""Launch Ready""",ok,ok,correct,True,"PRINT ""Launch Ready"";","PRINT ""Launch Ready"";",,,,False
+held_out,baseline,paraphrase,H07,H07-4,"say ""Launch Ready""",ok,unsupported,rejected,False,"PRINT ""Launch Ready"";",,,False,E101,False
+held_out,baseline,paraphrase,H08,H08-1,print balance,ok,ok,correct,True,PRINT balance;,PRINT balance;,,,,True
+held_out,baseline,paraphrase,H08,H08-2,show balance,ok,ok,correct,True,PRINT balance;,PRINT balance;,,,,True
+held_out,baseline,paraphrase,H08,H08-3,display balance,ok,ok,correct,True,PRINT balance;,PRINT balance;,,,,True
+held_out,baseline,paraphrase,H08,H08-4,output balance,ok,ok,correct,True,PRINT balance;,PRINT balance;,,,,True
+held_out,baseline,paraphrase,H09,H09-1,"print ""North"" plus ""Star""",ok,ok,correct,True,"PRINT ""North"" + ""Star"";","PRINT ""North"" + ""Star"";",,,,False
+held_out,baseline,paraphrase,H09,H09-2,"show ""North"" + ""Star""",ok,ok,correct,True,"PRINT ""North"" + ""Star"";","PRINT ""North"" + ""Star"";",,,,False
+held_out,baseline,paraphrase,H09,H09-3,"display ""North"" plus ""Star""",ok,ok,correct,True,"PRINT ""North"" + ""Star"";","PRINT ""North"" + ""Star"";",,,,False
+held_out,baseline,paraphrase,H09,H09-4,"join ""North"" and ""Star"" and print the result",ok,unsupported,rejected,False,"PRINT ""North"" + ""Star"";",,,False,E101,False
+held_out,baseline,paraphrase,H10,H10-1,set temperature to negative 6,ok,ok,correct,True,temperature = -6;,temperature = -6;,,,,True
+held_out,baseline,paraphrase,H10,H10-2,change temperature to -6,ok,ok,correct,True,temperature = -6;,temperature = -6;,,,,True
+held_out,baseline,paraphrase,H10,H10-3,assign negative 6 to temperature,ok,ok,correct,True,temperature = -6;,temperature = -6;,,,,True
+held_out,baseline,paraphrase,H10,H10-4,make temperature six below zero,ok,unsupported,rejected,False,temperature = -6;,,,False,E101,True
+held_out,baseline,paraphrase,H11,H11-1,"if level is at least 10 then print ""ready""",ok,ok,correct,True,"IF level >= 10 THEN { PRINT ""ready""; }","IF level >= 10 THEN { PRINT ""ready""; }",,,,True
+held_out,baseline,paraphrase,H11,H11-2,"if level is greater than or equal to 10 then show ""ready""",ok,ok,correct,True,"IF level >= 10 THEN { PRINT ""ready""; }","IF level >= 10 THEN { PRINT ""ready""; }",,,,True
+held_out,baseline,paraphrase,H11,H11-3,"if level is at least 10 then display ""ready""",ok,ok,correct,True,"IF level >= 10 THEN { PRINT ""ready""; }","IF level >= 10 THEN { PRINT ""ready""; }",,,,True
+held_out,baseline,paraphrase,H11,H11-4,"when level reaches 10 or higher, print ""ready""",ok,unsupported,rejected,False,"IF level >= 10 THEN { PRINT ""ready""; }",,,False,E101,True
+held_out,baseline,paraphrase,H12,H12-1,if pressure is at most 8 then set flag to 1,ok,ok,correct,True,IF pressure <= 8 THEN { flag = 1; },IF pressure <= 8 THEN { flag = 1; },,,,True
+held_out,baseline,paraphrase,H12,H12-2,if pressure is less than or equal to 8 then change flag to 1,ok,ok,correct,True,IF pressure <= 8 THEN { flag = 1; },IF pressure <= 8 THEN { flag = 1; },,,,True
+held_out,baseline,paraphrase,H12,H12-3,if pressure is at most 8 then assign 1 to flag,ok,ok,correct,True,IF pressure <= 8 THEN { flag = 1; },IF pressure <= 8 THEN { flag = 1; },,,,True
+held_out,baseline,paraphrase,H12,H12-4,set flag to 1 provided pressure does not exceed 8,ok,error,error,False,IF pressure <= 8 THEN { flag = 1; },,,,E209,True
+held_out,baseline,paraphrase,H13,H13-1,"repeat 3 times show ""ping""",ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""ping""; }","REPEAT 3 TIMES { PRINT ""ping""; }",,,,False
+held_out,baseline,paraphrase,H13,H13-2,"repeat display ""ping"" 3 times",ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""ping""; }","REPEAT 3 TIMES { PRINT ""ping""; }",,,,False
+held_out,baseline,paraphrase,H13,H13-3,"do print ""ping"" 3 times",ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""ping""; }","REPEAT 3 TIMES { PRINT ""ping""; }",,,,False
+held_out,baseline,paraphrase,H13,H13-4,"print ""ping"" on three occasions",ok,unsupported,rejected,False,"REPEAT 3 TIMES { PRINT ""ping""; }",,,False,E101,False
+held_out,baseline,paraphrase,H14,H14-1,add 4 to that,ok,ok,correct,True,points = points + 4;,points = points + 4;,,,,True
+held_out,baseline,paraphrase,H14,H14-2,increase the variable by 4,ok,ok,correct,True,points = points + 4;,points = points + 4;,,,,True
+held_out,baseline,paraphrase,H14,H14-3,raise points by 4,ok,ok,correct,True,points = points + 4;,points = points + 4;,,,,True
+held_out,baseline,paraphrase,H14,H14-4,add 4 to it,ok,ok,correct,True,points = points + 4;,points = points + 4;,,,,True
+held_out,baseline,paraphrase,H15,H15-1,"if mode is not equal to ""paused"" then print ""go""",ok,ok,correct,True,"IF mode != ""paused"" THEN { PRINT ""go""; }","IF mode != ""paused"" THEN { PRINT ""go""; }",,,,True
+held_out,baseline,paraphrase,H15,H15-2,"if mode does not equal ""paused"" then show ""go""",ok,ok,correct,True,"IF mode != ""paused"" THEN { PRINT ""go""; }","IF mode != ""paused"" THEN { PRINT ""go""; }",,,,True
+held_out,baseline,paraphrase,H15,H15-3,"if mode is not equal to ""paused"" then display ""go""",ok,ok,correct,True,"IF mode != ""paused"" THEN { PRINT ""go""; }","IF mode != ""paused"" THEN { PRINT ""go""; }",,,,True
+held_out,baseline,paraphrase,H15,H15-4,"unless mode equals ""paused"", print ""go""",ok,unsupported,rejected,False,"IF mode != ""paused"" THEN { PRINT ""go""; }",,,False,E101,True
+held_out,baseline,session,HS01,HS01-1,set lanternCount to 12,ok,ok,correct,True,LET lanternCount = 12;,LET lanternCount = 12;,,,W301,True
+held_out,baseline,session,HS01,HS01-2,add 7 to it,ok,ok,correct,True,lanternCount = lanternCount + 7;,lanternCount = lanternCount + 7;,,,,True
+held_out,baseline,session,HS01,HS01-3,print lanternCount,ok,ok,correct,True,PRINT lanternCount;,PRINT lanternCount;,,,,True
+held_out,baseline,session,HS01,HS01-4,"print ""lanternCount""",ok,ok,correct,True,"PRINT ""lanternCount"";","PRINT ""lanternCount"";",,,,True
+held_out,baseline,session,HS01,HS01-5,display dusk,ok,ok,correct,True,"PRINT ""dusk"";","PRINT ""dusk"";",,,,True
+held_out,baseline,session,HS02,HS02-1,change crateTotal to 18,ok,ok,correct,True,LET crateTotal = 18;,LET crateTotal = 18;,,,W301,True
+held_out,baseline,session,HS02,HS02-2,subtract 3 from it,ok,ok,correct,True,crateTotal = crateTotal - 3;,crateTotal = crateTotal - 3;,,,,True
+held_out,baseline,session,HS02,HS02-3,show crateTotal,ok,ok,correct,True,PRINT crateTotal;,PRINT crateTotal;,,,,True
+held_out,baseline,session,HS02,HS02-4,"show ""crateTotal""",ok,ok,correct,True,"PRINT ""crateTotal"";","PRINT ""crateTotal"";",,,,True
+held_out,baseline,session,HS02,HS02-5,print cargo,ok,ok,correct,True,"PRINT ""cargo"";","PRINT ""cargo"";",,,,True
+held_out,baseline,session,HS03,HS03-1,update tileArea to 7,ok,ok,correct,True,LET tileArea = 7;,LET tileArea = 7;,,,W301,True
+held_out,baseline,session,HS03,HS03-2,multiply it by 6,ok,ok,correct,True,tileArea = tileArea * 6;,tileArea = tileArea * 6;,,,,True
+held_out,baseline,session,HS03,HS03-3,display tileArea,ok,ok,correct,True,PRINT tileArea;,PRINT tileArea;,,,,True
+held_out,baseline,session,HS03,HS03-4,"display ""tileArea""",ok,ok,correct,True,"PRINT ""tileArea"";","PRINT ""tileArea"";",,,,True
+held_out,baseline,session,HS03,HS03-5,show mosaic,ok,ok,correct,True,"PRINT ""mosaic"";","PRINT ""mosaic"";",,,,True
+held_out,baseline,session,HS04,HS04-1,assign 32 to cisternVolume,ok,ok,correct,True,LET cisternVolume = 32;,LET cisternVolume = 32;,,,W301,True
+held_out,baseline,session,HS04,HS04-2,divide it by 4,ok,ok,correct,True,cisternVolume = cisternVolume / 4;,cisternVolume = cisternVolume / 4;,,,,True
+held_out,baseline,session,HS04,HS04-3,print cisternVolume,ok,ok,correct,True,PRINT cisternVolume;,PRINT cisternVolume;,,,,True
+held_out,baseline,session,HS04,HS04-4,"show ""cisternVolume""",ok,ok,correct,True,"PRINT ""cisternVolume"";","PRINT ""cisternVolume"";",,,,True
+held_out,baseline,session,HS04,HS04-5,display rain,ok,ok,correct,True,"PRINT ""rain"";","PRINT ""rain"";",,,,True
+held_out,baseline,session,HS05,HS05-1,"set welcomeBanner to ""Good Morning""",ok,ok,correct,True,"LET welcomeBanner = ""Good Morning"";","LET welcomeBanner = ""Good Morning"";",,,W301,True
+held_out,baseline,session,HS05,HS05-2,"set it to ""Welcome Aboard""",ok,ok,correct,True,"welcomeBanner = ""Welcome Aboard"";","welcomeBanner = ""Welcome Aboard"";",,,,True
+held_out,baseline,session,HS05,HS05-3,show welcomeBanner,ok,ok,correct,True,PRINT welcomeBanner;,PRINT welcomeBanner;,,,,True
+held_out,baseline,session,HS05,HS05-4,"print ""welcomeBanner""",ok,ok,correct,True,"PRINT ""welcomeBanner"";","PRINT ""welcomeBanner"";",,,,True
+held_out,baseline,session,HS05,HS05-5,display visitors,ok,ok,correct,True,"PRINT ""visitors"";","PRINT ""visitors"";",,,,True
+held_out,baseline,session,HS06,HS06-1,set northStock to 10,ok,ok,correct,True,LET northStock = 10;,LET northStock = 10;,,,W301,True
+held_out,baseline,session,HS06,HS06-2,let ticketQuota be 25,ok,ok,correct,True,LET ticketQuota = 25;,LET ticketQuota = 25;,,,,True
+held_out,baseline,session,HS06,HS06-3,add 6 to it,ok,ok,correct,True,ticketQuota = ticketQuota + 6;,ticketQuota = ticketQuota + 6;,,,,True
+held_out,baseline,session,HS06,HS06-4,print northStock,ok,ok,correct,True,PRINT northStock;,PRINT northStock;,,,,True
+held_out,baseline,session,HS06,HS06-5,decrease it by 2,ok,ok,correct,True,northStock = northStock - 2;,northStock = northStock - 2;,,,,True
+held_out,baseline,session,HS06,HS06-6,show ticketQuota,ok,ok,correct,True,PRINT ticketQuota;,PRINT ticketQuota;,,,,True
+held_out,baseline,session,HS06,HS06-7,"print ""ticketQuota""",ok,ok,correct,True,"PRINT ""ticketQuota"";","PRINT ""ticketQuota"";",,,,True
+held_out,baseline,session,HS06,HS06-8,display goods,ok,ok,correct,True,"PRINT ""goods"";","PRINT ""goods"";",,,,True
+held_out,baseline,session,HS07,HS07-1,set fabricRolls to 9,ok,ok,correct,True,LET fabricRolls = 9;,LET fabricRolls = 9;,,,W301,True
+held_out,baseline,session,HS07,HS07-2,print fabricRolls,ok,ok,correct,True,PRINT fabricRolls;,PRINT fabricRolls;,,,,True
+held_out,baseline,session,HS07,HS07-3,increase it by 3,ok,ok,correct,True,fabricRolls = fabricRolls + 3;,fabricRolls = fabricRolls + 3;,,,,True
+held_out,baseline,session,HS07,HS07-4,repeat 2 times print fabricRolls,ok,ok,correct,True,REPEAT 2 TIMES { PRINT fabricRolls; },REPEAT 2 TIMES { PRINT fabricRolls; },,,,True
+held_out,baseline,session,HS07,HS07-5,"print ""fabricRolls""",ok,ok,correct,True,"PRINT ""fabricRolls"";","PRINT ""fabricRolls"";",,,,True
+held_out,baseline,session,HS07,HS07-6,show cloth,ok,ok,correct,True,"PRINT ""cloth"";","PRINT ""cloth"";",,,,True
+held_out,baseline,session,HS08,HS08-1,set roomTemp to 22,ok,ok,correct,True,LET roomTemp = 22;,LET roomTemp = 22;,,,W301,True
+held_out,baseline,session,HS08,HS08-2,reduce it by 3,ok,ok,correct,True,roomTemp = roomTemp - 3;,roomTemp = roomTemp - 3;,,,,True
+held_out,baseline,session,HS08,HS08-3,if roomTemp is at least 18 then print mild else print cold,ok,ok,correct,True,"IF roomTemp >= 18 THEN { PRINT ""mild""; } ELSE { PRINT ""cold""; }","IF roomTemp >= 18 THEN { PRINT ""mild""; } ELSE { PRINT ""cold""; }",,,,True
+held_out,baseline,session,HS08,HS08-4,print roomTemp,ok,ok,correct,True,PRINT roomTemp;,PRINT roomTemp;,,,,True
+held_out,baseline,session,HS08,HS08-5,"show ""roomTemp""",ok,ok,correct,True,"PRINT ""roomTemp"";","PRINT ""roomTemp"";",,,,True
+held_out,baseline,session,HS08,HS08-6,display forecast,ok,ok,correct,True,"PRINT ""forecast"";","PRINT ""forecast"";",,,,True
+held_out,baseline,session,HS09,HS09-1,set routeOffset to negative 3,ok,ok,correct,True,LET routeOffset = -3;,LET routeOffset = -3;,,,W301,True
+held_out,baseline,session,HS09,HS09-2,add 1.5 to it,ok,ok,correct,True,routeOffset = routeOffset + 1.5;,routeOffset = routeOffset + 1.5;,,,,True
+held_out,baseline,session,HS09,HS09-3,print routeOffset,ok,ok,correct,True,PRINT routeOffset;,PRINT routeOffset;,,,,True
+held_out,baseline,session,HS09,HS09-4,"show ""routeOffset""",ok,ok,correct,True,"PRINT ""routeOffset"";","PRINT ""routeOffset"";",,,,True
+held_out,baseline,session,HS09,HS09-5,display compass,ok,ok,correct,True,"PRINT ""compass"";","PRINT ""compass"";",,,,True
+held_out,baseline,session,HS10,HS10-1,assign 8 to marbleCount,ok,ok,correct,True,LET marbleCount = 8;,LET marbleCount = 8;,,,W301,True
+held_out,baseline,session,HS10,HS10-2,change paperSheets to 30,ok,ok,correct,True,LET paperSheets = 30;,LET paperSheets = 30;,,,W301,True
+held_out,baseline,session,HS10,HS10-3,subtract 2 from it,ok,ok,correct,True,paperSheets = paperSheets - 2;,paperSheets = paperSheets - 2;,,,,True
+held_out,baseline,session,HS10,HS10-4,print marbleCount,ok,ok,correct,True,PRINT marbleCount;,PRINT marbleCount;,,,,True
+held_out,baseline,session,HS10,HS10-5,multiply it by 3,ok,ok,correct,True,marbleCount = marbleCount * 3;,marbleCount = marbleCount * 3;,,,,True
+held_out,baseline,session,HS10,HS10-6,show paperSheets,ok,ok,correct,True,PRINT paperSheets;,PRINT paperSheets;,,,,True
+held_out,baseline,session,HS10,HS10-7,"display ""paperSheets""",ok,ok,correct,True,"PRINT ""paperSheets"";","PRINT ""paperSheets"";",,,,True
+held_out,baseline,session,HS10,HS10-8,print inventory,ok,ok,correct,True,"PRINT ""inventory"";","PRINT ""inventory"";",,,,True
+held_out,baseline,unsupported,,HU01,define a function called farewell with parameter guest,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU02,call the function farewell,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU03,create a list called autumnBins,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU04,append 12 to autumnBins,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU05,sort autumnBins in ascending order,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU06,ask the user to enter a delivery code,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU07,read parcelName from the keyboard,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU08,while lanternCount is below 9 print waiting,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU09,for each parcel in shipments print parcel,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU10,calculate the square root of 81,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU11,compute the sine of 45,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU12,open the file harvest.csv,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU13,write the report to harvest.csv,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU14,go to line 24,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU15,import statistics,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU16,return early from this program,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU17,delete the variable lanternCount,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU18,create a dictionary called postalLookup,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU19," 	 
+ ",unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU20,...?!...,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU21,"show ""unclosed parcel",unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU22,"set bannerText to ""unfinished",unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU23,print zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU24,set queueLimit to 2 or 4 or 6 or 8 or 10,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,unsupported,,HU25,"display ""left"" or ""right"" or ""up"" or ""down"" or ""center""",unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,ambiguous,,HA01,increase lanternCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA02,lower voucherCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA03,multiply parcelWeight,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA04,divide paintVolume,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA05,set orchardCount to,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA06,change ticketPrice to,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA07,update reserveLevel to,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA08,display,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,context_off,ambiguous,,HA09,"repeat print ""lunch ready""",ambiguous,needs_clarification,correct,,,,,,,False
+held_out,context_off,ambiguous,,HA10,subtract 8 from it,ambiguous,error,error,,,,,,E401,False
+held_out,context_off,ambiguous,,HA11,multiply that by 7,ambiguous,error,error,,,,,,E401,False
+held_out,context_off,ambiguous,,HA12,set the variable to 14,ambiguous,error,error,,,,,,E401,False
+held_out,context_off,ambiguous,,HA13,set queueLimit to 14 or 28,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA14,show 6 or 11,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,context_off,ambiguous,,HA15,change sailCount to 2 or 4 or 8,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA16,"print ""copper"" or ""silver""",ambiguous,needs_clarification,correct,,,,,,,False
+held_out,context_off,ambiguous,,HA17,set beaconLevel to 3 or 6 or 9 or 12,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA18,print lantrenCount,ambiguous,error,error,,,,,,E401,True
+held_out,context_off,ambiguous,,HA19,set voucehrCount to 19,ambiguous,error,error,,,,,,E201,True
+held_out,context_off,ambiguous,,HA20,increase parcelWieght by 2,ambiguous,error,error,,,,,,E201 E201,True
+held_out,context_off,ambiguous,,HA21,multiply ribbonLength by 3 plus 4,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA22,divide tankVolume by 2 minus 5,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA23,repeat 4 times multiply batchSize by 2 plus 7,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,ambiguous,,HA24,raise it,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,context_off,ambiguous,,HA25,if crateCount is greater than 3 then increase crateCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,paraphrase,H01,H01-1,create a variable called seedCount and set it to 0,ok,ok,correct,True,LET seedCount = 0;,LET seedCount = 0;,,,,False
+held_out,context_off,paraphrase,H01,H01-2,declare a new variable named seedCount with value 0,ok,ok,correct,True,LET seedCount = 0;,LET seedCount = 0;,,,,False
+held_out,context_off,paraphrase,H01,H01-3,let seedCount be 0,ok,ok,correct,True,LET seedCount = 0;,LET seedCount = 0;,,,,False
+held_out,context_off,paraphrase,H01,H01-4,initialize seedCount with zero,ok,unsupported,rejected,False,LET seedCount = 0;,,,False,E101,False
+held_out,context_off,paraphrase,H02,H02-1,set unitPrice to 2.75,ok,ok,correct,True,unitPrice = 2.75;,unitPrice = 2.75;,,,,True
+held_out,context_off,paraphrase,H02,H02-2,change unitPrice to 2.75,ok,ok,correct,True,unitPrice = 2.75;,unitPrice = 2.75;,,,,True
+held_out,context_off,paraphrase,H02,H02-3,assign 2.75 to unitPrice,ok,ok,correct,True,unitPrice = 2.75;,unitPrice = 2.75;,,,,True
+held_out,context_off,paraphrase,H02,H02-4,replace the value of unitPrice with 2.75,ok,unsupported,rejected,False,unitPrice = 2.75;,,,False,E101,True
+held_out,context_off,paraphrase,H03,H03-1,increment visits by 3,ok,ok,correct,True,visits = visits + 3;,visits = visits + 3;,,,,True
+held_out,context_off,paraphrase,H03,H03-2,raise visits by 3,ok,ok,correct,True,visits = visits + 3;,visits = visits + 3;,,,,True
+held_out,context_off,paraphrase,H03,H03-3,add 3 to visits,ok,ok,correct,True,visits = visits + 3;,visits = visits + 3;,,,,True
+held_out,context_off,paraphrase,H03,H03-4,bump visits up by 3,ok,unsupported,rejected,False,visits = visits + 3;,,,False,E101,True
+held_out,context_off,paraphrase,H04,H04-1,reduce tickets by 2,ok,ok,correct,True,tickets = tickets - 2;,tickets = tickets - 2;,,,,True
+held_out,context_off,paraphrase,H04,H04-2,lower tickets by 2,ok,ok,correct,True,tickets = tickets - 2;,tickets = tickets - 2;,,,,True
+held_out,context_off,paraphrase,H04,H04-3,subtract 2 from tickets,ok,ok,correct,True,tickets = tickets - 2;,tickets = tickets - 2;,,,,True
+held_out,context_off,paraphrase,H04,H04-4,take 2 away from tickets,ok,error,error,False,tickets = tickets - 2;,,,,E401,True
+held_out,context_off,paraphrase,H05,H05-1,multiply subtotal by 4,ok,ok,correct,True,subtotal = subtotal * 4;,subtotal = subtotal * 4;,,,,True
+held_out,context_off,paraphrase,H05,H05-2,set subtotal to subtotal times 4,ok,error,error,False,subtotal = subtotal * 4;,,,,E401,True
+held_out,context_off,paraphrase,H05,H05-3,change subtotal to subtotal multiplied by 4,ok,error,error,False,subtotal = subtotal * 4;,,,,E401,True
+held_out,context_off,paraphrase,H05,H05-4,quadruple subtotal,ok,unsupported,rejected,False,subtotal = subtotal * 4;,,,False,E101,True
+held_out,context_off,paraphrase,H06,H06-1,divide budget by 5,ok,ok,correct,True,budget = budget / 5;,budget = budget / 5;,,,,True
+held_out,context_off,paraphrase,H06,H06-2,set budget to budget divided by 5,ok,error,error,False,budget = budget / 5;,,,,E401,True
+held_out,context_off,paraphrase,H06,H06-3,update budget to budget / 5,ok,error,error,False,budget = budget / 5;,,,,E401,True
+held_out,context_off,paraphrase,H06,H06-4,make budget one fifth of its current value,ok,unsupported,rejected,False,budget = budget / 5;,,,False,E101,True
+held_out,context_off,paraphrase,H07,H07-1,"print ""Launch Ready""",ok,ok,correct,True,"PRINT ""Launch Ready"";","PRINT ""Launch Ready"";",,,,False
+held_out,context_off,paraphrase,H07,H07-2,"show ""Launch Ready""",ok,ok,correct,True,"PRINT ""Launch Ready"";","PRINT ""Launch Ready"";",,,,False
+held_out,context_off,paraphrase,H07,H07-3,"display ""Launch Ready""",ok,ok,correct,True,"PRINT ""Launch Ready"";","PRINT ""Launch Ready"";",,,,False
+held_out,context_off,paraphrase,H07,H07-4,"say ""Launch Ready""",ok,unsupported,rejected,False,"PRINT ""Launch Ready"";",,,False,E101,False
+held_out,context_off,paraphrase,H08,H08-1,print balance,ok,error,error,False,PRINT balance;,,,,E401,True
+held_out,context_off,paraphrase,H08,H08-2,show balance,ok,error,error,False,PRINT balance;,,,,E401,True
+held_out,context_off,paraphrase,H08,H08-3,display balance,ok,error,error,False,PRINT balance;,,,,E401,True
+held_out,context_off,paraphrase,H08,H08-4,output balance,ok,error,error,False,PRINT balance;,,,,E401,True
+held_out,context_off,paraphrase,H09,H09-1,"print ""North"" plus ""Star""",ok,ok,correct,True,"PRINT ""North"" + ""Star"";","PRINT ""North"" + ""Star"";",,,,False
+held_out,context_off,paraphrase,H09,H09-2,"show ""North"" + ""Star""",ok,ok,correct,True,"PRINT ""North"" + ""Star"";","PRINT ""North"" + ""Star"";",,,,False
+held_out,context_off,paraphrase,H09,H09-3,"display ""North"" plus ""Star""",ok,ok,correct,True,"PRINT ""North"" + ""Star"";","PRINT ""North"" + ""Star"";",,,,False
+held_out,context_off,paraphrase,H09,H09-4,"join ""North"" and ""Star"" and print the result",ok,unsupported,rejected,False,"PRINT ""North"" + ""Star"";",,,False,E101,False
+held_out,context_off,paraphrase,H10,H10-1,set temperature to negative 6,ok,ok,correct,True,temperature = -6;,temperature = -6;,,,,True
+held_out,context_off,paraphrase,H10,H10-2,change temperature to -6,ok,ok,correct,True,temperature = -6;,temperature = -6;,,,,True
+held_out,context_off,paraphrase,H10,H10-3,assign negative 6 to temperature,ok,ok,correct,True,temperature = -6;,temperature = -6;,,,,True
+held_out,context_off,paraphrase,H10,H10-4,make temperature six below zero,ok,unsupported,rejected,False,temperature = -6;,,,False,E101,True
+held_out,context_off,paraphrase,H11,H11-1,"if level is at least 10 then print ""ready""",ok,error,error,False,"IF level >= 10 THEN { PRINT ""ready""; }",,,,E401,True
+held_out,context_off,paraphrase,H11,H11-2,"if level is greater than or equal to 10 then show ""ready""",ok,error,error,False,"IF level >= 10 THEN { PRINT ""ready""; }",,,,E401,True
+held_out,context_off,paraphrase,H11,H11-3,"if level is at least 10 then display ""ready""",ok,error,error,False,"IF level >= 10 THEN { PRINT ""ready""; }",,,,E401,True
+held_out,context_off,paraphrase,H11,H11-4,"when level reaches 10 or higher, print ""ready""",ok,unsupported,rejected,False,"IF level >= 10 THEN { PRINT ""ready""; }",,,False,E101,True
+held_out,context_off,paraphrase,H12,H12-1,if pressure is at most 8 then set flag to 1,ok,error,error,False,IF pressure <= 8 THEN { flag = 1; },,,,E401,True
+held_out,context_off,paraphrase,H12,H12-2,if pressure is less than or equal to 8 then change flag to 1,ok,error,error,False,IF pressure <= 8 THEN { flag = 1; },,,,E401,True
+held_out,context_off,paraphrase,H12,H12-3,if pressure is at most 8 then assign 1 to flag,ok,error,error,False,IF pressure <= 8 THEN { flag = 1; },,,,E401,True
+held_out,context_off,paraphrase,H12,H12-4,set flag to 1 provided pressure does not exceed 8,ok,error,error,False,IF pressure <= 8 THEN { flag = 1; },,,,E401,True
+held_out,context_off,paraphrase,H13,H13-1,"repeat 3 times show ""ping""",ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""ping""; }","REPEAT 3 TIMES { PRINT ""ping""; }",,,,False
+held_out,context_off,paraphrase,H13,H13-2,"repeat display ""ping"" 3 times",ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""ping""; }","REPEAT 3 TIMES { PRINT ""ping""; }",,,,False
+held_out,context_off,paraphrase,H13,H13-3,"do print ""ping"" 3 times",ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""ping""; }","REPEAT 3 TIMES { PRINT ""ping""; }",,,,False
+held_out,context_off,paraphrase,H13,H13-4,"print ""ping"" on three occasions",ok,unsupported,rejected,False,"REPEAT 3 TIMES { PRINT ""ping""; }",,,False,E101,False
+held_out,context_off,paraphrase,H14,H14-1,add 4 to that,ok,error,error,False,points = points + 4;,,,,E401,True
+held_out,context_off,paraphrase,H14,H14-2,increase the variable by 4,ok,error,error,False,points = points + 4;,,,,E401,True
+held_out,context_off,paraphrase,H14,H14-3,raise points by 4,ok,ok,correct,True,points = points + 4;,points = points + 4;,,,,True
+held_out,context_off,paraphrase,H14,H14-4,add 4 to it,ok,error,error,False,points = points + 4;,,,,E401,True
+held_out,context_off,paraphrase,H15,H15-1,"if mode is not equal to ""paused"" then print ""go""",ok,error,error,False,"IF mode != ""paused"" THEN { PRINT ""go""; }",,,,E401,True
+held_out,context_off,paraphrase,H15,H15-2,"if mode does not equal ""paused"" then show ""go""",ok,error,error,False,"IF mode != ""paused"" THEN { PRINT ""go""; }",,,,E401,True
+held_out,context_off,paraphrase,H15,H15-3,"if mode is not equal to ""paused"" then display ""go""",ok,error,error,False,"IF mode != ""paused"" THEN { PRINT ""go""; }",,,,E401,True
+held_out,context_off,paraphrase,H15,H15-4,"unless mode equals ""paused"", print ""go""",ok,unsupported,rejected,False,"IF mode != ""paused"" THEN { PRINT ""go""; }",,,False,E101,True
+held_out,context_off,session,HS01,HS01-1,set lanternCount to 12,ok,error,error,False,LET lanternCount = 12;,,,,E201,True
+held_out,context_off,session,HS01,HS01-2,add 7 to it,ok,error,error,False,lanternCount = lanternCount + 7;,,,,E401,True
+held_out,context_off,session,HS01,HS01-3,print lanternCount,ok,error,error,False,PRINT lanternCount;,,,,E401,True
+held_out,context_off,session,HS01,HS01-4,"print ""lanternCount""",ok,ok,correct,True,"PRINT ""lanternCount"";","PRINT ""lanternCount"";",,,,True
+held_out,context_off,session,HS01,HS01-5,display dusk,ok,error,error,False,"PRINT ""dusk"";",,,,E401,True
+held_out,context_off,session,HS02,HS02-1,change crateTotal to 18,ok,error,error,False,LET crateTotal = 18;,,,,E201,True
+held_out,context_off,session,HS02,HS02-2,subtract 3 from it,ok,error,error,False,crateTotal = crateTotal - 3;,,,,E401,True
+held_out,context_off,session,HS02,HS02-3,show crateTotal,ok,error,error,False,PRINT crateTotal;,,,,E401,True
+held_out,context_off,session,HS02,HS02-4,"show ""crateTotal""",ok,ok,correct,True,"PRINT ""crateTotal"";","PRINT ""crateTotal"";",,,,True
+held_out,context_off,session,HS02,HS02-5,print cargo,ok,error,error,False,"PRINT ""cargo"";",,,,E401,True
+held_out,context_off,session,HS03,HS03-1,update tileArea to 7,ok,error,error,False,LET tileArea = 7;,,,,E201,True
+held_out,context_off,session,HS03,HS03-2,multiply it by 6,ok,error,error,False,tileArea = tileArea * 6;,,,,E401,True
+held_out,context_off,session,HS03,HS03-3,display tileArea,ok,error,error,False,PRINT tileArea;,,,,E401,True
+held_out,context_off,session,HS03,HS03-4,"display ""tileArea""",ok,ok,correct,True,"PRINT ""tileArea"";","PRINT ""tileArea"";",,,,True
+held_out,context_off,session,HS03,HS03-5,show mosaic,ok,error,error,False,"PRINT ""mosaic"";",,,,E401,True
+held_out,context_off,session,HS04,HS04-1,assign 32 to cisternVolume,ok,error,error,False,LET cisternVolume = 32;,,,,E201,True
+held_out,context_off,session,HS04,HS04-2,divide it by 4,ok,error,error,False,cisternVolume = cisternVolume / 4;,,,,E401,True
+held_out,context_off,session,HS04,HS04-3,print cisternVolume,ok,error,error,False,PRINT cisternVolume;,,,,E401,True
+held_out,context_off,session,HS04,HS04-4,"show ""cisternVolume""",ok,ok,correct,True,"PRINT ""cisternVolume"";","PRINT ""cisternVolume"";",,,,True
+held_out,context_off,session,HS04,HS04-5,display rain,ok,error,error,False,"PRINT ""rain"";",,,,E401,True
+held_out,context_off,session,HS05,HS05-1,"set welcomeBanner to ""Good Morning""",ok,error,error,False,"LET welcomeBanner = ""Good Morning"";",,,,E201,True
+held_out,context_off,session,HS05,HS05-2,"set it to ""Welcome Aboard""",ok,error,error,False,"welcomeBanner = ""Welcome Aboard"";",,,,E401,True
+held_out,context_off,session,HS05,HS05-3,show welcomeBanner,ok,error,error,False,PRINT welcomeBanner;,,,,E401,True
+held_out,context_off,session,HS05,HS05-4,"print ""welcomeBanner""",ok,ok,correct,True,"PRINT ""welcomeBanner"";","PRINT ""welcomeBanner"";",,,,True
+held_out,context_off,session,HS05,HS05-5,display visitors,ok,error,error,False,"PRINT ""visitors"";",,,,E401,True
+held_out,context_off,session,HS06,HS06-1,set northStock to 10,ok,error,error,False,LET northStock = 10;,,,,E201,True
+held_out,context_off,session,HS06,HS06-2,let ticketQuota be 25,ok,ok,correct,True,LET ticketQuota = 25;,LET ticketQuota = 25;,,,,True
+held_out,context_off,session,HS06,HS06-3,add 6 to it,ok,error,error,False,ticketQuota = ticketQuota + 6;,,,,E401,True
+held_out,context_off,session,HS06,HS06-4,print northStock,ok,error,error,False,PRINT northStock;,,,,E401,True
+held_out,context_off,session,HS06,HS06-5,decrease it by 2,ok,error,error,False,northStock = northStock - 2;,,,,E401,True
+held_out,context_off,session,HS06,HS06-6,show ticketQuota,ok,error,error,False,PRINT ticketQuota;,,,,E401,True
+held_out,context_off,session,HS06,HS06-7,"print ""ticketQuota""",ok,ok,correct,True,"PRINT ""ticketQuota"";","PRINT ""ticketQuota"";",,,,True
+held_out,context_off,session,HS06,HS06-8,display goods,ok,error,error,False,"PRINT ""goods"";",,,,E401,True
+held_out,context_off,session,HS07,HS07-1,set fabricRolls to 9,ok,error,error,False,LET fabricRolls = 9;,,,,E201,True
+held_out,context_off,session,HS07,HS07-2,print fabricRolls,ok,error,error,False,PRINT fabricRolls;,,,,E401,True
+held_out,context_off,session,HS07,HS07-3,increase it by 3,ok,error,error,False,fabricRolls = fabricRolls + 3;,,,,E401,True
+held_out,context_off,session,HS07,HS07-4,repeat 2 times print fabricRolls,ok,error,error,False,REPEAT 2 TIMES { PRINT fabricRolls; },,,,E401,True
+held_out,context_off,session,HS07,HS07-5,"print ""fabricRolls""",ok,ok,correct,True,"PRINT ""fabricRolls"";","PRINT ""fabricRolls"";",,,,True
+held_out,context_off,session,HS07,HS07-6,show cloth,ok,error,error,False,"PRINT ""cloth"";",,,,E401,True
+held_out,context_off,session,HS08,HS08-1,set roomTemp to 22,ok,error,error,False,LET roomTemp = 22;,,,,E201,True
+held_out,context_off,session,HS08,HS08-2,reduce it by 3,ok,error,error,False,roomTemp = roomTemp - 3;,,,,E401,True
+held_out,context_off,session,HS08,HS08-3,if roomTemp is at least 18 then print mild else print cold,ok,error,error,False,"IF roomTemp >= 18 THEN { PRINT ""mild""; } ELSE { PRINT ""cold""; }",,,,E401,True
+held_out,context_off,session,HS08,HS08-4,print roomTemp,ok,error,error,False,PRINT roomTemp;,,,,E401,True
+held_out,context_off,session,HS08,HS08-5,"show ""roomTemp""",ok,ok,correct,True,"PRINT ""roomTemp"";","PRINT ""roomTemp"";",,,,True
+held_out,context_off,session,HS08,HS08-6,display forecast,ok,error,error,False,"PRINT ""forecast"";",,,,E401,True
+held_out,context_off,session,HS09,HS09-1,set routeOffset to negative 3,ok,error,error,False,LET routeOffset = -3;,,,,E201,True
+held_out,context_off,session,HS09,HS09-2,add 1.5 to it,ok,error,error,False,routeOffset = routeOffset + 1.5;,,,,E401,True
+held_out,context_off,session,HS09,HS09-3,print routeOffset,ok,error,error,False,PRINT routeOffset;,,,,E401,True
+held_out,context_off,session,HS09,HS09-4,"show ""routeOffset""",ok,ok,correct,True,"PRINT ""routeOffset"";","PRINT ""routeOffset"";",,,,True
+held_out,context_off,session,HS09,HS09-5,display compass,ok,error,error,False,"PRINT ""compass"";",,,,E401,True
+held_out,context_off,session,HS10,HS10-1,assign 8 to marbleCount,ok,error,error,False,LET marbleCount = 8;,,,,E201,True
+held_out,context_off,session,HS10,HS10-2,change paperSheets to 30,ok,error,error,False,LET paperSheets = 30;,,,,E201,True
+held_out,context_off,session,HS10,HS10-3,subtract 2 from it,ok,error,error,False,paperSheets = paperSheets - 2;,,,,E401,True
+held_out,context_off,session,HS10,HS10-4,print marbleCount,ok,error,error,False,PRINT marbleCount;,,,,E401,True
+held_out,context_off,session,HS10,HS10-5,multiply it by 3,ok,error,error,False,marbleCount = marbleCount * 3;,,,,E401,True
+held_out,context_off,session,HS10,HS10-6,show paperSheets,ok,error,error,False,PRINT paperSheets;,,,,E401,True
+held_out,context_off,session,HS10,HS10-7,"display ""paperSheets""",ok,ok,correct,True,"PRINT ""paperSheets"";","PRINT ""paperSheets"";",,,,True
+held_out,context_off,session,HS10,HS10-8,print inventory,ok,error,error,False,"PRINT ""inventory"";",,,,E401,True
+held_out,context_off,unsupported,,HU01,define a function called farewell with parameter guest,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU02,call the function farewell,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU03,create a list called autumnBins,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU04,append 12 to autumnBins,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU05,sort autumnBins in ascending order,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU06,ask the user to enter a delivery code,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU07,read parcelName from the keyboard,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU08,while lanternCount is below 9 print waiting,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU09,for each parcel in shipments print parcel,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU10,calculate the square root of 81,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU11,compute the sine of 45,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU12,open the file harvest.csv,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU13,write the report to harvest.csv,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU14,go to line 24,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU15,import statistics,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU16,return early from this program,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU17,delete the variable lanternCount,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU18,create a dictionary called postalLookup,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU19," 	 
+ ",unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU20,...?!...,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU21,"show ""unclosed parcel",unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU22,"set bannerText to ""unfinished",unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU23,print zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU24,set queueLimit to 2 or 4 or 6 or 8 or 10,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,unsupported,,HU25,"display ""left"" or ""right"" or ""up"" or ""down"" or ""center""",unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,ambiguous,,HA01,increase lanternCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,forced_top1,ambiguous,,HA02,lower voucherCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,forced_top1,ambiguous,,HA03,multiply parcelWeight,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,forced_top1,ambiguous,,HA04,divide paintVolume,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,forced_top1,ambiguous,,HA05,set orchardCount to,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,forced_top1,ambiguous,,HA06,change ticketPrice to,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,forced_top1,ambiguous,,HA07,update reserveLevel to,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,forced_top1,ambiguous,,HA08,display,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,forced_top1,ambiguous,,HA09,"repeat print ""lunch ready""",ambiguous,needs_clarification,correct,,,,,,,False
+held_out,forced_top1,ambiguous,,HA10,subtract 8 from it,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,forced_top1,ambiguous,,HA11,multiply that by 7,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,forced_top1,ambiguous,,HA12,set the variable to 14,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,forced_top1,ambiguous,,HA13,set queueLimit to 14 or 28,ambiguous,ok,missed_ambiguity,,,queueLimit = 14;,,,,True
+held_out,forced_top1,ambiguous,,HA14,show 6 or 11,ambiguous,ok,missed_ambiguity,,,PRINT 6;,,,,False
+held_out,forced_top1,ambiguous,,HA15,change sailCount to 2 or 4 or 8,ambiguous,ok,missed_ambiguity,,,sailCount = 2;,,,,True
+held_out,forced_top1,ambiguous,,HA16,"print ""copper"" or ""silver""",ambiguous,ok,missed_ambiguity,,,"PRINT ""copper"";",,,,False
+held_out,forced_top1,ambiguous,,HA17,set beaconLevel to 3 or 6 or 9 or 12,ambiguous,ok,missed_ambiguity,,,beaconLevel = 3;,,,,True
+held_out,forced_top1,ambiguous,,HA18,print lantrenCount,ambiguous,ok,missed_ambiguity,,,PRINT lanternCount;,,,,True
+held_out,forced_top1,ambiguous,,HA19,set voucehrCount to 19,ambiguous,ok,missed_ambiguity,,,voucherCount = 19;,,,,True
+held_out,forced_top1,ambiguous,,HA20,increase parcelWieght by 2,ambiguous,ok,missed_ambiguity,,,parcelWeight = parcelWeight + 2;,,,,True
+held_out,forced_top1,ambiguous,,HA21,multiply ribbonLength by 3 plus 4,ambiguous,ok,missed_ambiguity,,,ribbonLength = ribbonLength * 3 + 4;,,,,True
+held_out,forced_top1,ambiguous,,HA22,divide tankVolume by 2 minus 5,ambiguous,ok,missed_ambiguity,,,tankVolume = tankVolume / 2 - 5;,,,,True
+held_out,forced_top1,ambiguous,,HA23,repeat 4 times multiply batchSize by 2 plus 7,ambiguous,ok,missed_ambiguity,,,REPEAT 4 TIMES { batchSize = batchSize * 2 + 7; },,,,True
+held_out,forced_top1,ambiguous,,HA24,raise it,ambiguous,needs_clarification,correct,,,,,,,False
+held_out,forced_top1,ambiguous,,HA25,if crateCount is greater than 3 then increase crateCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,forced_top1,paraphrase,H01,H01-1,create a variable called seedCount and set it to 0,ok,ok,correct,True,LET seedCount = 0;,LET seedCount = 0;,,,,False
+held_out,forced_top1,paraphrase,H01,H01-2,declare a new variable named seedCount with value 0,ok,ok,correct,True,LET seedCount = 0;,LET seedCount = 0;,,,,False
+held_out,forced_top1,paraphrase,H01,H01-3,let seedCount be 0,ok,ok,correct,True,LET seedCount = 0;,LET seedCount = 0;,,,,False
+held_out,forced_top1,paraphrase,H01,H01-4,initialize seedCount with zero,ok,unsupported,rejected,False,LET seedCount = 0;,,,False,E101,False
+held_out,forced_top1,paraphrase,H02,H02-1,set unitPrice to 2.75,ok,ok,correct,True,unitPrice = 2.75;,unitPrice = 2.75;,,,,True
+held_out,forced_top1,paraphrase,H02,H02-2,change unitPrice to 2.75,ok,ok,correct,True,unitPrice = 2.75;,unitPrice = 2.75;,,,,True
+held_out,forced_top1,paraphrase,H02,H02-3,assign 2.75 to unitPrice,ok,ok,correct,True,unitPrice = 2.75;,unitPrice = 2.75;,,,,True
+held_out,forced_top1,paraphrase,H02,H02-4,replace the value of unitPrice with 2.75,ok,unsupported,rejected,False,unitPrice = 2.75;,,,False,E101,True
+held_out,forced_top1,paraphrase,H03,H03-1,increment visits by 3,ok,ok,correct,True,visits = visits + 3;,visits = visits + 3;,,,,True
+held_out,forced_top1,paraphrase,H03,H03-2,raise visits by 3,ok,ok,correct,True,visits = visits + 3;,visits = visits + 3;,,,,True
+held_out,forced_top1,paraphrase,H03,H03-3,add 3 to visits,ok,ok,correct,True,visits = visits + 3;,visits = visits + 3;,,,,True
+held_out,forced_top1,paraphrase,H03,H03-4,bump visits up by 3,ok,unsupported,rejected,False,visits = visits + 3;,,,False,E101,True
+held_out,forced_top1,paraphrase,H04,H04-1,reduce tickets by 2,ok,ok,correct,True,tickets = tickets - 2;,tickets = tickets - 2;,,,,True
+held_out,forced_top1,paraphrase,H04,H04-2,lower tickets by 2,ok,ok,correct,True,tickets = tickets - 2;,tickets = tickets - 2;,,,,True
+held_out,forced_top1,paraphrase,H04,H04-3,subtract 2 from tickets,ok,ok,correct,True,tickets = tickets - 2;,tickets = tickets - 2;,,,,True
+held_out,forced_top1,paraphrase,H04,H04-4,take 2 away from tickets,ok,error,error,False,tickets = tickets - 2;,,,,E203,True
+held_out,forced_top1,paraphrase,H05,H05-1,multiply subtotal by 4,ok,ok,correct,True,subtotal = subtotal * 4;,subtotal = subtotal * 4;,,,,True
+held_out,forced_top1,paraphrase,H05,H05-2,set subtotal to subtotal times 4,ok,ok,correct,True,subtotal = subtotal * 4;,subtotal = subtotal * 4;,,,,True
+held_out,forced_top1,paraphrase,H05,H05-3,change subtotal to subtotal multiplied by 4,ok,ok,correct,True,subtotal = subtotal * 4;,subtotal = subtotal * 4;,,,,True
+held_out,forced_top1,paraphrase,H05,H05-4,quadruple subtotal,ok,unsupported,rejected,False,subtotal = subtotal * 4;,,,False,E101,True
+held_out,forced_top1,paraphrase,H06,H06-1,divide budget by 5,ok,ok,correct,True,budget = budget / 5;,budget = budget / 5;,,,,True
+held_out,forced_top1,paraphrase,H06,H06-2,set budget to budget divided by 5,ok,ok,correct,True,budget = budget / 5;,budget = budget / 5;,,,,True
+held_out,forced_top1,paraphrase,H06,H06-3,update budget to budget / 5,ok,ok,correct,True,budget = budget / 5;,budget = budget / 5;,,,,True
+held_out,forced_top1,paraphrase,H06,H06-4,make budget one fifth of its current value,ok,unsupported,rejected,False,budget = budget / 5;,,,False,E101,True
+held_out,forced_top1,paraphrase,H07,H07-1,"print ""Launch Ready""",ok,ok,correct,True,"PRINT ""Launch Ready"";","PRINT ""Launch Ready"";",,,,False
+held_out,forced_top1,paraphrase,H07,H07-2,"show ""Launch Ready""",ok,ok,correct,True,"PRINT ""Launch Ready"";","PRINT ""Launch Ready"";",,,,False
+held_out,forced_top1,paraphrase,H07,H07-3,"display ""Launch Ready""",ok,ok,correct,True,"PRINT ""Launch Ready"";","PRINT ""Launch Ready"";",,,,False
+held_out,forced_top1,paraphrase,H07,H07-4,"say ""Launch Ready""",ok,unsupported,rejected,False,"PRINT ""Launch Ready"";",,,False,E101,False
+held_out,forced_top1,paraphrase,H08,H08-1,print balance,ok,ok,correct,True,PRINT balance;,PRINT balance;,,,,True
+held_out,forced_top1,paraphrase,H08,H08-2,show balance,ok,ok,correct,True,PRINT balance;,PRINT balance;,,,,True
+held_out,forced_top1,paraphrase,H08,H08-3,display balance,ok,ok,correct,True,PRINT balance;,PRINT balance;,,,,True
+held_out,forced_top1,paraphrase,H08,H08-4,output balance,ok,ok,correct,True,PRINT balance;,PRINT balance;,,,,True
+held_out,forced_top1,paraphrase,H09,H09-1,"print ""North"" plus ""Star""",ok,ok,correct,True,"PRINT ""North"" + ""Star"";","PRINT ""North"" + ""Star"";",,,,False
+held_out,forced_top1,paraphrase,H09,H09-2,"show ""North"" + ""Star""",ok,ok,correct,True,"PRINT ""North"" + ""Star"";","PRINT ""North"" + ""Star"";",,,,False
+held_out,forced_top1,paraphrase,H09,H09-3,"display ""North"" plus ""Star""",ok,ok,correct,True,"PRINT ""North"" + ""Star"";","PRINT ""North"" + ""Star"";",,,,False
+held_out,forced_top1,paraphrase,H09,H09-4,"join ""North"" and ""Star"" and print the result",ok,unsupported,rejected,False,"PRINT ""North"" + ""Star"";",,,False,E101,False
+held_out,forced_top1,paraphrase,H10,H10-1,set temperature to negative 6,ok,ok,correct,True,temperature = -6;,temperature = -6;,,,,True
+held_out,forced_top1,paraphrase,H10,H10-2,change temperature to -6,ok,ok,correct,True,temperature = -6;,temperature = -6;,,,,True
+held_out,forced_top1,paraphrase,H10,H10-3,assign negative 6 to temperature,ok,ok,correct,True,temperature = -6;,temperature = -6;,,,,True
+held_out,forced_top1,paraphrase,H10,H10-4,make temperature six below zero,ok,unsupported,rejected,False,temperature = -6;,,,False,E101,True
+held_out,forced_top1,paraphrase,H11,H11-1,"if level is at least 10 then print ""ready""",ok,ok,correct,True,"IF level >= 10 THEN { PRINT ""ready""; }","IF level >= 10 THEN { PRINT ""ready""; }",,,,True
+held_out,forced_top1,paraphrase,H11,H11-2,"if level is greater than or equal to 10 then show ""ready""",ok,ok,correct,True,"IF level >= 10 THEN { PRINT ""ready""; }","IF level >= 10 THEN { PRINT ""ready""; }",,,,True
+held_out,forced_top1,paraphrase,H11,H11-3,"if level is at least 10 then display ""ready""",ok,ok,correct,True,"IF level >= 10 THEN { PRINT ""ready""; }","IF level >= 10 THEN { PRINT ""ready""; }",,,,True
+held_out,forced_top1,paraphrase,H11,H11-4,"when level reaches 10 or higher, print ""ready""",ok,unsupported,rejected,False,"IF level >= 10 THEN { PRINT ""ready""; }",,,False,E101,True
+held_out,forced_top1,paraphrase,H12,H12-1,if pressure is at most 8 then set flag to 1,ok,ok,correct,True,IF pressure <= 8 THEN { flag = 1; },IF pressure <= 8 THEN { flag = 1; },,,,True
+held_out,forced_top1,paraphrase,H12,H12-2,if pressure is less than or equal to 8 then change flag to 1,ok,ok,correct,True,IF pressure <= 8 THEN { flag = 1; },IF pressure <= 8 THEN { flag = 1; },,,,True
+held_out,forced_top1,paraphrase,H12,H12-3,if pressure is at most 8 then assign 1 to flag,ok,ok,correct,True,IF pressure <= 8 THEN { flag = 1; },IF pressure <= 8 THEN { flag = 1; },,,,True
+held_out,forced_top1,paraphrase,H12,H12-4,set flag to 1 provided pressure does not exceed 8,ok,error,error,False,IF pressure <= 8 THEN { flag = 1; },,,,E209,True
+held_out,forced_top1,paraphrase,H13,H13-1,"repeat 3 times show ""ping""",ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""ping""; }","REPEAT 3 TIMES { PRINT ""ping""; }",,,,False
+held_out,forced_top1,paraphrase,H13,H13-2,"repeat display ""ping"" 3 times",ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""ping""; }","REPEAT 3 TIMES { PRINT ""ping""; }",,,,False
+held_out,forced_top1,paraphrase,H13,H13-3,"do print ""ping"" 3 times",ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""ping""; }","REPEAT 3 TIMES { PRINT ""ping""; }",,,,False
+held_out,forced_top1,paraphrase,H13,H13-4,"print ""ping"" on three occasions",ok,unsupported,rejected,False,"REPEAT 3 TIMES { PRINT ""ping""; }",,,False,E101,False
+held_out,forced_top1,paraphrase,H14,H14-1,add 4 to that,ok,ok,correct,True,points = points + 4;,points = points + 4;,,,,True
+held_out,forced_top1,paraphrase,H14,H14-2,increase the variable by 4,ok,ok,correct,True,points = points + 4;,points = points + 4;,,,,True
+held_out,forced_top1,paraphrase,H14,H14-3,raise points by 4,ok,ok,correct,True,points = points + 4;,points = points + 4;,,,,True
+held_out,forced_top1,paraphrase,H14,H14-4,add 4 to it,ok,ok,correct,True,points = points + 4;,points = points + 4;,,,,True
+held_out,forced_top1,paraphrase,H15,H15-1,"if mode is not equal to ""paused"" then print ""go""",ok,ok,correct,True,"IF mode != ""paused"" THEN { PRINT ""go""; }","IF mode != ""paused"" THEN { PRINT ""go""; }",,,,True
+held_out,forced_top1,paraphrase,H15,H15-2,"if mode does not equal ""paused"" then show ""go""",ok,ok,correct,True,"IF mode != ""paused"" THEN { PRINT ""go""; }","IF mode != ""paused"" THEN { PRINT ""go""; }",,,,True
+held_out,forced_top1,paraphrase,H15,H15-3,"if mode is not equal to ""paused"" then display ""go""",ok,ok,correct,True,"IF mode != ""paused"" THEN { PRINT ""go""; }","IF mode != ""paused"" THEN { PRINT ""go""; }",,,,True
+held_out,forced_top1,paraphrase,H15,H15-4,"unless mode equals ""paused"", print ""go""",ok,unsupported,rejected,False,"IF mode != ""paused"" THEN { PRINT ""go""; }",,,False,E101,True
+held_out,forced_top1,session,HS01,HS01-1,set lanternCount to 12,ok,ok,correct,True,LET lanternCount = 12;,LET lanternCount = 12;,,,W301,True
+held_out,forced_top1,session,HS01,HS01-2,add 7 to it,ok,ok,correct,True,lanternCount = lanternCount + 7;,lanternCount = lanternCount + 7;,,,,True
+held_out,forced_top1,session,HS01,HS01-3,print lanternCount,ok,ok,correct,True,PRINT lanternCount;,PRINT lanternCount;,,,,True
+held_out,forced_top1,session,HS01,HS01-4,"print ""lanternCount""",ok,ok,correct,True,"PRINT ""lanternCount"";","PRINT ""lanternCount"";",,,,True
+held_out,forced_top1,session,HS01,HS01-5,display dusk,ok,ok,correct,True,"PRINT ""dusk"";","PRINT ""dusk"";",,,,True
+held_out,forced_top1,session,HS02,HS02-1,change crateTotal to 18,ok,ok,correct,True,LET crateTotal = 18;,LET crateTotal = 18;,,,W301,True
+held_out,forced_top1,session,HS02,HS02-2,subtract 3 from it,ok,ok,correct,True,crateTotal = crateTotal - 3;,crateTotal = crateTotal - 3;,,,,True
+held_out,forced_top1,session,HS02,HS02-3,show crateTotal,ok,ok,correct,True,PRINT crateTotal;,PRINT crateTotal;,,,,True
+held_out,forced_top1,session,HS02,HS02-4,"show ""crateTotal""",ok,ok,correct,True,"PRINT ""crateTotal"";","PRINT ""crateTotal"";",,,,True
+held_out,forced_top1,session,HS02,HS02-5,print cargo,ok,ok,correct,True,"PRINT ""cargo"";","PRINT ""cargo"";",,,,True
+held_out,forced_top1,session,HS03,HS03-1,update tileArea to 7,ok,ok,correct,True,LET tileArea = 7;,LET tileArea = 7;,,,W301,True
+held_out,forced_top1,session,HS03,HS03-2,multiply it by 6,ok,ok,correct,True,tileArea = tileArea * 6;,tileArea = tileArea * 6;,,,,True
+held_out,forced_top1,session,HS03,HS03-3,display tileArea,ok,ok,correct,True,PRINT tileArea;,PRINT tileArea;,,,,True
+held_out,forced_top1,session,HS03,HS03-4,"display ""tileArea""",ok,ok,correct,True,"PRINT ""tileArea"";","PRINT ""tileArea"";",,,,True
+held_out,forced_top1,session,HS03,HS03-5,show mosaic,ok,ok,correct,True,"PRINT ""mosaic"";","PRINT ""mosaic"";",,,,True
+held_out,forced_top1,session,HS04,HS04-1,assign 32 to cisternVolume,ok,ok,correct,True,LET cisternVolume = 32;,LET cisternVolume = 32;,,,W301,True
+held_out,forced_top1,session,HS04,HS04-2,divide it by 4,ok,ok,correct,True,cisternVolume = cisternVolume / 4;,cisternVolume = cisternVolume / 4;,,,,True
+held_out,forced_top1,session,HS04,HS04-3,print cisternVolume,ok,ok,correct,True,PRINT cisternVolume;,PRINT cisternVolume;,,,,True
+held_out,forced_top1,session,HS04,HS04-4,"show ""cisternVolume""",ok,ok,correct,True,"PRINT ""cisternVolume"";","PRINT ""cisternVolume"";",,,,True
+held_out,forced_top1,session,HS04,HS04-5,display rain,ok,ok,correct,True,"PRINT ""rain"";","PRINT ""rain"";",,,,True
+held_out,forced_top1,session,HS05,HS05-1,"set welcomeBanner to ""Good Morning""",ok,ok,correct,True,"LET welcomeBanner = ""Good Morning"";","LET welcomeBanner = ""Good Morning"";",,,W301,True
+held_out,forced_top1,session,HS05,HS05-2,"set it to ""Welcome Aboard""",ok,ok,correct,True,"welcomeBanner = ""Welcome Aboard"";","welcomeBanner = ""Welcome Aboard"";",,,,True
+held_out,forced_top1,session,HS05,HS05-3,show welcomeBanner,ok,ok,correct,True,PRINT welcomeBanner;,PRINT welcomeBanner;,,,,True
+held_out,forced_top1,session,HS05,HS05-4,"print ""welcomeBanner""",ok,ok,correct,True,"PRINT ""welcomeBanner"";","PRINT ""welcomeBanner"";",,,,True
+held_out,forced_top1,session,HS05,HS05-5,display visitors,ok,ok,correct,True,"PRINT ""visitors"";","PRINT ""visitors"";",,,,True
+held_out,forced_top1,session,HS06,HS06-1,set northStock to 10,ok,ok,correct,True,LET northStock = 10;,LET northStock = 10;,,,W301,True
+held_out,forced_top1,session,HS06,HS06-2,let ticketQuota be 25,ok,ok,correct,True,LET ticketQuota = 25;,LET ticketQuota = 25;,,,,True
+held_out,forced_top1,session,HS06,HS06-3,add 6 to it,ok,ok,correct,True,ticketQuota = ticketQuota + 6;,ticketQuota = ticketQuota + 6;,,,,True
+held_out,forced_top1,session,HS06,HS06-4,print northStock,ok,ok,correct,True,PRINT northStock;,PRINT northStock;,,,,True
+held_out,forced_top1,session,HS06,HS06-5,decrease it by 2,ok,ok,correct,True,northStock = northStock - 2;,northStock = northStock - 2;,,,,True
+held_out,forced_top1,session,HS06,HS06-6,show ticketQuota,ok,ok,correct,True,PRINT ticketQuota;,PRINT ticketQuota;,,,,True
+held_out,forced_top1,session,HS06,HS06-7,"print ""ticketQuota""",ok,ok,correct,True,"PRINT ""ticketQuota"";","PRINT ""ticketQuota"";",,,,True
+held_out,forced_top1,session,HS06,HS06-8,display goods,ok,ok,correct,True,"PRINT ""goods"";","PRINT ""goods"";",,,,True
+held_out,forced_top1,session,HS07,HS07-1,set fabricRolls to 9,ok,ok,correct,True,LET fabricRolls = 9;,LET fabricRolls = 9;,,,W301,True
+held_out,forced_top1,session,HS07,HS07-2,print fabricRolls,ok,ok,correct,True,PRINT fabricRolls;,PRINT fabricRolls;,,,,True
+held_out,forced_top1,session,HS07,HS07-3,increase it by 3,ok,ok,correct,True,fabricRolls = fabricRolls + 3;,fabricRolls = fabricRolls + 3;,,,,True
+held_out,forced_top1,session,HS07,HS07-4,repeat 2 times print fabricRolls,ok,ok,correct,True,REPEAT 2 TIMES { PRINT fabricRolls; },REPEAT 2 TIMES { PRINT fabricRolls; },,,,True
+held_out,forced_top1,session,HS07,HS07-5,"print ""fabricRolls""",ok,ok,correct,True,"PRINT ""fabricRolls"";","PRINT ""fabricRolls"";",,,,True
+held_out,forced_top1,session,HS07,HS07-6,show cloth,ok,ok,correct,True,"PRINT ""cloth"";","PRINT ""cloth"";",,,,True
+held_out,forced_top1,session,HS08,HS08-1,set roomTemp to 22,ok,ok,correct,True,LET roomTemp = 22;,LET roomTemp = 22;,,,W301,True
+held_out,forced_top1,session,HS08,HS08-2,reduce it by 3,ok,ok,correct,True,roomTemp = roomTemp - 3;,roomTemp = roomTemp - 3;,,,,True
+held_out,forced_top1,session,HS08,HS08-3,if roomTemp is at least 18 then print mild else print cold,ok,ok,correct,True,"IF roomTemp >= 18 THEN { PRINT ""mild""; } ELSE { PRINT ""cold""; }","IF roomTemp >= 18 THEN { PRINT ""mild""; } ELSE { PRINT ""cold""; }",,,,True
+held_out,forced_top1,session,HS08,HS08-4,print roomTemp,ok,ok,correct,True,PRINT roomTemp;,PRINT roomTemp;,,,,True
+held_out,forced_top1,session,HS08,HS08-5,"show ""roomTemp""",ok,ok,correct,True,"PRINT ""roomTemp"";","PRINT ""roomTemp"";",,,,True
+held_out,forced_top1,session,HS08,HS08-6,display forecast,ok,ok,correct,True,"PRINT ""forecast"";","PRINT ""forecast"";",,,,True
+held_out,forced_top1,session,HS09,HS09-1,set routeOffset to negative 3,ok,ok,correct,True,LET routeOffset = -3;,LET routeOffset = -3;,,,W301,True
+held_out,forced_top1,session,HS09,HS09-2,add 1.5 to it,ok,ok,correct,True,routeOffset = routeOffset + 1.5;,routeOffset = routeOffset + 1.5;,,,,True
+held_out,forced_top1,session,HS09,HS09-3,print routeOffset,ok,ok,correct,True,PRINT routeOffset;,PRINT routeOffset;,,,,True
+held_out,forced_top1,session,HS09,HS09-4,"show ""routeOffset""",ok,ok,correct,True,"PRINT ""routeOffset"";","PRINT ""routeOffset"";",,,,True
+held_out,forced_top1,session,HS09,HS09-5,display compass,ok,ok,correct,True,"PRINT ""compass"";","PRINT ""compass"";",,,,True
+held_out,forced_top1,session,HS10,HS10-1,assign 8 to marbleCount,ok,ok,correct,True,LET marbleCount = 8;,LET marbleCount = 8;,,,W301,True
+held_out,forced_top1,session,HS10,HS10-2,change paperSheets to 30,ok,ok,correct,True,LET paperSheets = 30;,LET paperSheets = 30;,,,W301,True
+held_out,forced_top1,session,HS10,HS10-3,subtract 2 from it,ok,ok,correct,True,paperSheets = paperSheets - 2;,paperSheets = paperSheets - 2;,,,,True
+held_out,forced_top1,session,HS10,HS10-4,print marbleCount,ok,ok,correct,True,PRINT marbleCount;,PRINT marbleCount;,,,,True
+held_out,forced_top1,session,HS10,HS10-5,multiply it by 3,ok,ok,correct,True,marbleCount = marbleCount * 3;,marbleCount = marbleCount * 3;,,,,True
+held_out,forced_top1,session,HS10,HS10-6,show paperSheets,ok,ok,correct,True,PRINT paperSheets;,PRINT paperSheets;,,,,True
+held_out,forced_top1,session,HS10,HS10-7,"display ""paperSheets""",ok,ok,correct,True,"PRINT ""paperSheets"";","PRINT ""paperSheets"";",,,,True
+held_out,forced_top1,session,HS10,HS10-8,print inventory,ok,ok,correct,True,"PRINT ""inventory"";","PRINT ""inventory"";",,,,True
+held_out,forced_top1,unsupported,,HU01,define a function called farewell with parameter guest,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU02,call the function farewell,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU03,create a list called autumnBins,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU04,append 12 to autumnBins,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU05,sort autumnBins in ascending order,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU06,ask the user to enter a delivery code,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU07,read parcelName from the keyboard,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU08,while lanternCount is below 9 print waiting,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU09,for each parcel in shipments print parcel,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU10,calculate the square root of 81,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU11,compute the sine of 45,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU12,open the file harvest.csv,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU13,write the report to harvest.csv,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU14,go to line 24,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU15,import statistics,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU16,return early from this program,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU17,delete the variable lanternCount,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU18,create a dictionary called postalLookup,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU19," 	 
+ ",unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU20,...?!...,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU21,"show ""unclosed parcel",unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU22,"set bannerText to ""unfinished",unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU23,print zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU24,set queueLimit to 2 or 4 or 6 or 8 or 10,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,unsupported,,HU25,"display ""left"" or ""right"" or ""up"" or ""down"" or ""center""",unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,synthetic_blind,,SB01,make a variable called orchardRows and set it to 14,ok,ok,correct,True,LET orchardRows = 14;,LET orchardRows = 14;,,,,False
+held_out,baseline,synthetic_blind,,SB02,"create a new variable named pilotName with value ""Mira""",ok,ok,correct,True,"LET pilotName = ""Mira"";","LET pilotName = ""Mira"";",,,,False
+held_out,baseline,synthetic_blind,,SB03,let tideLevel be 2.5,ok,ok,correct,True,LET tideLevel = 2.5;,LET tideLevel = 2.5;,,,,False
+held_out,baseline,synthetic_blind,,SB04,change kiteCount to 9,ok,ok,correct,True,kiteCount = 9;,kiteCount = 9;,,,,True
+held_out,baseline,synthetic_blind,,SB05,update ferryFare to 15,ok,ok,correct,True,ferryFare = 15;,ferryFare = 15;,,,,True
+held_out,baseline,synthetic_blind,,SB06,assign 200 to ovenTemp,ok,ok,correct,True,ovenTemp = 200;,ovenTemp = 200;,,,,True
+held_out,baseline,synthetic_blind,,SB07,subtract 6 from pebbleTotal,ok,ok,correct,True,pebbleTotal = pebbleTotal - 6;,pebbleTotal = pebbleTotal - 6;,,,,True
+held_out,baseline,synthetic_blind,,SB08,multiply crateWeight by 4,ok,ok,correct,True,crateWeight = crateWeight * 4;,crateWeight = crateWeight * 4;,,,,True
+held_out,baseline,synthetic_blind,,SB09,set area to width times height plus 2,ok,ok,correct,True,LET area = width * height + 2;,LET area = width * height + 2;,,,W301,True
+held_out,baseline,synthetic_blind,,SB10,decrease ledgerBalance by 8,ok,ok,correct,True,ledgerBalance = ledgerBalance - 8;,ledgerBalance = ledgerBalance - 8;,,,,True
+held_out,baseline,synthetic_blind,,SB11,if hikerAge is at least 18 then print adult else print junior,ok,ok,correct,True,"IF hikerAge >= 18 THEN { PRINT ""adult""; } ELSE { PRINT ""junior""; }","IF hikerAge >= 18 THEN { PRINT ""adult""; } ELSE { PRINT ""junior""; }",,,,True
+held_out,baseline,synthetic_blind,,SB12,"if windSpeed is above 25 then print ""stay inside""",ok,ok,correct,True,"IF windSpeed > 25 THEN { PRINT ""stay inside""; }","IF windSpeed > 25 THEN { PRINT ""stay inside""; }",,,,True
+held_out,baseline,synthetic_blind,,SB13,"if mapMode does not equal ""day"" then print ""dim screen""",ok,ok,correct,True,"IF mapMode != ""day"" THEN { PRINT ""dim screen""; }","IF mapMode != ""day"" THEN { PRINT ""dim screen""; }",,,,True
+held_out,baseline,synthetic_blind,,SB14,"repeat 4 times print ""wave""",ok,ok,correct,True,"REPEAT 4 TIMES { PRINT ""wave""; }","REPEAT 4 TIMES { PRINT ""wave""; }",,,,False
+held_out,baseline,synthetic_blind,,SB15,do add 2 to stepCount 3 times,ok,ok,correct,True,REPEAT 3 TIMES { stepCount = stepCount + 2; },REPEAT 3 TIMES { stepCount = stepCount + 2; },,,,True
+held_out,baseline,synthetic_blind,,SB16,repeat show drumBeat 2 times,ok,ok,correct,True,REPEAT 2 TIMES { PRINT drumBeat; },REPEAT 2 TIMES { PRINT drumBeat; },,,,True
+held_out,baseline,synthetic_blind,,SB17,raise it by 4,ok,ok,correct,True,candleCount = candleCount + 4;,candleCount = candleCount + 4;,,,,True
+held_out,baseline,synthetic_blind,,SB18,display compassHeading,ok,ok,correct,True,PRINT compassHeading;,PRINT compassHeading;,,,,True
+held_out,baseline,synthetic_blind,,SB19,set bellCount to doorCount plus 1,ok,ok,correct,True,LET bellCount = doorCount + 1;,LET bellCount = doorCount + 1;,,,W301,True
+held_out,baseline,synthetic_blind,,SB20,reduce jarCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,synthetic_blind,,SB21,set buoyCount to 7 or 9,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,synthetic_blind,,SB22,show rockte,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,baseline,synthetic_blind,,SB23,draw a circle on the screen,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,synthetic_blind,,SB24,send an email to the whole team,unsupported,unsupported,correct,,,,,,E101,False
+held_out,baseline,synthetic_blind,,SB25,if fuelLevel is below 10 then print refuel and print hurry,unsupported,unsupported,correct,,,,if fuelLevel is below 10 then print refuel,,E101,True
+held_out,context_off,synthetic_blind,,SB01,make a variable called orchardRows and set it to 14,ok,ok,correct,True,LET orchardRows = 14;,LET orchardRows = 14;,,,,False
+held_out,context_off,synthetic_blind,,SB02,"create a new variable named pilotName with value ""Mira""",ok,ok,correct,True,"LET pilotName = ""Mira"";","LET pilotName = ""Mira"";",,,,False
+held_out,context_off,synthetic_blind,,SB03,let tideLevel be 2.5,ok,ok,correct,True,LET tideLevel = 2.5;,LET tideLevel = 2.5;,,,,False
+held_out,context_off,synthetic_blind,,SB04,change kiteCount to 9,ok,ok,correct,True,kiteCount = 9;,kiteCount = 9;,,,,True
+held_out,context_off,synthetic_blind,,SB05,update ferryFare to 15,ok,ok,correct,True,ferryFare = 15;,ferryFare = 15;,,,,True
+held_out,context_off,synthetic_blind,,SB06,assign 200 to ovenTemp,ok,ok,correct,True,ovenTemp = 200;,ovenTemp = 200;,,,,True
+held_out,context_off,synthetic_blind,,SB07,subtract 6 from pebbleTotal,ok,ok,correct,True,pebbleTotal = pebbleTotal - 6;,pebbleTotal = pebbleTotal - 6;,,,,True
+held_out,context_off,synthetic_blind,,SB08,multiply crateWeight by 4,ok,ok,correct,True,crateWeight = crateWeight * 4;,crateWeight = crateWeight * 4;,,,,True
+held_out,context_off,synthetic_blind,,SB09,set area to width times height plus 2,ok,error,error,False,LET area = width * height + 2;,,,,E401,True
+held_out,context_off,synthetic_blind,,SB10,decrease ledgerBalance by 8,ok,ok,correct,True,ledgerBalance = ledgerBalance - 8;,ledgerBalance = ledgerBalance - 8;,,,,True
+held_out,context_off,synthetic_blind,,SB11,if hikerAge is at least 18 then print adult else print junior,ok,error,error,False,"IF hikerAge >= 18 THEN { PRINT ""adult""; } ELSE { PRINT ""junior""; }",,,,E401,True
+held_out,context_off,synthetic_blind,,SB12,"if windSpeed is above 25 then print ""stay inside""",ok,error,error,False,"IF windSpeed > 25 THEN { PRINT ""stay inside""; }",,,,E401,True
+held_out,context_off,synthetic_blind,,SB13,"if mapMode does not equal ""day"" then print ""dim screen""",ok,error,error,False,"IF mapMode != ""day"" THEN { PRINT ""dim screen""; }",,,,E401,True
+held_out,context_off,synthetic_blind,,SB14,"repeat 4 times print ""wave""",ok,ok,correct,True,"REPEAT 4 TIMES { PRINT ""wave""; }","REPEAT 4 TIMES { PRINT ""wave""; }",,,,False
+held_out,context_off,synthetic_blind,,SB15,do add 2 to stepCount 3 times,ok,ok,correct,True,REPEAT 3 TIMES { stepCount = stepCount + 2; },REPEAT 3 TIMES { stepCount = stepCount + 2; },,,,True
+held_out,context_off,synthetic_blind,,SB16,repeat show drumBeat 2 times,ok,error,error,False,REPEAT 2 TIMES { PRINT drumBeat; },,,,E401,True
+held_out,context_off,synthetic_blind,,SB17,raise it by 4,ok,error,error,False,candleCount = candleCount + 4;,,,,E401,True
+held_out,context_off,synthetic_blind,,SB18,display compassHeading,ok,error,error,False,PRINT compassHeading;,,,,E401,True
+held_out,context_off,synthetic_blind,,SB19,set bellCount to doorCount plus 1,ok,error,error,False,LET bellCount = doorCount + 1;,,,,E401,True
+held_out,context_off,synthetic_blind,,SB20,reduce jarCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,synthetic_blind,,SB21,set buoyCount to 7 or 9,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,context_off,synthetic_blind,,SB22,show rockte,ambiguous,error,error,,,,,,E401,True
+held_out,context_off,synthetic_blind,,SB23,draw a circle on the screen,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,synthetic_blind,,SB24,send an email to the whole team,unsupported,unsupported,correct,,,,,,E101,False
+held_out,context_off,synthetic_blind,,SB25,if fuelLevel is below 10 then print refuel and print hurry,unsupported,unsupported,correct,,,,if fuelLevel is below 10 then print refuel,,E101,True
+held_out,forced_top1,synthetic_blind,,SB01,make a variable called orchardRows and set it to 14,ok,ok,correct,True,LET orchardRows = 14;,LET orchardRows = 14;,,,,False
+held_out,forced_top1,synthetic_blind,,SB02,"create a new variable named pilotName with value ""Mira""",ok,ok,correct,True,"LET pilotName = ""Mira"";","LET pilotName = ""Mira"";",,,,False
+held_out,forced_top1,synthetic_blind,,SB03,let tideLevel be 2.5,ok,ok,correct,True,LET tideLevel = 2.5;,LET tideLevel = 2.5;,,,,False
+held_out,forced_top1,synthetic_blind,,SB04,change kiteCount to 9,ok,ok,correct,True,kiteCount = 9;,kiteCount = 9;,,,,True
+held_out,forced_top1,synthetic_blind,,SB05,update ferryFare to 15,ok,ok,correct,True,ferryFare = 15;,ferryFare = 15;,,,,True
+held_out,forced_top1,synthetic_blind,,SB06,assign 200 to ovenTemp,ok,ok,correct,True,ovenTemp = 200;,ovenTemp = 200;,,,,True
+held_out,forced_top1,synthetic_blind,,SB07,subtract 6 from pebbleTotal,ok,ok,correct,True,pebbleTotal = pebbleTotal - 6;,pebbleTotal = pebbleTotal - 6;,,,,True
+held_out,forced_top1,synthetic_blind,,SB08,multiply crateWeight by 4,ok,ok,correct,True,crateWeight = crateWeight * 4;,crateWeight = crateWeight * 4;,,,,True
+held_out,forced_top1,synthetic_blind,,SB09,set area to width times height plus 2,ok,ok,correct,True,LET area = width * height + 2;,LET area = width * height + 2;,,,W301,True
+held_out,forced_top1,synthetic_blind,,SB10,decrease ledgerBalance by 8,ok,ok,correct,True,ledgerBalance = ledgerBalance - 8;,ledgerBalance = ledgerBalance - 8;,,,,True
+held_out,forced_top1,synthetic_blind,,SB11,if hikerAge is at least 18 then print adult else print junior,ok,ok,correct,True,"IF hikerAge >= 18 THEN { PRINT ""adult""; } ELSE { PRINT ""junior""; }","IF hikerAge >= 18 THEN { PRINT ""adult""; } ELSE { PRINT ""junior""; }",,,,True
+held_out,forced_top1,synthetic_blind,,SB12,"if windSpeed is above 25 then print ""stay inside""",ok,ok,correct,True,"IF windSpeed > 25 THEN { PRINT ""stay inside""; }","IF windSpeed > 25 THEN { PRINT ""stay inside""; }",,,,True
+held_out,forced_top1,synthetic_blind,,SB13,"if mapMode does not equal ""day"" then print ""dim screen""",ok,ok,correct,True,"IF mapMode != ""day"" THEN { PRINT ""dim screen""; }","IF mapMode != ""day"" THEN { PRINT ""dim screen""; }",,,,True
+held_out,forced_top1,synthetic_blind,,SB14,"repeat 4 times print ""wave""",ok,ok,correct,True,"REPEAT 4 TIMES { PRINT ""wave""; }","REPEAT 4 TIMES { PRINT ""wave""; }",,,,False
+held_out,forced_top1,synthetic_blind,,SB15,do add 2 to stepCount 3 times,ok,ok,correct,True,REPEAT 3 TIMES { stepCount = stepCount + 2; },REPEAT 3 TIMES { stepCount = stepCount + 2; },,,,True
+held_out,forced_top1,synthetic_blind,,SB16,repeat show drumBeat 2 times,ok,ok,correct,True,REPEAT 2 TIMES { PRINT drumBeat; },REPEAT 2 TIMES { PRINT drumBeat; },,,,True
+held_out,forced_top1,synthetic_blind,,SB17,raise it by 4,ok,ok,correct,True,candleCount = candleCount + 4;,candleCount = candleCount + 4;,,,,True
+held_out,forced_top1,synthetic_blind,,SB18,display compassHeading,ok,ok,correct,True,PRINT compassHeading;,PRINT compassHeading;,,,,True
+held_out,forced_top1,synthetic_blind,,SB19,set bellCount to doorCount plus 1,ok,ok,correct,True,LET bellCount = doorCount + 1;,LET bellCount = doorCount + 1;,,,W301,True
+held_out,forced_top1,synthetic_blind,,SB20,reduce jarCount,ambiguous,needs_clarification,correct,,,,,,,True
+held_out,forced_top1,synthetic_blind,,SB21,set buoyCount to 7 or 9,ambiguous,ok,missed_ambiguity,,,buoyCount = 7;,,,,True
+held_out,forced_top1,synthetic_blind,,SB22,show rockte,ambiguous,ok,missed_ambiguity,,,PRINT rocket;,,,,True
+held_out,forced_top1,synthetic_blind,,SB23,draw a circle on the screen,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,synthetic_blind,,SB24,send an email to the whole team,unsupported,unsupported,correct,,,,,,E101,False
+held_out,forced_top1,synthetic_blind,,SB25,if fuelLevel is below 10 then print refuel and print hurry,unsupported,unsupported,correct,,,,if fuelLevel is below 10 then print refuel,,E101,True
+development,baseline,valid,,V01,make a variable called age and set it to 20,ok,ok,correct,True,LET age = 20;,LET age = 20;,,,,False
+development,baseline,valid,,V02,create a variable named totalAmount with value 0,ok,ok,correct,True,LET totalAmount = 0;,LET totalAmount = 0;,,,,False
+development,baseline,valid,,V03,"let greeting be ""Hello""",ok,ok,correct,True,"LET greeting = ""Hello"";","LET greeting = ""Hello"";",,,,False
+development,baseline,valid,,V04,set age to age plus 1,ok,ok,correct,True,age = age + 1;,age = age + 1;,,,,True
+development,baseline,valid,,V05,change price to 2.5,ok,ok,correct,True,price = 2.5;,price = 2.5;,,,,True
+development,baseline,valid,,V06,set x to 5,ok,ok,correct,True,LET x = 5;,LET x = 5;,,,W301,False
+development,baseline,valid,,V07,increase count by 2,ok,ok,correct,True,count = count + 2;,count = count + 2;,,,,True
+development,baseline,valid,,V08,add 5 to score,ok,ok,correct,True,score = score + 5;,score = score + 5;,,,,True
+development,baseline,valid,,V09,decrease count by 1,ok,ok,correct,True,count = count - 1;,count = count - 1;,,,,True
+development,baseline,valid,,V10,multiply total by 3,ok,ok,correct,True,total = total * 3;,total = total * 3;,,,,True
+development,baseline,valid,,V11,divide total by 2,ok,ok,correct,True,total = total / 2;,total = total / 2;,,,,True
+development,baseline,valid,,V12,print age,ok,ok,correct,True,PRINT age;,PRINT age;,,,,True
+development,baseline,valid,,V13,"show ""Hello""",ok,ok,correct,True,"PRINT ""Hello"";","PRINT ""Hello"";",,,,False
+development,baseline,valid,,V14,display hello world,ok,ok,correct,True,"PRINT ""hello world"";","PRINT ""hello world"";",,,,False
+development,baseline,valid,,V15,print total,ok,ok,correct,True,"PRINT ""total"";","PRINT ""total"";",,,,True
+development,baseline,valid,,V16,if age is greater than 17 then print adult else print minor,ok,ok,correct,True,"IF age > 17 THEN { PRINT ""adult""; } ELSE { PRINT ""minor""; }","IF age > 17 THEN { PRINT ""adult""; } ELSE { PRINT ""minor""; }",,,,True
+development,baseline,valid,,V17,if score is at least 10 then print winner,ok,ok,correct,True,"IF score >= 10 THEN { PRINT ""winner""; }","IF score >= 10 THEN { PRINT ""winner""; }",,,,True
+development,baseline,valid,,V18,repeat 3 times print hello,ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""hello""; }","REPEAT 3 TIMES { PRINT ""hello""; }",,,,False
+development,baseline,valid,,V19,do show score 2 times,ok,ok,correct,True,REPEAT 2 TIMES { PRINT score; },REPEAT 2 TIMES { PRINT score; },,,,True
+development,baseline,valid,,V20,add 5 to it,ok,ok,correct,True,score = score + 5;,score = score + 5;,,,,True
+development,baseline,valid,,V21,print y,ok,ok,correct,True,"PRINT ""y"";","PRINT ""y"";",,,,True
+development,baseline,valid,,V22,print store,ok,ok,correct,True,"PRINT ""store"";","PRINT ""store"";",,,,True
+development,baseline,valid,,V23,set x to negative 5,ok,ok,correct,True,x = -5;,x = -5;,,,,True
+development,baseline,valid,,V24,define x as 5,ok,ok,correct,True,LET x = 5;,LET x = 5;,,,,False
+development,baseline,valid,,V25,increase the x by 2,ok,ok,correct,True,x = x + 2;,x = x + 2;,,,,True
+development,baseline,valid,,V26,show me x,ok,ok,correct,True,PRINT x;,PRINT x;,,,,True
+development,baseline,valid,,V27,x becomes x plus 3,ok,ok,correct,True,x = x + 3;,x = x + 3;,,,,True
+development,baseline,valid,,V28,grow x by 2,ok,ok,correct,True,x = x + 2;,x = x + 2;,,,,True
+development,baseline,valid,,V29,take 2 from x,ok,ok,correct,True,x = x - 2;,x = x - 2;,,,,True
+development,baseline,valid,,V30,set x as 20,ok,ok,correct,True,x = 20;,x = 20;,,,,True
+development,baseline,valid,,V31,"when x is no less than 20 then output x otherwise print out ""small""",ok,ok,correct,True,"IF x >= 20 THEN { PRINT x; } ELSE { PRINT ""small""; }","IF x >= 20 THEN { PRINT x; } ELSE { PRINT ""small""; }",,,,True
+development,baseline,valid,,V32,loop 2 times print x,ok,ok,correct,True,REPEAT 2 TIMES { PRINT x; },REPEAT 2 TIMES { PRINT x; },,,,True
+development,baseline,valid,,V33,please show me x,ok,ok,correct,True,PRINT x;,PRINT x;,,,,True
+development,baseline,invalid,,X01,store 50 in bonus,unsupported,unsupported,correct,,,,set bonus to 50,,E101,False
+development,baseline,invalid,,X02,sort the list descending,unsupported,unsupported,correct,,,,,,E101,False
+development,baseline,invalid,,X03,define a function called greet,unsupported,unsupported,correct,,,,,,E101,False
+development,baseline,invalid,,X04,create a list of numbers,unsupported,unsupported,correct,,,,,,E101,False
+development,baseline,invalid,,X05,ask the user for their age,unsupported,unsupported,correct,,,,,,E101,False
+development,baseline,invalid,,X06,while x is less than 10 print x,unsupported,unsupported,correct,,,,,,E101,True
+development,baseline,invalid,,X07,calculate the square root of 16,unsupported,unsupported,correct,,,,,,E101,False
+development,baseline,invalid,,X08,open the file data.txt,unsupported,unsupported,correct,,,,,,E101,False
+development,baseline,invalid,,X09,go to line 10,unsupported,unsupported,correct,,,,,,E101,False
+development,baseline,invalid,,X10,!!!,unsupported,unsupported,correct,,,,,,E101,False
+development,baseline,invalid,,X11,if count is greater than 5 then print big and print done,unsupported,unsupported,correct,,,,if count is greater than 5 then print big,True,E101,True
+development,baseline,ambiguous,,A01,increase score,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A02,add 5 to it,ambiguous,needs_clarification,correct,,,,,,,False
+development,baseline,ambiguous,,A03,set x to 10 or 20,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A04,print scroe,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A05,multiply x by 2 plus 3,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A06,repeat print hello,ambiguous,needs_clarification,correct,,,,,,,False
+development,baseline,ambiguous,,A08,multiply total,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A09,show totl,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A10,set y to,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A11,print contr,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A12,print 1 or 2 or 3,ambiguous,needs_clarification,correct,,,,,,,False
+development,baseline,ambiguous,,A13,assign 5 or 6 to x,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A14,"print ""yes"" or ""no""",ambiguous,needs_clarification,correct,,,,,,,False
+development,baseline,ambiguous,,A15,divide total by 4 minus 1,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A16,repeat 2 times multiply x by 2 plus 3,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A17,set scroe to 7,ambiguous,needs_clarification,correct,,,,,,,True
+development,baseline,ambiguous,,A18,increase it,ambiguous,needs_clarification,correct,,,,,,,False
+development,baseline,semantic,,M01,set age to x plus 1,error,error,correct,,,,,,E201,True
+development,baseline,semantic,,M02,print x times 2,error,error,correct,,,,,,E201,False
+development,baseline,semantic,,M03,add 5 to name,error,error,correct,,,,,,E204,True
+development,baseline,semantic,,M04,set name to name minus 1,error,error,correct,,,,,,E203,True
+development,baseline,semantic,,M05,print name times 2,error,error,correct,,,,,,E203,True
+development,baseline,semantic,,M06,"if name is greater than ""bob"" then print hi",error,error,correct,,,,,,E205,True
+development,baseline,semantic,,M07,if name equals 3 then print hi,error,error,correct,,,,,,E204,True
+development,baseline,semantic,,M08,divide total by 0,error,error,correct,,,,,,E206,True
+development,baseline,semantic,,M09,repeat 0 times print hi,error,error,correct,,,,,,E207,False
+development,baseline,semantic,,M10,repeat 1001 times print hi,error,error,correct,,,,,,E207,False
+development,baseline,semantic,,M11,make a variable called age and set it to 3,ok,ok,correct,,,LET age = 3;,,,W208,True
+development,context_off,valid,,V01,make a variable called age and set it to 20,ok,ok,correct,True,LET age = 20;,LET age = 20;,,,,False
+development,context_off,valid,,V02,create a variable named totalAmount with value 0,ok,ok,correct,True,LET totalAmount = 0;,LET totalAmount = 0;,,,,False
+development,context_off,valid,,V03,"let greeting be ""Hello""",ok,ok,correct,True,"LET greeting = ""Hello"";","LET greeting = ""Hello"";",,,,False
+development,context_off,valid,,V04,set age to age plus 1,ok,error,error,False,age = age + 1;,,,,E401,True
+development,context_off,valid,,V05,change price to 2.5,ok,ok,correct,True,price = 2.5;,price = 2.5;,,,,True
+development,context_off,valid,,V06,set x to 5,ok,error,error,False,LET x = 5;,,,,E201,False
+development,context_off,valid,,V07,increase count by 2,ok,ok,correct,True,count = count + 2;,count = count + 2;,,,,True
+development,context_off,valid,,V08,add 5 to score,ok,ok,correct,True,score = score + 5;,score = score + 5;,,,,True
+development,context_off,valid,,V09,decrease count by 1,ok,ok,correct,True,count = count - 1;,count = count - 1;,,,,True
+development,context_off,valid,,V10,multiply total by 3,ok,ok,correct,True,total = total * 3;,total = total * 3;,,,,True
+development,context_off,valid,,V11,divide total by 2,ok,ok,correct,True,total = total / 2;,total = total / 2;,,,,True
+development,context_off,valid,,V12,print age,ok,error,error,False,PRINT age;,,,,E401,True
+development,context_off,valid,,V13,"show ""Hello""",ok,ok,correct,True,"PRINT ""Hello"";","PRINT ""Hello"";",,,,False
+development,context_off,valid,,V14,display hello world,ok,error,error,False,"PRINT ""hello world"";",,,,E401,False
+development,context_off,valid,,V15,print total,ok,error,error,False,"PRINT ""total"";",,,,E401,True
+development,context_off,valid,,V16,if age is greater than 17 then print adult else print minor,ok,error,error,False,"IF age > 17 THEN { PRINT ""adult""; } ELSE { PRINT ""minor""; }",,,,E401,True
+development,context_off,valid,,V17,if score is at least 10 then print winner,ok,error,error,False,"IF score >= 10 THEN { PRINT ""winner""; }",,,,E401,True
+development,context_off,valid,,V18,repeat 3 times print hello,ok,error,error,False,"REPEAT 3 TIMES { PRINT ""hello""; }",,,,E401,False
+development,context_off,valid,,V19,do show score 2 times,ok,error,error,False,REPEAT 2 TIMES { PRINT score; },,,,E401,True
+development,context_off,valid,,V20,add 5 to it,ok,error,error,False,score = score + 5;,,,,E401,True
+development,context_off,valid,,V21,print y,ok,error,error,False,"PRINT ""y"";",,,,E401,True
+development,context_off,valid,,V22,print store,ok,error,error,False,"PRINT ""store"";",,,,E401,True
+development,context_off,valid,,V23,set x to negative 5,ok,ok,correct,True,x = -5;,x = -5;,,,,True
+development,context_off,valid,,V24,define x as 5,ok,ok,correct,True,LET x = 5;,LET x = 5;,,,,False
+development,context_off,valid,,V25,increase the x by 2,ok,ok,correct,True,x = x + 2;,x = x + 2;,,,,True
+development,context_off,valid,,V26,show me x,ok,error,error,False,PRINT x;,,,,E401,True
+development,context_off,valid,,V27,x becomes x plus 3,ok,error,error,False,x = x + 3;,,,,E401,True
+development,context_off,valid,,V28,grow x by 2,ok,ok,correct,True,x = x + 2;,x = x + 2;,,,,True
+development,context_off,valid,,V29,take 2 from x,ok,ok,correct,True,x = x - 2;,x = x - 2;,,,,True
+development,context_off,valid,,V30,set x as 20,ok,ok,correct,True,x = 20;,x = 20;,,,,True
+development,context_off,valid,,V31,"when x is no less than 20 then output x otherwise print out ""small""",ok,error,error,False,"IF x >= 20 THEN { PRINT x; } ELSE { PRINT ""small""; }",,,,E401,True
+development,context_off,valid,,V32,loop 2 times print x,ok,error,error,False,REPEAT 2 TIMES { PRINT x; },,,,E401,True
+development,context_off,valid,,V33,please show me x,ok,error,error,False,PRINT x;,,,,E401,True
+development,context_off,invalid,,X01,store 50 in bonus,unsupported,unsupported,correct,,,,set bonus to 50,,E101,False
+development,context_off,invalid,,X02,sort the list descending,unsupported,unsupported,correct,,,,,,E101,False
+development,context_off,invalid,,X03,define a function called greet,unsupported,unsupported,correct,,,,,,E101,False
+development,context_off,invalid,,X04,create a list of numbers,unsupported,unsupported,correct,,,,,,E101,False
+development,context_off,invalid,,X05,ask the user for their age,unsupported,unsupported,correct,,,,,,E101,False
+development,context_off,invalid,,X06,while x is less than 10 print x,unsupported,unsupported,correct,,,,,,E101,True
+development,context_off,invalid,,X07,calculate the square root of 16,unsupported,unsupported,correct,,,,,,E101,False
+development,context_off,invalid,,X08,open the file data.txt,unsupported,unsupported,correct,,,,,,E101,False
+development,context_off,invalid,,X09,go to line 10,unsupported,unsupported,correct,,,,,,E101,False
+development,context_off,invalid,,X10,!!!,unsupported,unsupported,correct,,,,,,E101,False
+development,context_off,invalid,,X11,if count is greater than 5 then print big and print done,unsupported,unsupported,correct,,,,if count is greater than 5 then print big,True,E101,True
+development,context_off,ambiguous,,A01,increase score,ambiguous,needs_clarification,correct,,,,,,,True
+development,context_off,ambiguous,,A02,add 5 to it,ambiguous,error,error,,,,,,E401,False
+development,context_off,ambiguous,,A03,set x to 10 or 20,ambiguous,needs_clarification,correct,,,,,,,True
+development,context_off,ambiguous,,A04,print scroe,ambiguous,error,error,,,,,,E401,True
+development,context_off,ambiguous,,A05,multiply x by 2 plus 3,ambiguous,needs_clarification,correct,,,,,,,True
+development,context_off,ambiguous,,A06,repeat print hello,ambiguous,needs_clarification,correct,,,,,,,False
+development,context_off,ambiguous,,A08,multiply total,ambiguous,needs_clarification,correct,,,,,,,True
+development,context_off,ambiguous,,A09,show totl,ambiguous,error,error,,,,,,E401,True
+development,context_off,ambiguous,,A10,set y to,ambiguous,needs_clarification,correct,,,,,,,True
+development,context_off,ambiguous,,A11,print contr,ambiguous,error,error,,,,,,E401,True
+development,context_off,ambiguous,,A12,print 1 or 2 or 3,ambiguous,needs_clarification,correct,,,,,,,False
+development,context_off,ambiguous,,A13,assign 5 or 6 to x,ambiguous,needs_clarification,correct,,,,,,,True
+development,context_off,ambiguous,,A14,"print ""yes"" or ""no""",ambiguous,needs_clarification,correct,,,,,,,False
+development,context_off,ambiguous,,A15,divide total by 4 minus 1,ambiguous,needs_clarification,correct,,,,,,,True
+development,context_off,ambiguous,,A16,repeat 2 times multiply x by 2 plus 3,ambiguous,needs_clarification,correct,,,,,,,True
+development,context_off,ambiguous,,A17,set scroe to 7,ambiguous,error,error,,,,,,E201,True
+development,context_off,ambiguous,,A18,increase it,ambiguous,needs_clarification,correct,,,,,,,False
+development,context_off,semantic,,M01,set age to x plus 1,error,error,wrong_error,,,,,,E401,True
+development,context_off,semantic,,M02,print x times 2,error,error,wrong_error,,,,,,E401,False
+development,context_off,semantic,,M03,add 5 to name,error,error,correct,,,,,,E204,True
+development,context_off,semantic,,M04,set name to name minus 1,error,error,wrong_error,,,,,,E401,True
+development,context_off,semantic,,M05,print name times 2,error,error,wrong_error,,,,,,E401,True
+development,context_off,semantic,,M06,"if name is greater than ""bob"" then print hi",error,error,wrong_error,,,,,,E401,True
+development,context_off,semantic,,M07,if name equals 3 then print hi,error,error,wrong_error,,,,,,E401,True
+development,context_off,semantic,,M08,divide total by 0,error,error,correct,,,,,,E206,True
+development,context_off,semantic,,M09,repeat 0 times print hi,error,error,wrong_error,,,,,,E401,False
+development,context_off,semantic,,M10,repeat 1001 times print hi,error,error,wrong_error,,,,,,E401,False
+development,context_off,semantic,,M11,make a variable called age and set it to 3,ok,ok,correct,,,LET age = 3;,,,W208,True
+development,forced_top1,valid,,V01,make a variable called age and set it to 20,ok,ok,correct,True,LET age = 20;,LET age = 20;,,,,False
+development,forced_top1,valid,,V02,create a variable named totalAmount with value 0,ok,ok,correct,True,LET totalAmount = 0;,LET totalAmount = 0;,,,,False
+development,forced_top1,valid,,V03,"let greeting be ""Hello""",ok,ok,correct,True,"LET greeting = ""Hello"";","LET greeting = ""Hello"";",,,,False
+development,forced_top1,valid,,V04,set age to age plus 1,ok,ok,correct,True,age = age + 1;,age = age + 1;,,,,True
+development,forced_top1,valid,,V05,change price to 2.5,ok,ok,correct,True,price = 2.5;,price = 2.5;,,,,True
+development,forced_top1,valid,,V06,set x to 5,ok,ok,correct,True,LET x = 5;,LET x = 5;,,,W301,False
+development,forced_top1,valid,,V07,increase count by 2,ok,ok,correct,True,count = count + 2;,count = count + 2;,,,,True
+development,forced_top1,valid,,V08,add 5 to score,ok,ok,correct,True,score = score + 5;,score = score + 5;,,,,True
+development,forced_top1,valid,,V09,decrease count by 1,ok,ok,correct,True,count = count - 1;,count = count - 1;,,,,True
+development,forced_top1,valid,,V10,multiply total by 3,ok,ok,correct,True,total = total * 3;,total = total * 3;,,,,True
+development,forced_top1,valid,,V11,divide total by 2,ok,ok,correct,True,total = total / 2;,total = total / 2;,,,,True
+development,forced_top1,valid,,V12,print age,ok,ok,correct,True,PRINT age;,PRINT age;,,,,True
+development,forced_top1,valid,,V13,"show ""Hello""",ok,ok,correct,True,"PRINT ""Hello"";","PRINT ""Hello"";",,,,False
+development,forced_top1,valid,,V14,display hello world,ok,ok,correct,True,"PRINT ""hello world"";","PRINT ""hello world"";",,,,False
+development,forced_top1,valid,,V15,print total,ok,ok,correct,True,"PRINT ""total"";","PRINT ""total"";",,,,True
+development,forced_top1,valid,,V16,if age is greater than 17 then print adult else print minor,ok,ok,correct,True,"IF age > 17 THEN { PRINT ""adult""; } ELSE { PRINT ""minor""; }","IF age > 17 THEN { PRINT ""adult""; } ELSE { PRINT ""minor""; }",,,,True
+development,forced_top1,valid,,V17,if score is at least 10 then print winner,ok,ok,correct,True,"IF score >= 10 THEN { PRINT ""winner""; }","IF score >= 10 THEN { PRINT ""winner""; }",,,,True
+development,forced_top1,valid,,V18,repeat 3 times print hello,ok,ok,correct,True,"REPEAT 3 TIMES { PRINT ""hello""; }","REPEAT 3 TIMES { PRINT ""hello""; }",,,,False
+development,forced_top1,valid,,V19,do show score 2 times,ok,ok,correct,True,REPEAT 2 TIMES { PRINT score; },REPEAT 2 TIMES { PRINT score; },,,,True
+development,forced_top1,valid,,V20,add 5 to it,ok,ok,correct,True,score = score + 5;,score = score + 5;,,,,True
+development,forced_top1,valid,,V21,print y,ok,ok,correct,True,"PRINT ""y"";","PRINT ""y"";",,,,True
+development,forced_top1,valid,,V22,print store,ok,ok,correct,True,"PRINT ""store"";","PRINT ""store"";",,,,True
+development,forced_top1,valid,,V23,set x to negative 5,ok,ok,correct,True,x = -5;,x = -5;,,,,True
+development,forced_top1,valid,,V24,define x as 5,ok,ok,correct,True,LET x = 5;,LET x = 5;,,,,False
+development,forced_top1,valid,,V25,increase the x by 2,ok,ok,correct,True,x = x + 2;,x = x + 2;,,,,True
+development,forced_top1,valid,,V26,show me x,ok,ok,correct,True,PRINT x;,PRINT x;,,,,True
+development,forced_top1,valid,,V27,x becomes x plus 3,ok,ok,correct,True,x = x + 3;,x = x + 3;,,,,True
+development,forced_top1,valid,,V28,grow x by 2,ok,ok,correct,True,x = x + 2;,x = x + 2;,,,,True
+development,forced_top1,valid,,V29,take 2 from x,ok,ok,correct,True,x = x - 2;,x = x - 2;,,,,True
+development,forced_top1,valid,,V30,set x as 20,ok,ok,correct,True,x = 20;,x = 20;,,,,True
+development,forced_top1,valid,,V31,"when x is no less than 20 then output x otherwise print out ""small""",ok,ok,correct,True,"IF x >= 20 THEN { PRINT x; } ELSE { PRINT ""small""; }","IF x >= 20 THEN { PRINT x; } ELSE { PRINT ""small""; }",,,,True
+development,forced_top1,valid,,V32,loop 2 times print x,ok,ok,correct,True,REPEAT 2 TIMES { PRINT x; },REPEAT 2 TIMES { PRINT x; },,,,True
+development,forced_top1,valid,,V33,please show me x,ok,ok,correct,True,PRINT x;,PRINT x;,,,,True
+development,forced_top1,invalid,,X01,store 50 in bonus,unsupported,unsupported,correct,,,,set bonus to 50,,E101,False
+development,forced_top1,invalid,,X02,sort the list descending,unsupported,unsupported,correct,,,,,,E101,False
+development,forced_top1,invalid,,X03,define a function called greet,unsupported,unsupported,correct,,,,,,E101,False
+development,forced_top1,invalid,,X04,create a list of numbers,unsupported,unsupported,correct,,,,,,E101,False
+development,forced_top1,invalid,,X05,ask the user for their age,unsupported,unsupported,correct,,,,,,E101,False
+development,forced_top1,invalid,,X06,while x is less than 10 print x,unsupported,unsupported,correct,,,,,,E101,True
+development,forced_top1,invalid,,X07,calculate the square root of 16,unsupported,unsupported,correct,,,,,,E101,False
+development,forced_top1,invalid,,X08,open the file data.txt,unsupported,unsupported,correct,,,,,,E101,False
+development,forced_top1,invalid,,X09,go to line 10,unsupported,unsupported,correct,,,,,,E101,False
+development,forced_top1,invalid,,X10,!!!,unsupported,unsupported,correct,,,,,,E101,False
+development,forced_top1,invalid,,X11,if count is greater than 5 then print big and print done,unsupported,unsupported,correct,,,,if count is greater than 5 then print big,True,E101,True
+development,forced_top1,ambiguous,,A01,increase score,ambiguous,needs_clarification,correct,,,,,,,True
+development,forced_top1,ambiguous,,A02,add 5 to it,ambiguous,needs_clarification,correct,,,,,,,False
+development,forced_top1,ambiguous,,A03,set x to 10 or 20,ambiguous,ok,missed_ambiguity,,,x = 10;,,,,True
+development,forced_top1,ambiguous,,A04,print scroe,ambiguous,ok,missed_ambiguity,,,PRINT score;,,,,True
+development,forced_top1,ambiguous,,A05,multiply x by 2 plus 3,ambiguous,ok,missed_ambiguity,,,x = x * 2 + 3;,,,,True
+development,forced_top1,ambiguous,,A06,repeat print hello,ambiguous,needs_clarification,correct,,,,,,,False
+development,forced_top1,ambiguous,,A08,multiply total,ambiguous,needs_clarification,correct,,,,,,,True
+development,forced_top1,ambiguous,,A09,show totl,ambiguous,ok,missed_ambiguity,,,PRINT total;,,,,True
+development,forced_top1,ambiguous,,A10,set y to,ambiguous,needs_clarification,correct,,,,,,,True
+development,forced_top1,ambiguous,,A11,print contr,ambiguous,ok,missed_ambiguity,,,PRINT counter;,,,,True
+development,forced_top1,ambiguous,,A12,print 1 or 2 or 3,ambiguous,ok,missed_ambiguity,,,PRINT 1;,,,,False
+development,forced_top1,ambiguous,,A13,assign 5 or 6 to x,ambiguous,ok,missed_ambiguity,,,x = 5;,,,,True
+development,forced_top1,ambiguous,,A14,"print ""yes"" or ""no""",ambiguous,ok,missed_ambiguity,,,"PRINT ""yes"";",,,,False
+development,forced_top1,ambiguous,,A15,divide total by 4 minus 1,ambiguous,ok,missed_ambiguity,,,total = total / 4 - 1;,,,,True
+development,forced_top1,ambiguous,,A16,repeat 2 times multiply x by 2 plus 3,ambiguous,ok,missed_ambiguity,,,REPEAT 2 TIMES { x = x * 2 + 3; },,,,True
+development,forced_top1,ambiguous,,A17,set scroe to 7,ambiguous,ok,missed_ambiguity,,,score = 7;,,,,True
+development,forced_top1,ambiguous,,A18,increase it,ambiguous,needs_clarification,correct,,,,,,,False
+development,forced_top1,semantic,,M01,set age to x plus 1,error,error,correct,,,,,,E201,True
+development,forced_top1,semantic,,M02,print x times 2,error,error,correct,,,,,,E201,False
+development,forced_top1,semantic,,M03,add 5 to name,error,error,correct,,,,,,E204,True
+development,forced_top1,semantic,,M04,set name to name minus 1,error,error,correct,,,,,,E203,True
+development,forced_top1,semantic,,M05,print name times 2,error,error,correct,,,,,,E203,True
+development,forced_top1,semantic,,M06,"if name is greater than ""bob"" then print hi",error,error,correct,,,,,,E205,True
+development,forced_top1,semantic,,M07,if name equals 3 then print hi,error,error,correct,,,,,,E204,True
+development,forced_top1,semantic,,M08,divide total by 0,error,error,correct,,,,,,E206,True
+development,forced_top1,semantic,,M09,repeat 0 times print hi,error,error,correct,,,,,,E207,False
+development,forced_top1,semantic,,M10,repeat 1001 times print hi,error,error,correct,,,,,,E207,False
+development,forced_top1,semantic,,M11,make a variable called age and set it to 3,ok,ok,correct,,,LET age = 3;,,,W208,True
+mutation,mutation,mutation,H01,H01:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H01,H01:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H02,H02:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H02,H02:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H03,H03:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H03,H03:operand_swap,,,checked,V2,,,,,,,
+mutation,mutation,mutation,H03,H03:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H03,H03:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H04,H04:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H04,H04:operand_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H04,H04:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H04,H04:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H05,H05:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H05,H05:operand_swap,,,checked,V2,,,,,,,
+mutation,mutation,mutation,H05,H05:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H05,H05:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H06,H06:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H06,H06:operand_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H06,H06:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H06,H06:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H07,H07:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H07,H07:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H08,H08:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H09,H09:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H09,H09:operand_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H09,H09:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H09,H09:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H10,H10:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H10,H10:negation_drop,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H10,H10:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H11,H11:compare_flip,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H11,H11:literal_off_by_one,,,checked,V2,,,,,,,
+mutation,mutation,mutation,H11,H11:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H11,H11:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H12,H12:compare_flip,,,checked,V2,,,,,,,
+mutation,mutation,mutation,H12,H12:literal_off_by_one,,,checked,V2,,,,,,,
+mutation,mutation,mutation,H12,H12:variable_swap,,,checked,V2,,,,,,,
+mutation,mutation,mutation,H12,H12:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H13,H13:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H13,H13:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H13,H13:repeat_count,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H13,H13:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H14,H14:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H14,H14:operand_swap,,,checked,V2,,,,,,,
+mutation,mutation,mutation,H14,H14:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H14,H14:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H15,H15:compare_flip,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,H15,H15:string_change,,,checked,V2,,,,,,,
+mutation,mutation,mutation,H15,H15:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS01,HS01:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS01,HS01:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS01,HS01:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS01,HS01:operand_swap,,,checked,V2,,,,,,,
+mutation,mutation,mutation,HS01,HS01:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS01,HS01:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS01,HS01:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS01,HS01:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS01,HS01:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS01,HS01:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS01,HS01:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:operand_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS02,HS02:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS03,HS03:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS03,HS03:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS03,HS03:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS03,HS03:operand_swap,,,checked,V2,,,,,,,
+mutation,mutation,mutation,HS03,HS03:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS03,HS03:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS03,HS03:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS03,HS03:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS03,HS03:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS03,HS03:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS03,HS03:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:operand_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS04,HS04:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS05,HS05:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS05,HS05:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS05,HS05:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS05,HS05:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS05,HS05:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS05,HS05:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS05,HS05:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS05,HS05:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS05,HS05:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:operand_swap,,,checked,V2,,,,,,,
+mutation,mutation,mutation,HS06,HS06:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:variable_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:variable_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:operand_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:variable_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:variable_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS06,HS06:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:operand_swap,,,checked,V2,,,,,,,
+mutation,mutation,mutation,HS07,HS07:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:repeat_count,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS07,HS07:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:operand_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:compare_flip,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:literal_off_by_one,,,checked,V2,,,,,,,
+mutation,mutation,mutation,HS08,HS08:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:swap_branches,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS08,HS08:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:negation_drop,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:operand_swap,,,checked,V2,,,,,,,
+mutation,mutation,mutation,HS09,HS09:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS09,HS09:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:operand_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:variable_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:variable_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:arith_op_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:operand_swap,,,checked,V2,,,,,,,
+mutation,mutation,mutation,HS10,HS10:literal_off_by_one,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:variable_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:variable_swap,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:drop_statement,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:string_change,,,checked,V2+V3,,,,,,,
+mutation,mutation,mutation,HS10,HS10:drop_statement,,,checked,V2+V3,,,,,,,

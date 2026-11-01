@@ -1,3 +1,4 @@
 * text=auto
 *.pdf binary
 tests/eval_data/paraphrases.json -text
+tests/golden/* -text
