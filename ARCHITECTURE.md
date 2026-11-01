@@ -397,6 +397,23 @@ How each guarantee holds for a model's reading:
 | Fallback | A provider problem never raises: the rule result stands, with `W510`, `W511`, `W512` or `W514`. Only a KeyboardInterrupt passes through. |
 | Secrets | Keys are excluded from `repr`, never quoted in a message, sent only over https or to loopback, and a `.env` cannot point a key from the real environment at another host. |
 
+### 2.12 Web API (optional)
+
+`parsley/web/` implements `web/API_CONTRACT.md` from the `web-frontend` branch with FastAPI and
+uvicorn, installed through the `web` extra. It is an adapter: `pipeline.run` and `pipeline.answer`
+do all compiling, and the core never imports it (a test checks both this and that only
+`parsley/web/` imports the web libraries). `app.py` holds `create_app`, the routes and the
+response shapes; `sessions.py` holds `SessionStore`.
+
+| Concern | Decision |
+|---|---|
+| Sessions | In memory. TTL 3600 s, renewed on use; at 1000 sessions the least recently used goes. A lock serializes one session's requests, because a model call can take seconds. |
+| State | `Session` plus the English of each accepted statement (kept parallel to `history`), the open question and its sentence, and the mode. A new compile, undo or reset drops an open question. Undo replays history through `semantic.analyze`, the only writer. |
+| Mode | Per session: `compile` sets it, and a compile without `mode` keeps it. The provider loads on first use, so a rules-only server reads no `.env`. |
+| Limits | Sentence and answer 500 characters (422); body 8 KiB (413); 500 statements per session (409), because V3 re-runs the whole session; `run` uses the interpreter's `STEP_LIMIT`. |
+| Errors | Unknown session 404. No open question: 200 with `status: "error"` and `E102`, as the frontend mock does. Validation errors say `invalid request` without echoing input. Anything unexpected is logged by type and answered with `internal error`. An infinite number travels as text, because JSON has none. |
+| Network | CORS for `localhost:5173` and `127.0.0.1:5173` only; listens on 127.0.0.1 by default; interactive docs are off. |
+
 ## 3. Design rules
 
 - No stage silently guesses. It returns a testable result or a diagnostic.

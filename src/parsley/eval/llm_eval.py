@@ -11,6 +11,7 @@ out: it injects bugs into the code generator, which no model touches.
 from __future__ import annotations
 
 import argparse
+import copy
 import csv
 import json
 import re
@@ -51,7 +52,7 @@ def facts(result: PipelineResult, session: Session, provider: object) -> LLMFact
         accepted=result.status == "ok" and chosen == LLM_RULE_ID,
         discarded=() if consulted is None else tuple(str(d.reason) for d in consulted.discarded),
         derived_question=derived,
-        confirmed_minilang=answer(result, "yes", session).minilang if derived else None,
+        confirmed_minilang=answer(result, "yes", copy.deepcopy(session)).minilang if derived else None,
         failed=any(d.code in ("W510", "W511") for d in result.diagnostics),
         latency=getattr(provider, "last_latency", None) if consulted is not None else None,
         proposed=json.dumps(proposed, sort_keys=True, ensure_ascii=False) if proposed else "",

@@ -312,6 +312,35 @@ Good to know:
 
 ---
 
+## Web API
+
+An optional HTTP API backs the web frontend. It needs the `web` extra:
+
+```
+pip install -e ".[web]"
+parsley-web                       # or: python -m parsley.web --port 8000
+```
+
+It listens on `127.0.0.1:8000` and allows browser requests from `localhost:5173`.
+
+| Endpoint | Request | Response |
+|---|---|---|
+| `POST /api/session` | `{}` | `{session_id}` |
+| `POST /api/compile` | `{session_id, sentence, mode}` | `{status, minilang?, understood?, checks?, question?, diagnostics, suggestion?, source?, trace?}` |
+| `POST /api/answer` | `{session_id, answer}` | Same as compile |
+| `GET /api/program?session_id=` | | `{minilang, statements: [{english, minilang}]}` |
+| `POST /api/run` | `{session_id}` | `{output, variables, error?}` |
+| `POST /api/undo`, `POST /api/reset` | `{session_id}` | `{ok}` |
+
+`status` is `accepted`, `clarify`, `rejected` or `error`, and `source` says whether the reading
+came from `rules` or the `llm`. Each sentence goes through the same pipeline as the CLI. Sessions
+live in memory only: one expires after an hour unused, and at 1000 sessions the least recently
+used one is dropped. A sentence can be 500 characters long and a session can hold 500 statements.
+`llm` and `hybrid` use the provider configured above, loaded the first time a session asks for it.
+Unknown or expired sessions return 404, and errors never include a stack trace or a key.
+
+---
+
 ## Evaluation
 
 Run from the repository root (after `pip install -e .`):
@@ -365,7 +394,8 @@ src/parsley/
 ├── compiler/   AST nodes, IR builder, lexer, parser, semantic analysis, symbols, codegen
 ├── verify/     back-translation, round-trip, AST evaluator, interpreter
 ├── eval/       dataset, metrics, evaluation runner
-└── llm/        optional model providers, prompt, validation, hybrid mode
+├── llm/        optional model providers, prompt, validation, hybrid mode, response cache
+└── web/        optional HTTP API for the frontend
 tests/          unit/  integration/  fixtures/  fixtures_llm/  golden/  eval_data/
 examples/       valid/  invalid/  ambiguous/
 ```

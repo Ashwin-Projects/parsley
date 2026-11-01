@@ -9,7 +9,9 @@ from pathlib import Path
 import pytest
 
 from parsley.eval import run_eval
+from parsley.eval.dataset import Item
 from parsley.llm.prompt import PROMPT_SHA256
+from parsley.llm.provider import RawProposal
 
 ROOT = Path(__file__).resolve().parents[2]
 RECORDED = ROOT / "tests" / "fixtures_llm" / "recorded.json"
@@ -149,6 +151,26 @@ def test_the_csv_carries_the_llm_columns(workspace):
     assert table["V01"]["llm_asked"] == "False"
     assert table["V90"]["derived_question"] == "True"
     assert '"intent": "assign"' in table["X01"]["llm_reading"]
+
+
+def test_seeing_the_confirmed_code_does_not_touch_the_session_of_the_item():
+    class Derived:
+        name = "scripted"
+
+        def propose(self, sentence, context):
+            reading = {"intent": "assign", "confidence": 0.9, "slots": {
+                **SLOT_X, "value": {"kind": "number", "text": "12", "derived": True},
+            }}
+            return [RawProposal(json.dumps({"readings": [reading]}), self.name)]
+
+    item = Item(
+        id="T", source="development", subset="valid", group=None, input="x gets a dozen", setup=(),
+        setup_minilang=(), expected_status="ok", expected_minilang="LET x = 12;", expected_suggestion=None,
+        expected_codes=(), context=None,
+    )
+    outcome = run_eval.evaluate(item, "forced_top1", "hybrid", Derived())
+    assert outcome.llm.confirmed_minilang == "LET x = 12;"
+    assert outcome.minilang == "LET x = 12;"
 
 
 def test_llm_mode_asks_for_every_item_rules_do_not_reject_for_a_reason(workspace):

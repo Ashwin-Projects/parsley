@@ -22,6 +22,9 @@ tests/
 `-- eval_data/      held-out evaluation set (Phase 8); written after Phase 7 by a teammate, frozen before running
 ```
 
+`tests/integration/test_web_api.py` needs the `web` and `dev` extras and is skipped without
+them; CI installs both.
+
 LLM tests never open a socket: providers take a scripted transport or replay
 `tests/fixtures_llm/recorded.json`. `test_rules_regression.py` is the one suite that compiles
 held-out English, because the requirement is that rules mode stays identical on it. It pins

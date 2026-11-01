@@ -59,6 +59,26 @@ def test_the_nlp_stages_do_not_depend_on_the_llm_package():
     assert offenders == []
 
 
+def test_only_the_web_package_uses_web_dependencies():
+    imports = re.compile(r"^\s*(from|import) (fastapi|starlette|uvicorn|pydantic)\b", re.MULTILINE)
+    offenders = [
+        str(path.relative_to(CORE))
+        for path in CORE.rglob("*.py")
+        if path.relative_to(CORE).parts[0] != "web" and imports.search(path.read_text(encoding="utf-8"))
+    ]
+    assert offenders == []
+
+
+def test_nothing_in_the_core_imports_the_web_package():
+    imports = re.compile(r"^\s*(from|import) parsley\.web\b", re.MULTILINE)
+    offenders = [
+        str(path.relative_to(CORE))
+        for path in CORE.rglob("*.py")
+        if path.relative_to(CORE).parts[0] != "web" and imports.search(path.read_text(encoding="utf-8"))
+    ]
+    assert offenders == []
+
+
 def test_core_never_imports_parsley_ml():
     offenders = [
         str(path.relative_to(CORE))
