@@ -191,7 +191,7 @@ stage (design rule 1).
 |---|---|---|
 | `level` | `"error" \| "warning" \| "info"` | Any `error` makes the CLI exit non-zero. |
 | `stage` | `str` | One of `normalizer`, `candidates`, `context`, `ambiguity`, `ir`, `lexer`, `parser`, `semantic`, `codegen`, `verify`, `cli`, `llm`. |
-| `code` | `str` | Letter (`E`/`W`/`I`, matching `level`) + 3 digits. Semantic codes `E201`-`E207`, `W208` and `E209` are listed in LANGUAGE_SPEC.md 2.2. Pipeline codes: `E101` (`candidates`: unsupported sentence), `W301` (`context`: implicit declaration), `E401` (`ir`: unresolved slot, e.g. with `--no-context`, or no valid statement), `E102` (`ambiguity`: a question outside the REPL), `E103` (`ambiguity`: interpretation not confirmed under `--confirm`). LLM codes `W510`-`W514` (`llm`) are listed in LANGUAGE_SPEC.md 7.5. |
+| `code` | `str` | Letter (`E`/`W`/`I`, matching `level`) + 3 digits. Semantic codes `E201`-`E207`, `W208` and `E209` are listed in LANGUAGE_SPEC.md 2.2. Pipeline codes: `E101` (`candidates`: unsupported sentence), `W301` (`context`: implicit declaration), `E401` (`ir`: unresolved slot, e.g. with `--no-context`, or no valid statement), `E102` (`ambiguity`: a question outside the REPL), `E103` (`ambiguity`: interpretation not confirmed under `--confirm`). LLM codes `W510`-`W515` (`llm`) are listed in LANGUAGE_SPEC.md 7.5. |
 | `message` | `str` | Plain English, user-facing. |
 
 ### 2.6 Verification
@@ -394,7 +394,7 @@ How each guarantee holds for a model's reading:
 | One statement per sentence (D-4) | Rejections with a reason of their own never reach the LLM; a reading that drops a second statement or a negation, or does not reverse the comparison after `unless`, is discarded. |
 | N3 | Unchanged. `W513` marks an accepted LLM reading, because V1 is the layer that can catch a misreading, and only if a person reads it. |
 | Only `semantic.py` writes the session | `LLMContext` is a copy; `llm/` imports neither `semantic` nor `codegen`. |
-| Fallback | A provider problem never raises: the rule result stands, with `W510`, `W511`, `W512` or `W514`. Only a KeyboardInterrupt passes through. |
+| Fallback | A provider problem never raises: the rule result stands, with `W510`, `W511`, `W512`, `W514` or `W515`. Only a KeyboardInterrupt passes through. |
 | Secrets | Keys are excluded from `repr`, never quoted in a message, sent only over https or to loopback, and a `.env` cannot point a key from the real environment at another host. |
 
 ### 2.12 Web API (optional)
@@ -411,6 +411,7 @@ response shapes; `sessions.py` holds `SessionStore`.
 | State | `Session` plus the English of each accepted statement (kept parallel to `history`), the open question and its sentence, and the mode. A new compile, undo or reset drops an open question. Undo replays history through `semantic.analyze`, the only writer. |
 | Mode | Per session: `compile` sets it, and a compile without `mode` keeps it. The provider loads on first use, and a provider that could not be configured is loaded again on the next request. `rules` compiles never load it; `/api/health` does, because only the configuration can answer `llm_configured`. |
 | Health | `/api/health` returns `version`, `llm_configured` and, when configured, the provider name and model. It makes no model call and never returns a key or base URL. |
+| Public limits | `web/limits.py`: requests per address, model calls per session and per UTC day, all from the environment. A limit refuses the model call (`ProviderLimited`), so the request keeps the rule result with `W515`; only the hard rate answers 429. Counts are in memory, so one process and a restart clears them. |
 | Timeouts | `DeadlineProvider` stops a whole web provider call after 14 s, retry included, whatever `PARSLEY_LLM_TIMEOUT` says, so it ends inside the frontend's 30-second deadline even when a server answers a byte at a time. |
 | Limits | Sentence and answer 500 characters (422); body 8 KiB (413); 500 statements per session (409), because V3 re-runs the whole session; `run` uses the interpreter's `STEP_LIMIT`. |
 | Errors | Unknown session 404. No open question: 200 with `status: "error"` and `E102`, as the frontend mock does. Validation errors say `invalid request` without echoing input. Anything unexpected stops at `_CatchAll`, is logged by type and answered with `internal error`, so its message reaches neither the client nor the server log. An infinite number travels as text, because JSON has none. |

@@ -147,6 +147,10 @@ it stood. A validator check for `unless` (D-18), tested on development data only
 into a rejection, and one cached re-run gave 0/168 with no other result changed, so exact match
 stayed 111/118. H15-4 has now been seen, so 1/168 is the fair figure.
 
+The live stack was checked on 2026-11-02 with real Groq, over HTTP and in a browser through Vite with
+mocks off: an LLM-only sentence, a derived-value confirmation, and `W510` with a working session
+when the base URL is unreachable.
+
 Known and left alone, because a fix would raise exact match on items already seen: the model labels
 some numbers as words (`{"kind": "word", "text": "2.75"}`), which fails with `E209`. That costs
 H02-1 (`llm` only) and H02-4. Reading a `word` slot that is a number token as a number would fix it,

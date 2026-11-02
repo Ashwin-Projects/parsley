@@ -50,6 +50,10 @@ class ProviderRateLimited(ProviderError):
     """The provider answered 429, after the retry; a batch run may wait and try again."""
 
 
+class ProviderLimited(ProviderError):
+    """A usage limit of this deployment refused the call; no request was sent."""
+
+
 class ConfigError(ProviderError):
     """The provider is not configured; the message names what to set."""
 
@@ -111,7 +115,7 @@ def _post_json(
             if isinstance(error.reason, TimeoutError):
                 failure = ProviderTimeout(f"no answer within {timeout:g} seconds")
             else:
-                failure = ProviderError(f"could not reach the provider: {error.reason}")
+                failure = ProviderError(f"could not reach the provider: {type(error.reason).__name__}")
         except (OSError, http.client.HTTPException) as error:
             failure = ProviderError(f"could not reach the provider: {type(error).__name__}")
         else:

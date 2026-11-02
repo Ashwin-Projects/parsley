@@ -298,6 +298,7 @@ asked and why any reading was discarded.
 | `W512` | No proposed reading passed validation; the rule result stands |
 | `W513` | The accepted reading came from the model, so check the back-translation |
 | `W514` | No provider is configured; the rule result stands |
+| `W515` | A usage limit of the web deployment was reached; the rule result stands |
 
 Good to know:
 

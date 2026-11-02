@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from parsley.diagnostics import Diagnostic
 from parsley.llm.config import ConfigError
 from parsley.llm.prompt import LLMContext
-from parsley.llm.provider import Provider, ProviderError, ProviderTimeout
+from parsley.llm.provider import Provider, ProviderError, ProviderLimited, ProviderTimeout
 from parsley.llm.validate import Discard, Reading, validate
 from parsley.nlp.ambiguity import CLARIFY_MARGIN
 from parsley.nlp.candidates import LLM_RULE_ID, Candidate, Reason
@@ -90,6 +90,9 @@ def consult(sentence: str, session: Session, provider: Provider | None, why: str
     except ProviderTimeout as error:
         return Consultation(why, provider.name, warnings=(_warning(
             "W511", f"the LLM did not answer in time ({_cut(error)}), {_FALLBACK}"),))
+    except ProviderLimited as error:
+        return Consultation(why, provider.name, warnings=(_warning(
+            "W515", f"the LLM was not asked ({_cut(error)}), {_FALLBACK}"),))
     except ProviderError as error:
         return Consultation(why, provider.name, warnings=(_failed(_cut(error)),))
     except (Exception, SystemExit) as error:

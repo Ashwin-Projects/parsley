@@ -7,13 +7,15 @@ step budget. A provider is loaded the first time ``/api/health`` or a session as
 or ``hybrid`` needs it, and a compile in ``rules`` mode never does. Errors never carry a stack
 trace, a request body or a key: ``_CatchAll`` logs an unexpected failure by type and answers ``internal error``. It is
 middleware and not an exception handler because Starlette re-raises after such a handler, and
-uvicorn would then log the message, which can hold a sentence.
+uvicorn would then log the message, which can hold a sentence. ``parsley.web.limits`` holds the
+limits of a public deployment.
 """
 
 from __future__ import annotations
 
 import logging
 import math
+import os
 import threading
 from collections.abc import Callable
 from dataclasses import replace
@@ -25,6 +27,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from parsley import pipeline
@@ -35,11 +38,11 @@ from parsley.compiler.semantic import analyze
 from parsley.nlp.candidates import LLM_RULE_ID, MAX_INPUT_CHARS
 from parsley.session import Session
 from parsley.verify import STEP_LIMIT, Verification, interpreter
-from parsley.web.sessions import DEFAULT_CAPACITY, DEFAULT_TTL, SessionStore, WebSession
+from parsley.web.limits import DailyBudget, LimitedProvider, RateLimiter, WebLimits, client_ip
+from parsley.web.sessions import SessionStore, WebSession
 
 logger = logging.getLogger(__name__)
 
-ALLOWED_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")
 MAX_BODY_BYTES = 8 * 1024
 MAX_STATEMENTS = 500  # V3 re-runs the whole session on each sentence, so its cost grows with this
 MAX_ID_CHARS = 128
@@ -122,8 +125,41 @@ class OkResponse(BaseModel):
 class HealthResponse(BaseModel):
     version: str
     llm_configured: bool
+    llm_budget_remaining: bool
     provider: str | None = None
     model: str | None = None
+
+
+class _SecurityHeaders:
+    """Headers for every response, including the ones the middleware below answers itself."""
+
+    def __init__(self, app: ASGIApp, frame_ancestors: str) -> None:
+        self._app = app
+        self._headers = {
+            "Content-Security-Policy": (
+                "default-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; "
+                f"frame-ancestors {frame_ancestors}"
+            ),
+            "Permissions-Policy": "camera=(), geolocation=(), microphone=()",
+            "Referrer-Policy": "no-referrer",
+            "Strict-Transport-Security": "max-age=31536000",
+            "X-Content-Type-Options": "nosniff",
+        }
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self._app(scope, receive, send)
+            return
+
+        async def with_headers(message: Message) -> None:
+            if message["type"] == "http.response.start":
+                headers = MutableHeaders(scope=message)
+                headers.update(self._headers)
+                if scope["path"].startswith("/api"):
+                    headers["Cache-Control"] = "no-store"
+            await send(message)
+
+        await self._app(scope, receive, with_headers)
 
 
 class _BodyLimit:
@@ -151,7 +187,13 @@ class _BodyLimit:
                 raise ValueError("the request is too large")
             return message
 
-        await self._app(scope, limited, send)
+        async def unless_too_large(message: Message) -> None:
+            if seen <= self._limit:  # FastAPI turns the error above into a 400; the client gets the 413
+                await send(message)
+
+        await self._app(scope, limited, unless_too_large)
+        if seen > self._limit:
+            await JSONResponse({"detail": "the request is too large"}, status_code=413)(scope, receive, send)
 
 
 class _CatchAll:
@@ -189,17 +231,21 @@ def _load_provider(dotenv: Path = Path(".env")) -> object:
 
 def create_app(
     *, provider: object = None, provider_factory: Callable[[], object] = _load_provider,
-    ttl: float = DEFAULT_TTL, capacity: int = DEFAULT_CAPACITY,
+    limits: WebLimits | None = None,
 ) -> FastAPI:
     """The API; ``provider`` overrides the configured one (tests pass a ``FakeProvider``)."""
+    limits = limits or WebLimits.from_env(os.environ)
     app = FastAPI(title="Parsley", docs_url=None, redoc_url=None, openapi_url=None)
     app.add_middleware(_CatchAll)  # innermost, so a 500 still gets its CORS headers
     app.add_middleware(_BodyLimit, limit=MAX_BODY_BYTES)
     app.add_middleware(
-        CORSMiddleware, allow_origins=list(ALLOWED_ORIGINS), allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type"],
+        CORSMiddleware, allow_origins=list(limits.allowed_origins), allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"], expose_headers=["Retry-After"],
     )
-    app.state.store = SessionStore(ttl, capacity)
+    app.add_middleware(_SecurityHeaders, frame_ancestors=limits.frame_ancestors)  # outermost: covers every answer
+    app.state.store = SessionStore(limits.session_ttl, limits.max_sessions)
+    app.state.rate = RateLimiter()
+    app.state.budget = DailyBudget(limits.daily_llm_calls)
     app.state.provider = provider
     app.state.step_limit = STEP_LIMIT
     provider_lock = threading.Lock()
@@ -212,6 +258,19 @@ def create_app(
             if getattr(built, "error", None) is None:  # a bad configuration is read again next time
                 app.state.provider = built
             return built
+
+    def count_request(request: Request) -> bool:
+        """Count one request from its address: True over the soft limit, a 429 over the hard one."""
+        hits = app.state.rate.hit(client_ip(request, limits.client_ip_header))
+        if hits > limits.hard_rate:
+            raise HTTPException(429, "too many requests", headers={"Retry-After": "60"})
+        return hits > limits.soft_rate
+
+    def limited_provider(web: WebSession, too_fast: bool) -> object:
+        source = get_provider()
+        if getattr(source, "error", None) is not None:
+            return source  # nothing will be called, so nothing is spent
+        return LimitedProvider(source, app.state.budget, web, limits.session_llm_calls, too_fast)
 
     def session_for(session_id: str) -> WebSession:
         web = app.state.store.get(session_id)
@@ -229,30 +288,33 @@ def create_app(
     def health() -> dict[str, Any]:
         source = get_provider()
         if getattr(source, "error", None) is not None:
-            return {"version": package_version(), "llm_configured": False}
+            return {"version": package_version(), "llm_configured": False, "llm_budget_remaining": False}
         return {
-            "version": package_version(), "llm_configured": True,
+            "version": package_version(), "llm_configured": True, "llm_budget_remaining": app.state.budget.remaining(),
             "provider": source.name, "model": getattr(source, "model", None),
         }
 
     @app.post("/api/session", response_model=SessionResponse)
-    def create_session() -> dict[str, str]:
+    def create_session(request: Request) -> dict[str, str]:
+        count_request(request)
         return {"session_id": app.state.store.create().id}
 
     @app.post("/api/compile", response_model=CompileResponse, response_model_exclude_none=True)
-    def compile_sentence(body: CompileRequest) -> dict[str, Any]:
+    def compile_sentence(body: CompileRequest, request: Request) -> dict[str, Any]:
+        too_fast = count_request(request)
         web = session_for(body.session_id)
         with web.lock:
             if len(web.statements) >= MAX_STATEMENTS:
                 raise HTTPException(409, f"a session holds at most {MAX_STATEMENTS} statements")
             web.mode = body.mode or web.mode
-            source = None if web.mode == "rules" else get_provider()
+            source = None if web.mode == "rules" else limited_provider(web, too_fast)
             result = pipeline.run(body.sentence, web.session, mode=web.mode, provider=source)
             app.state.store.touch(web)
             return _respond(web, result, body.sentence)
 
     @app.post("/api/answer", response_model=CompileResponse, response_model_exclude_none=True)
-    def answer_question(body: AnswerRequest) -> dict[str, Any]:
+    def answer_question(body: AnswerRequest, request: Request) -> dict[str, Any]:
+        count_request(request)
         web = session_for(body.session_id)
         with web.lock:
             if web.pending is None:
@@ -273,7 +335,8 @@ def create_app(
             }
 
     @app.post("/api/run", response_model=RunResponse, response_model_exclude_none=True)
-    def run_program(body: SessionRequest) -> dict[str, Any]:
+    def run_program(body: SessionRequest, request: Request) -> dict[str, Any]:
+        count_request(request)
         web = session_for(body.session_id)
         with web.lock:
             source = _source(web)

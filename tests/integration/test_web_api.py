@@ -241,11 +241,14 @@ def test_health_without_a_provider_says_it_is_not_configured():
     client = TestClient(create_app(provider_factory=Unavailable))
     response = client.get("/api/health")
     assert response.status_code == 200
-    assert response.json() == {"version": cli.package_version(), "llm_configured": False}
+    assert response.json() == {
+        "version": cli.package_version(), "llm_configured": False, "llm_budget_remaining": False,
+    }
 
 
 def test_health_names_the_provider_and_model():
     body = TestClient(create_app(provider=FakeProvider(RECORDED))).get("/api/health").json()
+    assert body.pop("llm_budget_remaining") is True
     assert body == {
         "version": cli.package_version(), "llm_configured": True, "provider": "fake",
         "model": json.loads(RECORDED.read_text(encoding="utf-8")).get("model", "fake"),
@@ -258,7 +261,8 @@ def test_health_never_exposes_the_key_or_the_base_url():
     )
     response = TestClient(create_app(provider=provider)).get("/api/health")
     assert response.json() == {
-        "version": cli.package_version(), "llm_configured": True, "provider": "openai", "model": "some-model",
+        "version": cli.package_version(), "llm_configured": True, "llm_budget_remaining": True,
+        "provider": "openai", "model": "some-model",
     }
     assert "SECRET" not in response.text and "secret" not in response.text and "example" not in response.text
 

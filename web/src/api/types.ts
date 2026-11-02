@@ -3,6 +3,7 @@ export type Check = 'ok' | 'fail' | 'skipped';
 export interface Health {
   version: string;
   llm_configured: boolean;
+  llm_budget_remaining?: boolean;
   provider?: string;
   model?: string;
   mode?: Mode;

@@ -472,7 +472,7 @@ any other text around the JSON makes it `malformed_json`.
 `low_confidence`, `bad_slots`, `not_grounded`, `not_covered`. A response with no readings is
 the model declining, not a failure, so it gets no warning.
 
-**Warning codes** (stage `llm`). In `W510`, `W511`, `W512` and `W514` the rule result stands:
+**Warning codes** (stage `llm`). In `W510`, `W511`, `W512`, `W514` and `W515` the rule result stands:
 compiled code, a question or `E101`. The numbers start at 510 because the CLI already uses
 `W506` and `E502`-`E507`.
 
@@ -483,6 +483,7 @@ compiled code, a question or `E101`. The numbers start at 510 because the CLI al
 | `W512` | The response held readings, but none survived validation. | `no LLM reading was usable (not_grounded), so this uses the rule result` |
 | `W513` | The accepted reading came from the LLM. Not a failure: V1 is the check that can catch a misreading, so it asks a person to read V1. | `this reading came from the LLM, not a rule; check the back-translation` |
 | `W514` | No provider is configured, or its configuration is invalid. | `the LLM is not configured (set PARSLEY_LLM_PROVIDER to anthropic, openai or fake), so this uses the rule result` |
+| `W515` | A usage limit of the deployment kept the sentence from the model; no call was made. Web API only. | `the LLM was not asked (the daily LLM allowance is used up), so this uses the rule result` |
 
 ## 8. Rejected English patterns
 

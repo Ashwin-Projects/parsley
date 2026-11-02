@@ -31,6 +31,7 @@ class WebSession:
     pending: PipelineResult | None = None  # the open question
     pending_sentence: str = ""
     mode: str = "rules"
+    llm_calls: int = 0  # kept across a reset, or a reset would refill the allowance
     lock: threading.Lock = field(default_factory=threading.Lock)
 
 

@@ -21,6 +21,9 @@ export default defineConfig({
       env: {
         PARSLEY_LLM_PROVIDER: 'fake',
         PARSLEY_LLM_FIXTURES: 'tests/fixtures_llm/e2e.json',
+        // One address runs the whole suite here, far above what one visitor sends.
+        PARSLEY_RATE_LIMIT_PER_MINUTE: '1000',
+        PARSLEY_HARD_RATE_LIMIT_PER_MINUTE: '1000',
       },
     },
     {

@@ -165,6 +165,13 @@ def test_errors_never_contain_the_api_key():
     assert "secret-key" not in repr(anthropic(Wire()))
 
 
+def test_a_connection_error_names_no_address_or_system_detail():
+    refused = urllib.error.URLError(OSError("[WinError 10061] refused by 10.0.0.5:8443"))
+    with pytest.raises(ProviderError) as caught:
+        openai(Wire(refused, refused)).propose("print x", CONTEXT)
+    assert "10.0.0.5" not in str(caught.value) and "WinError" not in str(caught.value)
+
+
 def test_oversized_response_is_refused():
     wire = Wire((200, b"x" * (llm.MAX_RESPONSE_BYTES + 1)))
     with pytest.raises(ProviderError, match="too large"):
