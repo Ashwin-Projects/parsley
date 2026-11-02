@@ -21,6 +21,7 @@ many items a number rests on. There is no combined score. Definitions:
 
 from __future__ import annotations
 
+import math
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -192,6 +193,13 @@ def suggestion_usefulness(outcomes: Iterable[Outcome]) -> Metric:
 def wrong_code_rate(outcomes: Sequence[Outcome]) -> Metric:
     wrong = sum(o.status == "ok" and category(o) != "correct" for o in outcomes)
     return Metric("wrong-code rate", wrong, len(outcomes))
+
+
+def p95(values: Sequence[float]) -> float | None:
+    """The 95th percentile by nearest rank; None with no values."""
+    if not values:
+        return None
+    return sorted(values)[math.ceil(0.95 * len(values)) - 1]
 
 
 def mutation_detection(results: Sequence[MutationResult]) -> dict[str, Metric]:

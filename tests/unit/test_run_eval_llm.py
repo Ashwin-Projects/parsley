@@ -102,6 +102,35 @@ def test_every_wrong_code_item_is_listed_with_what_the_model_proposed(workspace)
     assert "LLM" in section
 
 
+def test_the_csv_carries_the_latency_of_each_call(workspace):
+    evaluate(workspace, "--mode", "hybrid")
+    asked = [row for row in rows(workspace).values() if row["llm_asked"] == "True" and row["llm_failed"] == "False"]
+    assert asked and all(float(row["latency"]) >= 0 for row in asked)
+
+
+def test_the_summary_reports_p95_latency(workspace):
+    evaluate(workspace, "--mode", "hybrid")
+    assert "| P95 latency (seconds) |" in summary(workspace)
+
+
+def test_a_recording_keeps_each_calls_latency(workspace):
+    evaluate(workspace, "--mode", "hybrid", "--record", str(workspace / "recording.json"))
+    responses = json.loads((workspace / "recording.json").read_text(encoding="utf-8"))["responses"]
+    assert responses and all(entry["latency"] >= 0 for entry in responses)
+
+
+def test_a_recording_replays_to_the_same_results(workspace, monkeypatch):
+    def without_latency(table):
+        return {key: {**row, "latency": ""} for key, row in table.items()}
+
+    evaluate(workspace, "--mode", "hybrid", "--record", str(workspace / "recording.json"))
+    first = without_latency(rows(workspace))
+    monkeypatch.setenv("PARSLEY_LLM_FIXTURES", str(workspace / "recording.json"))
+    shutil.rmtree(workspace / "out")
+    assert evaluate(workspace, "--mode", "hybrid") == 0
+    assert without_latency(rows(workspace)) == first
+
+
 def test_the_llm_metrics_are_reported(workspace):
     evaluate(workspace, "--mode", "hybrid")
     text = summary(workspace)

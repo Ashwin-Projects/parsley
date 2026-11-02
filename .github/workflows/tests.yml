@@ -23,5 +23,7 @@ jobs:
           python -m pip install -r requirements.txt
       - name: Run tests
         run: python -m pytest -q
+      - name: Replay recorded model responses
+        run: python -m pytest tests/integration/test_llm_replay.py -q -rs
       - name: Run evaluation
         run: python -m parsley.eval.run_eval

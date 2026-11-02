@@ -137,6 +137,11 @@ frontend (ARCHITECTURE.md 2.12).
 playwright.real.config.ts` (in `web/`) runs the browser suite against the real API, replaying the
 hand-written `tests/fixtures_llm/e2e.json`.
 
+The real-model evaluation has still not been run, so no accuracy is claimed for `llm` or `hybrid`.
+`python -m parsley.eval.compare` prints the rules, hybrid and llm columns side by side.
+`tests/integration/test_llm_replay.py` replays `tests/fixtures_llm/recorded_<mode>.json` against
+`tests/golden/<mode>_results.csv` and skips until a real run has been recorded.
+
 ---
 
 ## Phase 0 - Setup (Days 1-2)

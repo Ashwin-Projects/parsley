@@ -33,7 +33,7 @@ from parsley.session import Session
 
 LLM_FIELDS = (
     "llm_asked", "llm_accepted", "llm_failed", "derived_question", "confirmed_minilang", "chosen_rule",
-    "back_translation", "llm_discarded", "llm_reading",
+    "back_translation", "llm_discarded", "llm_reading", "latency",
 )
 BY_CONDITION = dict[str, list[Outcome]]
 
@@ -112,6 +112,7 @@ def _llm_row(llm: LLMFacts | None) -> dict[str, str]:
         "derived_question": str(llm.derived_question), "confirmed_minilang": llm.confirmed_minilang or "",
         "chosen_rule": llm.rule_id, "back_translation": llm.back_translation,
         "llm_discarded": " ".join(llm.discarded), "llm_reading": llm.proposed,
+        "latency": "" if llm.latency is None else f"{llm.latency:.3f}",
     }
 
 
@@ -134,6 +135,7 @@ def _activity(outcomes: Sequence[Outcome]) -> list[str]:
     confirmed = sum(o.llm.confirmed_minilang == o.expected_minilang for o in derived)
     latencies = [fact.latency for fact in llm if fact.latency is not None]
     average = f"{sum(latencies) / len(latencies):.3f}" if latencies else "n/a"
+    slowest = metrics.p95(latencies)
     rows = [
         ("LLM calls", sum(fact.asked for fact in llm)),
         ("LLM call failures", sum(fact.failed for fact in llm)),
@@ -141,6 +143,7 @@ def _activity(outcomes: Sequence[Outcome]) -> list[str]:
         ("Derived-value questions", sum(fact.derived_question for fact in llm)),
         ("Derived questions whose confirmed reading is the gold code", Metric("", confirmed, len(derived)).text),
         ("Average latency (seconds)", average),
+        ("P95 latency (seconds)", "n/a" if slowest is None else f"{slowest:.3f}"),
     ]
     lines = ["| Measure | Value |", "|---|---|", *[f"| {name} | {value} |" for name, value in rows]]
     failed = sum(fact.failed for fact in llm)

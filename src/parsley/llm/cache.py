@@ -82,7 +82,8 @@ class MeteredProvider:
     def write_fixture(self, path: Path) -> None:
         """Save this run's responses as a ``FakeProvider`` fixtures file."""
         responses = [
-            {"sentence": entry["sentence"], "context": entry["context"], "raw": entry["texts"][0]}
+            {"sentence": entry["sentence"], "context": entry["context"], "raw": entry["texts"][0],
+             "latency": entry["latency"]}
             for _, entry in sorted(self._entries.items())
         ]
         data = {

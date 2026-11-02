@@ -2,6 +2,7 @@
 
 import pytest
 
+from parsley.eval import metrics
 from parsley.eval.metrics import (
     Metric, MutationResult, Outcome, ambiguity_precision, ambiguity_recall, category,
     context_resolution_accuracy, exact_match_accuracy, failure_breakdown, mutation_detection,
@@ -146,3 +147,10 @@ def test_whole_session_counts_only_sessions_where_every_sentence_is_right():
                 outcome("s2-2", subset="session", group="s2", status="setup_failed", minilang=None),
                 outcome("v", subset="valid")]
     assert session_exact_match(outcomes) == Metric("whole-session exact match", 1, 2)
+
+
+def test_p95_is_the_nearest_rank():
+    assert metrics.p95([]) is None
+    assert metrics.p95([3.0]) == 3.0
+    assert metrics.p95([float(n) for n in range(1, 101)]) == 95.0
+    assert metrics.p95([1.0, 2.0, 3.0]) == 3.0
