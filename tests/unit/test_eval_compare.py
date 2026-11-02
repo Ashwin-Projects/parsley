@@ -91,6 +91,14 @@ def test_llm_activity_and_latency(tmp_path):
     assert got["P95 latency (s)"] == "3.000"
 
 
+def test_results_written_before_the_latency_column_have_no_latency(tmp_path):
+    older = {key: value for key, value in LLM.items() if key != "latency"}
+    got = column(tmp_path, {**BASE, **older, "llm_asked": "True"})
+    assert got["LLM calls"] == "1"
+    assert got["Mean latency (s)"] == "n/a"
+    assert got["P95 latency (s)"] == "n/a"
+
+
 def test_rules_results_have_no_llm_columns(tmp_path):
     got = column(tmp_path, BASE, name="results.csv")
     assert got["LLM calls"] == "n/a"

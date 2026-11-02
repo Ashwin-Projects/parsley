@@ -43,7 +43,7 @@ ALLOWED_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")
 MAX_BODY_BYTES = 8 * 1024
 MAX_STATEMENTS = 500  # V3 re-runs the whole session on each sentence, so its cost grows with this
 MAX_ID_CHARS = 128
-PROVIDER_TIMEOUT = 14.0  # seconds; two attempts and the retry delay fit the frontend's 30-second deadline
+PROVIDER_TIMEOUT = 14.0  # seconds for a whole provider call, retry included; the frontend gives up at 30
 
 _STATUS = {"ok": "accepted", "needs_clarification": "clarify", "unsupported": "rejected", "error": "error"}
 _NO_QUESTION = {"code": "E102", "stage": "ambiguity", "message": "There is no pending question."}
@@ -178,11 +178,13 @@ class _CatchAll:
 
 def _load_provider(dotenv: Path = Path(".env")) -> object:
     from parsley.llm.config import load_provider
+    from parsley.llm.provider import DeadlineProvider
 
     provider = load_provider(dotenv)
-    if getattr(provider, "timeout", 0) > PROVIDER_TIMEOUT:
-        return replace(provider, timeout=PROVIDER_TIMEOUT)
-    return provider
+    if not hasattr(provider, "timeout"):
+        return provider  # nothing to wait for: a replay, or a configuration problem
+    bounded = replace(provider, timeout=min(provider.timeout, PROVIDER_TIMEOUT))
+    return DeadlineProvider(bounded, PROVIDER_TIMEOUT)
 
 
 def create_app(

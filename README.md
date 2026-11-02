@@ -337,8 +337,8 @@ It listens on `127.0.0.1:8000` and allows browser requests from `localhost:5173`
 came from `rules` or the `llm`. Each sentence goes through the same pipeline as the CLI. Sessions
 live in memory only: one expires after an hour unused, and at 1000 sessions the least recently
 used one is dropped. A sentence can be 500 characters long and a session can hold 500 statements.
-`llm` and `hybrid` use the provider configured above, loaded the first time it is needed, with at
-most 14 seconds per attempt. `/api/health` reads that configuration too, but never calls the model
+`llm` and `hybrid` use the provider configured above, loaded the first time it is needed, and a
+whole model call stops after 14 seconds. `/api/health` reads that configuration too, but never calls the model
 and never returns a key or a base URL.
 Unknown or expired sessions return 404, and errors never include a stack trace or a key.
 

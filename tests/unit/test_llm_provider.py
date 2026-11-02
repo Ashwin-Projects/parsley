@@ -2,6 +2,7 @@
 
 import json
 import socket
+import threading
 import urllib.error
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from parsley.llm import provider as llm
 from parsley.llm.prompt import LLMContext, SYSTEM_PROMPT
 from parsley.llm.provider import (
     AnthropicProvider,
+    DeadlineProvider,
     FakeProvider,
     OpenAICompatibleProvider,
     ProviderError,
@@ -182,6 +184,64 @@ def test_redirects_are_not_followed():
 
 
 # FakeProvider
+
+
+def test_a_deadline_stops_a_call_however_slowly_the_server_answers():
+    release = threading.Event()
+
+    def dripping(url, headers, body, timeout):
+        release.wait(5)  # stands in for bytes that each arrive inside the socket timeout
+        return 200, OPENAI_OK
+
+    provider = DeadlineProvider(openai(dripping), 0.05)
+    try:
+        with pytest.raises(ProviderTimeout, match="0.05 seconds"):
+            provider.propose("print x", CONTEXT)
+    finally:
+        release.set()
+
+
+def test_a_deadline_covers_the_retry_too():
+    release = threading.Event()
+    attempts = []
+
+    def failing_then_slow(url, headers, body, timeout):
+        attempts.append(timeout)
+        if len(attempts) > 1:
+            release.wait(5)
+        raise TimeoutError
+
+    provider = DeadlineProvider(openai(failing_then_slow), 0.05)
+    try:
+        with pytest.raises(ProviderTimeout):
+            provider.propose("print x", CONTEXT)
+    finally:
+        release.set()
+    assert len(attempts) == 2
+
+
+def test_a_deadline_passes_an_answer_through():
+    provider = DeadlineProvider(openai(Wire((200, OPENAI_OK))), 5)
+    assert provider.propose("print x", CONTEXT) == [RawProposal('{"readings": []}', "openai")]
+
+
+def test_a_deadline_passes_a_failure_through():
+    provider = DeadlineProvider(openai(Wire((401, b""))), 5)
+    with pytest.raises(ProviderError, match="401"):
+        provider.propose("print x", CONTEXT)
+
+
+def test_a_deadline_passes_an_unexpected_error_through_at_once():
+    def broken(url, headers, body, timeout):
+        raise ValueError("a bug, not a slow server")
+
+    with pytest.raises(ValueError, match="a bug"):
+        DeadlineProvider(openai(broken), 5).propose("print x", CONTEXT)
+
+
+def test_a_deadline_keeps_the_name_and_model_of_the_provider():
+    provider = DeadlineProvider(openai(Wire()), 5)
+    assert (provider.name, provider.model) == ("openai", "m")
 
 
 def test_fake_replays_a_recorded_reading_as_raw_json():

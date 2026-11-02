@@ -2,6 +2,7 @@
 
 import json
 import socket
+import threading
 from pathlib import Path
 
 import pytest
@@ -14,8 +15,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 from parsley import cli, pipeline  # noqa: E402
 from parsley.llm.provider import (  # noqa: E402
-    MAX_ATTEMPTS,
-    RETRY_DELAY,
+    DeadlineProvider,
     FakeProvider,
     OpenAICompatibleProvider,
     ProviderError,
@@ -285,17 +285,36 @@ def test_the_docker_entry_point_is_an_app():
     assert isinstance(importer.import_from_string("parsley.web.app:app"), FastAPI)
 
 
-def test_two_provider_attempts_fit_inside_the_browser_deadline(tmp_path):
+def test_a_whole_provider_call_fits_inside_the_browser_deadline(tmp_path):
     dotenv = tmp_path / ".env"
     dotenv.write_text("PARSLEY_LLM_PROVIDER=openai\nPARSLEY_LLM_MODEL=m\nPARSLEY_LLM_TIMEOUT=60\n", encoding="utf-8")
     provider = web_app._load_provider(dotenv)
-    assert provider.timeout * MAX_ATTEMPTS + RETRY_DELAY < BROWSER_DEADLINE
+    assert provider.seconds == web_app.PROVIDER_TIMEOUT < BROWSER_DEADLINE
+    assert provider.inner.timeout == web_app.PROVIDER_TIMEOUT
 
 
 def test_a_shorter_configured_timeout_is_kept(tmp_path):
     dotenv = tmp_path / ".env"
     dotenv.write_text("PARSLEY_LLM_PROVIDER=openai\nPARSLEY_LLM_MODEL=m\nPARSLEY_LLM_TIMEOUT=3\n", encoding="utf-8")
-    assert web_app._load_provider(dotenv).timeout == 3
+    assert web_app._load_provider(dotenv).inner.timeout == 3
+
+
+def test_a_provider_that_outlasts_the_deadline_falls_back_to_the_rules():
+    release = threading.Event()
+
+    def stalled(url, headers, body, timeout):
+        release.wait(5)
+        return 200, b""
+
+    inner = OpenAICompatibleProvider(model="m", base_url="http://localhost:1/v1", transport=stalled)
+    client = TestClient(create_app(provider=DeadlineProvider(inner, 0.05)))
+    session_id = client.post("/api/session").json()["session_id"]
+    try:
+        reply = client.post("/api/compile", json={"session_id": session_id, "sentence": "print 1", "mode": "llm"})
+    finally:
+        release.set()
+    assert reply.json()["status"] == "accepted"
+    assert any(d["code"].startswith("W5") for d in reply.json()["diagnostics"])
 
 
 # Program, run, undo, reset

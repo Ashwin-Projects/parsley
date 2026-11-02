@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import http.client
 import json
+import queue
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -209,6 +211,45 @@ class OpenAICompatibleProvider:
         if not isinstance(text, str):
             raise ProviderError("the provider's response has no message")
         return [RawProposal(text, self.name)]
+
+
+@dataclass(frozen=True)
+class DeadlineProvider:
+    """``inner`` with a limit on a whole call, retry included.
+
+    A socket timeout limits each read, so a server sending a byte at a time can outlast it, and
+    it does not cover name resolution. The call runs on a daemon thread so the caller stops
+    waiting at ``seconds`` either way; that thread ends when its own socket timeout fires.
+    """
+
+    inner: Provider
+    seconds: float
+
+    @property
+    def name(self) -> str:
+        return self.inner.name
+
+    @property
+    def model(self) -> str | None:
+        return getattr(self.inner, "model", None)
+
+    def propose(self, sentence: str, context: LLMContext) -> list[RawProposal]:
+        outcome: queue.SimpleQueue[list[RawProposal] | Exception] = queue.SimpleQueue()
+
+        def call() -> None:
+            try:
+                outcome.put(self.inner.propose(sentence, context))
+            except Exception as error:
+                outcome.put(error)
+
+        threading.Thread(target=call, daemon=True).start()
+        try:
+            result = outcome.get(timeout=self.seconds)
+        except queue.Empty:
+            raise ProviderTimeout(f"no answer within {self.seconds:g} seconds") from None
+        if isinstance(result, Exception):
+            raise result
+        return result
 
 
 def context_json(context: LLMContext) -> dict[str, list[Any]]:

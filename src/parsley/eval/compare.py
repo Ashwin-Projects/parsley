@@ -54,7 +54,7 @@ def _discards(rows: Sequence[Row]) -> str:
 def _llm_column(rows: Sequence[Row]) -> dict[str, str]:
     derived = [r for r in rows if r["derived_question"] == "True"]
     golden = [r for r in derived if r["expected_minilang"]]
-    latencies = [float(r["latency"]) for r in rows if r["latency"]]
+    latencies = [float(r["latency"]) for r in rows if r.get("latency")]
     slowest = p95(latencies)
     return {
         "Would match if confirmed": _rate(
