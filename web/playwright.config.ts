@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  testIgnore: '**/*.real.spec.ts', // these need the real API: playwright.real.config.ts
+  testIgnore: ['**/*.real.spec.ts', '**/*.docker.spec.ts'],
   fullyParallel: true,
   workers: 2,
   use: {

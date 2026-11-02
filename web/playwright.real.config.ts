@@ -9,7 +9,7 @@ const stubbed = (base.webServer as { url: string }[]).find((server) =>
 
 export default defineConfig({
   ...base,
-  testIgnore: [],
+  testIgnore: ['**/*.docker.spec.ts'],
   workers: 1,
   fullyParallel: false,
   webServer: [
