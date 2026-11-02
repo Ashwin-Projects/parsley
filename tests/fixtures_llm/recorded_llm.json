@@ -1,0 +1,2647 @@
+{
+ "version": 1,
+ "model": "openai/gpt-oss-120b",
+ "prompt_sha256": "716c3911a3fa883c0130ba5dfd765fe964374c93ba116191b811058f33747353",
+ "note": "Responses of openai/gpt-oss-120b, recorded by run_eval --record.",
+ "responses": [
+  {
+   "sentence": "change crateTotal to 18",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"crateTotal\"},\"value\":{\"kind\":\"number\",\"text\":\"18\"}},\"confidence\":0.95}]}",
+   "latency": 0.7376685999915935
+  },
+  {
+   "sentence": "show welcomeBanner",
+   "context": {
+    "symbols": [
+     [
+      "welcomeBanner",
+      "string"
+     ]
+    ],
+    "reference_stack": [
+     "welcomeBanner"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7395273000001907
+  },
+  {
+   "sentence": "print northStock",
+   "context": {
+    "symbols": [
+     [
+      "northStock",
+      "number"
+     ],
+     [
+      "ticketQuota",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "northStock",
+     "ticketQuota"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"northStock\"}},\"confidence\":1.0}]}",
+   "latency": 0.7581951000029221
+  },
+  {
+   "sentence": "define a function called farewell with parameter guest",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.8794125000131316
+  },
+  {
+   "sentence": "change unitPrice to 2.75",
+   "context": {
+    "symbols": [
+     [
+      "unitPrice",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "unitPrice"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"unitPrice\"},\"value\":{\"kind\":\"number\",\"text\":\"2.75\"}},\"confidence\":0.98}]}",
+   "latency": 2.0002989000058733
+  },
+  {
+   "sentence": "set orchardCount to",
+   "context": {
+    "symbols": [
+     [
+      "orchardCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "orchardCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"orchardCount\"},\"value\":null},\"confidence\":0.95}]}",
+   "latency": 1.6038220999762416
+  },
+  {
+   "sentence": "print \"copper\" or \"silver\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 1.1385655000049155
+  },
+  {
+   "sentence": "initialize seedCount with zero",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"seedCount\"},\"value\":{\"kind\":\"number\",\"text\":\"0\"}},\"confidence\":0.97}]}",
+   "latency": 1.3834574000211433
+  },
+  {
+   "sentence": "calculate the square root of 81",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7938126999943051
+  },
+  {
+   "sentence": "change sailCount to 2 or 4 or 8",
+   "context": {
+    "symbols": [
+     [
+      "sailCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "sailCount"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 1.1694894999964163
+  },
+  {
+   "sentence": "assign 200 to ovenTemp",
+   "context": {
+    "symbols": [
+     [
+      "ovenTemp",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "ovenTemp"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"ovenTemp\"},\"value\":{\"kind\":\"number\",\"text\":\"200\"}},\"confidence\":0.99}]}",
+   "latency": 1.0638794999977108
+  },
+  {
+   "sentence": "decrease it by 2",
+   "context": {
+    "symbols": [
+     [
+      "northStock",
+      "number"
+     ],
+     [
+      "ticketQuota",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "ticketQuota",
+     "northStock"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"2\"}},\"confidence\":0.99}]}",
+   "latency": 1.265671500004828
+  },
+  {
+   "sentence": "set queueLimit to 14 or 28",
+   "context": {
+    "symbols": [
+     [
+      "queueLimit",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "queueLimit"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"queueLimit\"},\"value\":{\"kind\":\"word\",\"text\":\"14 or 28\"}},\"confidence\":0.6}]}",
+   "latency": 1.6903426999924704
+  },
+  {
+   "sentence": "print cisternVolume",
+   "context": {
+    "symbols": [
+     [
+      "cisternVolume",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "cisternVolume"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"cisternVolume\"}},\"confidence\":0.99}]}",
+   "latency": 1.2707021000096574
+  },
+  {
+   "sentence": "multiply parcelWeight",
+   "context": {
+    "symbols": [
+     [
+      "parcelWeight",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "parcelWeight"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"multiply\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"parcelWeight\"},\"amount\":null},\"confidence\":0.9}]}",
+   "latency": 1.0955063999863341
+  },
+  {
+   "sentence": "show paperSheets",
+   "context": {
+    "symbols": [
+     [
+      "marbleCount",
+      "number"
+     ],
+     [
+      "paperSheets",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "paperSheets",
+     "marbleCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"paperSheets\"}},\"confidence\":0.99}]}",
+   "latency": 1.0007164000126068
+  },
+  {
+   "sentence": "multiply ribbonLength by 3 plus 4",
+   "context": {
+    "symbols": [
+     [
+      "ribbonLength",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "ribbonLength"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"multiply\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"ribbonLength\"},\"amount\":{\"kind\":\"binop\",\"op\":\"+\",\"left\":{\"kind\":\"number\",\"text\":\"3\"},\"right\":{\"kind\":\"number\",\"text\":\"4\"}}},\"confidence\":0.95}]}",
+   "latency": 1.252273799997056
+  },
+  {
+   "sentence": "repeat 3 times show \"ping\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.774383800016949
+  },
+  {
+   "sentence": "if pressure is less than or equal to 8 then change flag to 1",
+   "context": {
+    "symbols": [
+     [
+      "pressure",
+      "number"
+     ],
+     [
+      "flag",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "pressure",
+     "flag"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\"<=\",\"left\":{\"kind\":\"word\",\"text\":\"pressure\"},\"right\":{\"kind\":\"number\",\"text\":\"8\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"flag\"},\"value\":{\"kind\":\"number\",\"text\":\"1\"}}}},\"confidence\":0.99}]}",
+   "latency": 1.7060741999885067
+  },
+  {
+   "sentence": "set area to width times height plus 2",
+   "context": {
+    "symbols": [
+     [
+      "width",
+      "number"
+     ],
+     [
+      "height",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "width",
+     "height"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"area\"},\"value\":{\"kind\":\"binop\",\"op\":\"+\",\"left\":{\"kind\":\"binop\",\"op\":\"*\",\"left\":{\"kind\":\"name\",\"text\":\"width\"},\"right\":{\"kind\":\"name\",\"text\":\"height\"}},\"right\":{\"kind\":\"number\",\"text\":\"2\"}}},\"confidence\":1.0}]}",
+   "latency": 1.9977211999939755
+  },
+  {
+   "sentence": "create a variable called seedCount and set it to 0",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"seedCount\"},\"value\":{\"kind\":\"number\",\"text\":\"0\"}},\"confidence\":1.0}]}",
+   "latency": 0.8269752999767661
+  },
+  {
+   "sentence": "bump visits up by 3",
+   "context": {
+    "symbols": [
+     [
+      "visits",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "visits"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"visits\"},\"amount\":{\"kind\":\"number\",\"text\":\"3\"}},\"confidence\":0.97}]}",
+   "latency": 0.8644020999781787
+  },
+  {
+   "sentence": "set lanternCount to 12",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"lanternCount\"},\"value\":{\"kind\":\"number\",\"text\":\"12\"}},\"confidence\":1.0}]}",
+   "latency": 0.9232920000213198
+  },
+  {
+   "sentence": "while lanternCount is below 9 print waiting",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6317436000099406
+  },
+  {
+   "sentence": "join \"North\" and \"Star\" and print the result",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 1.5361629000108223
+  },
+  {
+   "sentence": "reduce jarCount",
+   "context": {
+    "symbols": [
+     [
+      "jarCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "jarCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"jarCount\"},\"amount\":null},\"confidence\":0.9}]}",
+   "latency": 1.5607931000122335
+  },
+  {
+   "sentence": "if windSpeed is above 25 then print \"stay inside\"",
+   "context": {
+    "symbols": [
+     [
+      "windSpeed",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "windSpeed"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\">\",\"left\":{\"kind\":\"word\",\"text\":\"windSpeed\"},\"right\":{\"kind\":\"number\",\"text\":\"25\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"stay inside\",\"quoted\":true}}}},\"confidence\":1.0}]}",
+   "latency": 1.8408099999942351
+  },
+  {
+   "sentence": "make a variable called orchardRows and set it to 14",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"orchardRows\"},\"value\":{\"kind\":\"number\",\"text\":\"14\"}},\"confidence\":0.99}]}",
+   "latency": 1.0876030000217725
+  },
+  {
+   "sentence": "call the function farewell",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.4655618999968283
+  },
+  {
+   "sentence": "if mode is not equal to \"paused\" then display \"go\"",
+   "context": {
+    "symbols": [
+     [
+      "mode",
+      "string"
+     ]
+    ],
+    "reference_stack": [
+     "mode"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\"!=\",\"left\":{\"kind\":\"word\",\"text\":\"mode\"},\"right\":{\"kind\":\"string\",\"text\":\"paused\",\"quoted\":true}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"go\",\"quoted\":true}}}},\"confidence\":0.99}]}",
+   "latency": 1.510675799974706
+  },
+  {
+   "sentence": "make temperature six below zero",
+   "context": {
+    "symbols": [
+     [
+      "temperature",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "temperature"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"temperature\"},\"value\":{\"kind\":\"neg\",\"operand\":{\"kind\":\"number\",\"text\":\"6\"}}},\"confidence\":0.95}]}",
+   "latency": 2.39714460002142
+  },
+  {
+   "sentence": "for each parcel in shipments print parcel",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7555229999998119
+  },
+  {
+   "sentence": "add 6 to it",
+   "context": {
+    "symbols": [
+     [
+      "northStock",
+      "number"
+     ],
+     [
+      "ticketQuota",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "northStock",
+     "ticketQuota"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"6\"}},\"confidence\":0.95}]}",
+   "latency": 1.8514085999922827
+  },
+  {
+   "sentence": "print routeOffset",
+   "context": {
+    "symbols": [
+     [
+      "routeOffset",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "routeOffset"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"routeOffset\"}},\"confidence\":1.0}]}",
+   "latency": 0.8785295999841765
+  },
+  {
+   "sentence": "go to line 24",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7688833999854978
+  },
+  {
+   "sentence": "let seedCount be 0",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"seedCount\"},\"value\":{\"kind\":\"number\",\"text\":\"0\"}},\"confidence\":1.0}]}",
+   "latency": 1.023794300010195
+  },
+  {
+   "sentence": "let tideLevel be 2.5",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"tideLevel\"},\"value\":{\"kind\":\"number\",\"text\":\"2.5\"}},\"confidence\":0.98}]}",
+   "latency": 1.1142252999998163
+  },
+  {
+   "sentence": "return early from this program",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.48443070001667365
+  },
+  {
+   "sentence": "set it to \"Welcome Aboard\"",
+   "context": {
+    "symbols": [
+     [
+      "welcomeBanner",
+      "string"
+     ]
+    ],
+    "reference_stack": [
+     "welcomeBanner"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"value\":{\"kind\":\"string\",\"text\":\"Welcome Aboard\",\"quoted\":true}},\"confidence\":1.0}]}",
+   "latency": 1.237093100004131
+  },
+  {
+   "sentence": "divide it by 4",
+   "context": {
+    "symbols": [
+     [
+      "cisternVolume",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "cisternVolume"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"divide\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"4\"}},\"confidence\":1.0}]}",
+   "latency": 1.2196468000183813
+  },
+  {
+   "sentence": "when level reaches 10 or higher, print \"ready\"",
+   "context": {
+    "symbols": [
+     [
+      "level",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "level"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\">=\",\"left\":{\"kind\":\"word\",\"text\":\"level\"},\"right\":{\"kind\":\"number\",\"text\":\"10\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"ready\",\"quoted\":true}}}},\"confidence\":1.0}]}",
+   "latency": 2.123305800021626
+  },
+  {
+   "sentence": "display tileArea",
+   "context": {
+    "symbols": [
+     [
+      "tileArea",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "tileArea"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6769214000087231
+  },
+  {
+   "sentence": "raise visits by 3",
+   "context": {
+    "symbols": [
+     [
+      "visits",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "visits"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"visits\"},\"amount\":{\"kind\":\"number\",\"text\":\"3\"}},\"confidence\":0.95}]}",
+   "latency": 1.2035354000108782
+  },
+  {
+   "sentence": "sort autumnBins in ascending order",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.48391790001187474
+  },
+  {
+   "sentence": "repeat 4 times multiply batchSize by 2 plus 7",
+   "context": {
+    "symbols": [
+     [
+      "batchSize",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "batchSize"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"repeat\",\"slots\":{\"count\":{\"kind\":\"count\",\"text\":\"4\"},\"body\":{\"kind\":\"statement\",\"intent\":\"multiply\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"batchSize\"},\"amount\":{\"kind\":\"binop\",\"op\":\"+\",\"left\":{\"kind\":\"number\",\"text\":\"2\"},\"right\":{\"kind\":\"number\",\"text\":\"7\"}}}}},\"confidence\":0.96}]}",
+   "latency": 1.4154617000021972
+  },
+  {
+   "sentence": "display \"paperSheets\"",
+   "context": {
+    "symbols": [
+     [
+      "marbleCount",
+      "number"
+     ],
+     [
+      "paperSheets",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "marbleCount",
+     "paperSheets"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.9150573999795597
+  },
+  {
+   "sentence": "create a list called autumnBins",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6527655000099912
+  },
+  {
+   "sentence": "raise points by 4",
+   "context": {
+    "symbols": [
+     [
+      "points",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "points"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"points\"},\"amount\":{\"kind\":\"number\",\"text\":\"4\"}},\"confidence\":0.95}]}",
+   "latency": 0.8037879000185058
+  },
+  {
+   "sentence": "open the file harvest.csv",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.9055083999992348
+  },
+  {
+   "sentence": "subtract 8 from it",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"8\"}},\"confidence\":0.97}]}",
+   "latency": 1.3922548999835271
+  },
+  {
+   "sentence": "set routeOffset to negative 3",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"routeOffset\"},\"value\":{\"kind\":\"neg\",\"operand\":{\"kind\":\"number\",\"text\":\"3\"}}},\"confidence\":0.99}]}",
+   "latency": 0.8954082000127528
+  },
+  {
+   "sentence": "subtract 3 from it",
+   "context": {
+    "symbols": [
+     [
+      "crateTotal",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "crateTotal"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"3\"}},\"confidence\":0.95}]}",
+   "latency": 1.1445484999858309
+  },
+  {
+   "sentence": "update reserveLevel to",
+   "context": {
+    "symbols": [
+     [
+      "reserveLevel",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "reserveLevel"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"reserveLevel\"},\"value\":null},\"confidence\":0.9}]}",
+   "latency": 1.2575157000101171
+  },
+  {
+   "sentence": "declare a new variable named seedCount with value 0",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"seedCount\"},\"value\":{\"kind\":\"number\",\"text\":\"0\"}},\"confidence\":1.0}]}",
+   "latency": 0.9574455999827478
+  },
+  {
+   "sentence": "change temperature to -6",
+   "context": {
+    "symbols": [
+     [
+      "temperature",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "temperature"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"temperature\"},\"value\":{\"kind\":\"neg\",\"operand\":{\"kind\":\"number\",\"text\":\"6\"}}},\"confidence\":0.99}]}",
+   "latency": 0.9017791000078432
+  },
+  {
+   "sentence": "print \"fabricRolls\"",
+   "context": {
+    "symbols": [
+     [
+      "fabricRolls",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "fabricRolls"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"fabricRolls\",\"quoted\":true}},\"confidence\":1.0}]}",
+   "latency": 1.11720839998452
+  },
+  {
+   "sentence": "set beaconLevel to 3 or 6 or 9 or 12",
+   "context": {
+    "symbols": [
+     [
+      "beaconLevel",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "beaconLevel"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.9921634999918751
+  },
+  {
+   "sentence": "change paperSheets to 30",
+   "context": {
+    "symbols": [
+     [
+      "marbleCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "marbleCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"paperSheets\"},\"value\":{\"kind\":\"number\",\"text\":\"30\"}},\"confidence\":0.97}]}",
+   "latency": 1.0908043000090402
+  },
+  {
+   "sentence": "set bellCount to doorCount plus 1",
+   "context": {
+    "symbols": [
+     [
+      "doorCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "doorCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"bellCount\"},\"value\":{\"kind\":\"binop\",\"op\":\"+\",\"left\":{\"kind\":\"word\",\"text\":\"doorCount\"},\"right\":{\"kind\":\"number\",\"text\":\"1\"}}},\"confidence\":0.95}]}",
+   "latency": 1.424911100009922
+  },
+  {
+   "sentence": "set welcomeBanner to \"Good Morning\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"welcomeBanner\"},\"value\":{\"kind\":\"string\",\"text\":\"Good Morning\",\"quoted\":true}},\"confidence\":1.0}]}",
+   "latency": 0.8907026000088081
+  },
+  {
+   "sentence": "increase parcelWieght by 2",
+   "context": {
+    "symbols": [
+     [
+      "parcelWeight",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "parcelWeight"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"parcelWieght\"},\"amount\":{\"kind\":\"number\",\"text\":\"2\"}},\"confidence\":0.99}]}",
+   "latency": 0.8031532000168227
+  },
+  {
+   "sentence": "multiply it by 3",
+   "context": {
+    "symbols": [
+     [
+      "marbleCount",
+      "number"
+     ],
+     [
+      "paperSheets",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "paperSheets",
+     "marbleCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"multiply\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"3\"}},\"confidence\":0.98}]}",
+   "latency": 1.0674470999801997
+  },
+  {
+   "sentence": "write the report to harvest.csv",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[]}",
+   "latency": 0.8654132999945432
+  },
+  {
+   "sentence": "raise it",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":null},\"confidence\":0.9}]}",
+   "latency": 1.032550200005062
+  },
+  {
+   "sentence": "change ticketPrice to",
+   "context": {
+    "symbols": [
+     [
+      "ticketPrice",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "ticketPrice"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"ticketPrice\"},\"value\":null},\"confidence\":1.0}]}",
+   "latency": 1.0095769999898039
+  },
+  {
+   "sentence": "if mode does not equal \"paused\" then show \"go\"",
+   "context": {
+    "symbols": [
+     [
+      "mode",
+      "string"
+     ]
+    ],
+    "reference_stack": [
+     "mode"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 1.0909892000199761
+  },
+  {
+   "sentence": "if level is at least 10 then print \"ready\"",
+   "context": {
+    "symbols": [
+     [
+      "level",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "level"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\">=\",\"left\":{\"kind\":\"name\",\"text\":\"level\"},\"right\":{\"kind\":\"number\",\"text\":\"10\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"ready\",\"quoted\":true}}}},\"confidence\":1.0}]}",
+   "latency": 1.6448652000108268
+  },
+  {
+   "sentence": "set roomTemp to 22",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"roomTemp\"},\"value\":{\"kind\":\"number\",\"text\":\"22\"}},\"confidence\":1.0}]}",
+   "latency": 1.007278300006874
+  },
+  {
+   "sentence": "display",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":null},\"confidence\":0.8}]}",
+   "latency": 1.2364768000261392
+  },
+  {
+   "sentence": "set subtotal to subtotal times 4",
+   "context": {
+    "symbols": [
+     [
+      "subtotal",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "subtotal"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"subtotal\"},\"value\":{\"kind\":\"binop\",\"op\":\"*\",\"left\":{\"kind\":\"word\",\"text\":\"subtotal\"},\"right\":{\"kind\":\"number\",\"text\":\"4\"}}},\"confidence\":0.99}]}",
+   "latency": 1.1823076999862678
+  },
+  {
+   "sentence": "update ferryFare to 15",
+   "context": {
+    "symbols": [
+     [
+      "ferryFare",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "ferryFare"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"ferryFare\"},\"value\":{\"kind\":\"number\",\"text\":\"15\"}},\"confidence\":0.99}]}",
+   "latency": 1.2729001000116114
+  },
+  {
+   "sentence": "show \"North\" + \"Star\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.9290913999720942
+  },
+  {
+   "sentence": "change subtotal to subtotal multiplied by 4",
+   "context": {
+    "symbols": [
+     [
+      "subtotal",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "subtotal"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"subtotal\"},\"value\":{\"kind\":\"binop\",\"op\":\"*\",\"left\":{\"kind\":\"word\",\"text\":\"subtotal\"},\"right\":{\"kind\":\"number\",\"text\":\"4\"}}},\"confidence\":0.97}]}",
+   "latency": 1.069095999991987
+  },
+  {
+   "sentence": "show \"Launch Ready\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.8516137999831699
+  },
+  {
+   "sentence": "add 7 to it",
+   "context": {
+    "symbols": [
+     [
+      "lanternCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "lanternCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"7\"}},\"confidence\":0.95}]}",
+   "latency": 1.0919748999876902
+  },
+  {
+   "sentence": "add 4 to it",
+   "context": {
+    "symbols": [
+     [
+      "points",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "points"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"4\"}},\"confidence\":0.7},{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"value\":{\"kind\":\"binop\",\"op\":\"+\",\"left\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"right\":{\"kind\":\"number\",\"text\":\"4\"}}},\"confidence\":0.4}]}",
+   "latency": 2.2514924999850336
+  },
+  {
+   "sentence": "unless mode equals \"paused\", print \"go\"",
+   "context": {
+    "symbols": [
+     [
+      "mode",
+      "string"
+     ]
+    ],
+    "reference_stack": [
+     "mode"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\"==\",\"left\":{\"kind\":\"word\",\"text\":\"mode\"},\"right\":{\"kind\":\"string\",\"text\":\"paused\",\"quoted\":true}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"go\",\"quoted\":true}}}},\"confidence\":0.9}]}",
+   "latency": 1.9268731999909505
+  },
+  {
+   "sentence": "print \"Launch Ready\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"Launch Ready\",\"quoted\":true}},\"confidence\":1.0}]}",
+   "latency": 0.8738652000029106
+  },
+  {
+   "sentence": "change kiteCount to 9",
+   "context": {
+    "symbols": [
+     [
+      "kiteCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "kiteCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"kiteCount\"},\"value\":{\"kind\":\"number\",\"text\":\"9\"}},\"confidence\":0.98}]}",
+   "latency": 1.3728854000219144
+  },
+  {
+   "sentence": "display forecast",
+   "context": {
+    "symbols": [
+     [
+      "roomTemp",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "roomTemp"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"forecast\"}},\"confidence\":0.9}]}",
+   "latency": 1.4073758000158705
+  },
+  {
+   "sentence": "divide budget by 5",
+   "context": {
+    "symbols": [
+     [
+      "budget",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "budget"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"divide\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"budget\"},\"amount\":{\"kind\":\"number\",\"text\":\"5\"}},\"confidence\":1.0}]}",
+   "latency": 1.1731253000034485
+  },
+  {
+   "sentence": "append 12 to autumnBins",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6706753999751527
+  },
+  {
+   "sentence": "subtract 2 from tickets",
+   "context": {
+    "symbols": [
+     [
+      "tickets",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "tickets"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"tickets\"},\"amount\":{\"kind\":\"number\",\"text\":\"2\"}},\"confidence\":0.95}]}",
+   "latency": 1.1723620000120718
+  },
+  {
+   "sentence": "assign 2.75 to unitPrice",
+   "context": {
+    "symbols": [
+     [
+      "unitPrice",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "unitPrice"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"unitPrice\"},\"value\":{\"kind\":\"number\",\"text\":\"2.75\"}},\"confidence\":0.99}]}",
+   "latency": 0.9067565999866929
+  },
+  {
+   "sentence": "add 1.5 to it",
+   "context": {
+    "symbols": [
+     [
+      "routeOffset",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "routeOffset"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"routeOffset\"},\"amount\":{\"kind\":\"number\",\"text\":\"1.5\"}},\"confidence\":0.97}]}",
+   "latency": 1.1514011999825016
+  },
+  {
+   "sentence": "display compassHeading",
+   "context": {
+    "symbols": [
+     [
+      "compassHeading",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "compassHeading"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"compassHeading\"}},\"confidence\":0.99}]}",
+   "latency": 1.1626759999780916
+  },
+  {
+   "sentence": "set voucehrCount to 19",
+   "context": {
+    "symbols": [
+     [
+      "voucherCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "voucherCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"voucehrCount\"},\"value\":{\"kind\":\"number\",\"text\":\"19\"}},\"confidence\":0.99}]}",
+   "latency": 1.1816185000061523
+  },
+  {
+   "sentence": "show cloth",
+   "context": {
+    "symbols": [
+     [
+      "fabricRolls",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "fabricRolls"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"cloth\"}},\"confidence\":0.95}]}",
+   "latency": 0.8212726000056136
+  },
+  {
+   "sentence": "quadruple subtotal",
+   "context": {
+    "symbols": [
+     [
+      "subtotal",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "subtotal"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"multiply\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"subtotal\"},\"amount\":{\"kind\":\"number\",\"text\":\"4\",\"derived\":true}},\"confidence\":0.9}]}",
+   "latency": 1.2381479000032414
+  },
+  {
+   "sentence": "repeat 2 times print fabricRolls",
+   "context": {
+    "symbols": [
+     [
+      "fabricRolls",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "fabricRolls"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"repeat\",\"slots\":{\"count\":{\"kind\":\"count\",\"text\":\"2\"},\"body\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"fabricRolls\"}}}},\"confidence\":1.0}]}",
+   "latency": 1.5649885000020731
+  },
+  {
+   "sentence": "decrease ledgerBalance by 8",
+   "context": {
+    "symbols": [
+     [
+      "ledgerBalance",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "ledgerBalance"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"ledgerBalance\"},\"amount\":{\"kind\":\"number\",\"text\":\"8\"}},\"confidence\":0.99}]}",
+   "latency": 0.932623299973784
+  },
+  {
+   "sentence": "subtract 6 from pebbleTotal",
+   "context": {
+    "symbols": [
+     [
+      "pebbleTotal",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "pebbleTotal"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"pebbleTotal\"},\"amount\":{\"kind\":\"number\",\"text\":\"6\"}},\"confidence\":0.98}]}",
+   "latency": 1.0313088000111748
+  },
+  {
+   "sentence": "add 3 to visits",
+   "context": {
+    "symbols": [
+     [
+      "visits",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "visits"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"visits\"},\"amount\":{\"kind\":\"number\",\"text\":\"3\"}},\"confidence\":0.99}]}",
+   "latency": 1.2740430999838281
+  },
+  {
+   "sentence": "import statistics",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.8211330999911297
+  },
+  {
+   "sentence": "lower tickets by 2",
+   "context": {
+    "symbols": [
+     [
+      "tickets",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "tickets"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"tickets\"},\"amount\":{\"kind\":\"number\",\"text\":\"2\"}},\"confidence\":0.95}]}",
+   "latency": 0.8668176000064705
+  },
+  {
+   "sentence": "set fabricRolls to 9",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"fabricRolls\"},\"value\":{\"kind\":\"number\",\"text\":\"9\"}},\"confidence\":0.99}]}",
+   "latency": 1.0816158999805339
+  },
+  {
+   "sentence": "display goods",
+   "context": {
+    "symbols": [
+     [
+      "northStock",
+      "number"
+     ],
+     [
+      "ticketQuota",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "northStock",
+     "ticketQuota"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"goods\"}},\"confidence\":0.95}]}",
+   "latency": 1.313262899988331
+  },
+  {
+   "sentence": "display compass",
+   "context": {
+    "symbols": [
+     [
+      "routeOffset",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "routeOffset"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 1.1819909999903757
+  },
+  {
+   "sentence": "set temperature to negative 6",
+   "context": {
+    "symbols": [
+     [
+      "temperature",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "temperature"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"temperature\"},\"value\":{\"kind\":\"neg\",\"operand\":{\"kind\":\"number\",\"text\":\"6\"}}},\"confidence\":0.99}]}",
+   "latency": 1.0678156999929342
+  },
+  {
+   "sentence": "set flag to 1 provided pressure does not exceed 8",
+   "context": {
+    "symbols": [
+     [
+      "pressure",
+      "number"
+     ],
+     [
+      "flag",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "pressure",
+     "flag"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\"<=\",\"left\":{\"kind\":\"name\",\"text\":\"pressure\"},\"right\":{\"kind\":\"number\",\"text\":\"8\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"flag\"},\"value\":{\"kind\":\"number\",\"text\":\"1\"}}}},\"confidence\":0.95}]}",
+   "latency": 1.2746056000178214
+  },
+  {
+   "sentence": "print \"lanternCount\"",
+   "context": {
+    "symbols": [
+     [
+      "lanternCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "lanternCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"lanternCount\",\"quoted\":true}},\"confidence\":0.99}]}",
+   "latency": 0.7619882999861147
+  },
+  {
+   "sentence": "show ticketQuota",
+   "context": {
+    "symbols": [
+     [
+      "northStock",
+      "number"
+     ],
+     [
+      "ticketQuota",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "ticketQuota",
+     "northStock"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"ticketQuota\"}},\"confidence\":0.98}]}",
+   "latency": 1.241485599981388
+  },
+  {
+   "sentence": "assign 32 to cisternVolume",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"cisternVolume\"},\"value\":{\"kind\":\"number\",\"text\":\"32\"}},\"confidence\":1.0}]}",
+   "latency": 0.8544896999956109
+  },
+  {
+   "sentence": "compute the sine of 45",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7222847000230104
+  },
+  {
+   "sentence": "print \"ticketQuota\"",
+   "context": {
+    "symbols": [
+     [
+      "northStock",
+      "number"
+     ],
+     [
+      "ticketQuota",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "northStock",
+     "ticketQuota"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"ticketQuota\",\"quoted\":true}},\"confidence\":1.0}]}",
+   "latency": 0.8621229999989737
+  },
+  {
+   "sentence": "output balance",
+   "context": {
+    "symbols": [
+     [
+      "balance",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "balance"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"balance\"}},\"confidence\":0.9}]}",
+   "latency": 0.8903319000091869
+  },
+  {
+   "sentence": "replace the value of unitPrice with 2.75",
+   "context": {
+    "symbols": [
+     [
+      "unitPrice",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "unitPrice"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"unitPrice\"},\"value\":{\"kind\":\"word\",\"text\":\"2.75\"}},\"confidence\":1.0}]}",
+   "latency": 1.359433200006606
+  },
+  {
+   "sentence": "reduce it by 3",
+   "context": {
+    "symbols": [
+     [
+      "roomTemp",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "roomTemp"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"3\"}},\"confidence\":0.95}]}",
+   "latency": 1.3813756000017747
+  },
+  {
+   "sentence": "multiply crateWeight by 4",
+   "context": {
+    "symbols": [
+     [
+      "crateWeight",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "crateWeight"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"multiply\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"crateWeight\"},\"amount\":{\"kind\":\"number\",\"text\":\"4\"}},\"confidence\":0.99}]}",
+   "latency": 1.3887057000247296
+  },
+  {
+   "sentence": "repeat print \"lunch ready\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"repeat\",\"slots\":{\"count\":null,\"body\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"lunch ready\",\"quoted\":true}}}},\"confidence\":1.0}]}",
+   "latency": 1.2201066999987233
+  },
+  {
+   "sentence": "repeat 4 times print \"wave\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"repeat\",\"slots\":{\"count\":{\"kind\":\"count\",\"text\":\"4\"},\"body\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"wave\",\"quoted\":true}}}},\"confidence\":1.0}]}",
+   "latency": 1.4578877000021748
+  },
+  {
+   "sentence": "update tileArea to 7",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"tileArea\"},\"value\":{\"kind\":\"number\",\"text\":\"7\"}},\"confidence\":0.95}]}",
+   "latency": 0.9623073000111617
+  },
+  {
+   "sentence": "print fabricRolls",
+   "context": {
+    "symbols": [
+     [
+      "fabricRolls",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "fabricRolls"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"fabricRolls\"}},\"confidence\":1.0}]}",
+   "latency": 1.0291727000148967
+  },
+  {
+   "sentence": "make budget one fifth of its current value",
+   "context": {
+    "symbols": [
+     [
+      "budget",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "budget"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"budget\"},\"value\":{\"kind\":\"binop\",\"op\":\"/\",\"left\":{\"kind\":\"word\",\"text\":\"its\"},\"right\":{\"kind\":\"number\",\"text\":\"5\"}}},\"confidence\":0.95}]}",
+   "latency": 2.466145599988522
+  },
+  {
+   "sentence": "send an email to the whole team",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6954394000058528
+  },
+  {
+   "sentence": "assign negative 6 to temperature",
+   "context": {
+    "symbols": [
+     [
+      "temperature",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "temperature"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"temperature\"},\"value\":{\"kind\":\"neg\",\"operand\":{\"kind\":\"number\",\"text\":\"6\"}}},\"confidence\":1.0}]}",
+   "latency": 1.467453299992485
+  },
+  {
+   "sentence": "display \"tileArea\"",
+   "context": {
+    "symbols": [
+     [
+      "tileArea",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "tileArea"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.9200802000123076
+  },
+  {
+   "sentence": "display rain",
+   "context": {
+    "symbols": [
+     [
+      "cisternVolume",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "cisternVolume"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"rain\"}},\"confidence\":0.98}]}",
+   "latency": 0.9745042999857105
+  },
+  {
+   "sentence": "add 4 to that",
+   "context": {
+    "symbols": [
+     [
+      "points",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "points"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"that\"},\"amount\":{\"kind\":\"number\",\"text\":\"4\"}},\"confidence\":0.95}]}",
+   "latency": 1.2835413000138942
+  },
+  {
+   "sentence": "show \"roomTemp\"",
+   "context": {
+    "symbols": [
+     [
+      "roomTemp",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "roomTemp"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"roomTemp\",\"quoted\":true}},\"confidence\":1.0}]}",
+   "latency": 1.7628314000030514
+  },
+  {
+   "sentence": "print inventory",
+   "context": {
+    "symbols": [
+     [
+      "marbleCount",
+      "number"
+     ],
+     [
+      "paperSheets",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "marbleCount",
+     "paperSheets"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"inventory\"}},\"confidence\":1.0}]}",
+   "latency": 1.0315104999754112
+  },
+  {
+   "sentence": "say \"Launch Ready\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"Launch Ready\",\"quoted\":true}},\"confidence\":1.0}]}",
+   "latency": 0.8731842999986839
+  },
+  {
+   "sentence": "increment visits by 3",
+   "context": {
+    "symbols": [
+     [
+      "visits",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "visits"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"visits\"},\"amount\":{\"kind\":\"number\",\"text\":\"3\"}},\"confidence\":0.99}]}",
+   "latency": 1.1034872999880463
+  },
+  {
+   "sentence": "assign 8 to marbleCount",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"marbleCount\"},\"value\":{\"kind\":\"number\",\"text\":\"8\"}},\"confidence\":0.99}]}",
+   "latency": 1.0312927000049967
+  },
+  {
+   "sentence": "update budget to budget / 5",
+   "context": {
+    "symbols": [
+     [
+      "budget",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "budget"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"budget\"},\"value\":{\"kind\":\"binop\",\"op\":\"/\",\"left\":{\"kind\":\"word\",\"text\":\"budget\"},\"right\":{\"kind\":\"number\",\"text\":\"5\"}}},\"confidence\":0.97}]}",
+   "latency": 1.2029480000201147
+  },
+  {
+   "sentence": "ask the user to enter a delivery code",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.4548336999723688
+  },
+  {
+   "sentence": "display visitors",
+   "context": {
+    "symbols": [
+     [
+      "welcomeBanner",
+      "string"
+     ]
+    ],
+    "reference_stack": [
+     "welcomeBanner"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"visitors\"}},\"confidence\":1.0}]}",
+   "latency": 0.7396430999797303
+  },
+  {
+   "sentence": "divide paintVolume",
+   "context": {
+    "symbols": [
+     [
+      "paintVolume",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "paintVolume"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"divide\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"paintVolume\"},\"amount\":null},\"confidence\":0.9}]}",
+   "latency": 0.9389703999913763
+  },
+  {
+   "sentence": "if level is at least 10 then display \"ready\"",
+   "context": {
+    "symbols": [
+     [
+      "level",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "level"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6551881000050344
+  },
+  {
+   "sentence": "show \"crateTotal\"",
+   "context": {
+    "symbols": [
+     [
+      "crateTotal",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "crateTotal"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.971070100000361
+  },
+  {
+   "sentence": "delete the variable lanternCount",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6487401000049431
+  },
+  {
+   "sentence": "show \"routeOffset\"",
+   "context": {
+    "symbols": [
+     [
+      "routeOffset",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "routeOffset"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 1.0580464999948163
+  },
+  {
+   "sentence": "increase lanternCount",
+   "context": {
+    "symbols": [
+     [
+      "lanternCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "lanternCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"lanternCount\"},\"amount\":null},\"confidence\":0.99}]}",
+   "latency": 1.2496412000036798
+  },
+  {
+   "sentence": "create a dictionary called postalLookup",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7534510999976192
+  },
+  {
+   "sentence": "if pressure is at most 8 then set flag to 1",
+   "context": {
+    "symbols": [
+     [
+      "pressure",
+      "number"
+     ],
+     [
+      "flag",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "pressure",
+     "flag"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\"<=\",\"left\":{\"kind\":\"word\",\"text\":\"pressure\"},\"right\":{\"kind\":\"number\",\"text\":\"8\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"flag\"},\"value\":{\"kind\":\"number\",\"text\":\"1\"}}}},\"confidence\":1.0}]}",
+   "latency": 1.6287842000019737
+  },
+  {
+   "sentence": "show \"cisternVolume\"",
+   "context": {
+    "symbols": [
+     [
+      "cisternVolume",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "cisternVolume"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.8141231000190601
+  },
+  {
+   "sentence": "subtract 2 from it",
+   "context": {
+    "symbols": [
+     [
+      "marbleCount",
+      "number"
+     ],
+     [
+      "paperSheets",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "marbleCount",
+     "paperSheets"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"2\"}},\"confidence\":1.0}]}",
+   "latency": 1.1075109999801498
+  },
+  {
+   "sentence": "multiply it by 6",
+   "context": {
+    "symbols": [
+     [
+      "tileArea",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "tileArea"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"multiply\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"6\"}},\"confidence\":0.98}]}",
+   "latency": 1.415543000010075
+  },
+  {
+   "sentence": "print lantrenCount",
+   "context": {
+    "symbols": [
+     [
+      "lanternCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "lanternCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"lantrenCount\"}},\"confidence\":1.0}]}",
+   "latency": 1.069816900009755
+  },
+  {
+   "sentence": "do print \"ping\" 3 times",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"repeat\",\"slots\":{\"count\":{\"kind\":\"count\",\"text\":\"3\"},\"body\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"ping\",\"quoted\":true}}}},\"confidence\":0.96}]}",
+   "latency": 2.995454400021117
+  },
+  {
+   "sentence": "print \"welcomeBanner\"",
+   "context": {
+    "symbols": [
+     [
+      "welcomeBanner",
+      "string"
+     ]
+    ],
+    "reference_stack": [
+     "welcomeBanner"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"welcomeBanner\",\"quoted\":true}},\"confidence\":1.0}]}",
+   "latency": 1.3194844000099692
+  },
+  {
+   "sentence": "if level is greater than or equal to 10 then show \"ready\"",
+   "context": {
+    "symbols": [
+     [
+      "level",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "level"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 2.4184246999793686
+  },
+  {
+   "sentence": "set budget to budget divided by 5",
+   "context": {
+    "symbols": [
+     [
+      "budget",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "budget"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"budget\"},\"value\":{\"kind\":\"binop\",\"op\":\"/\",\"left\":{\"kind\":\"word\",\"text\":\"budget\"},\"right\":{\"kind\":\"number\",\"text\":\"5\"}}},\"confidence\":0.97}]}",
+   "latency": 1.3856304000073578
+  },
+  {
+   "sentence": "set the variable to 14",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"the variable\"},\"value\":{\"kind\":\"number\",\"text\":\"14\"}},\"confidence\":1.0}]}",
+   "latency": 1.2651109999860637
+  },
+  {
+   "sentence": "if mode is not equal to \"paused\" then print \"go\"",
+   "context": {
+    "symbols": [
+     [
+      "mode",
+      "string"
+     ]
+    ],
+    "reference_stack": [
+     "mode"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\"!=\",\"left\":{\"kind\":\"word\",\"text\":\"mode\"},\"right\":{\"kind\":\"string\",\"text\":\"paused\",\"quoted\":true}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"go\",\"quoted\":true}}}},\"confidence\":1.0}]}",
+   "latency": 1.3277053000056185
+  },
+  {
+   "sentence": "set northStock to 10",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"northStock\"},\"value\":{\"kind\":\"number\",\"text\":\"10\"}},\"confidence\":1.0}]}",
+   "latency": 0.9458741999987978
+  },
+  {
+   "sentence": "take 2 away from tickets",
+   "context": {
+    "symbols": [
+     [
+      "tickets",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "tickets"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"tickets\"},\"amount\":{\"kind\":\"number\",\"text\":\"2\"}},\"confidence\":0.95}]}",
+   "latency": 0.9084420999861322
+  },
+  {
+   "sentence": "print \"ping\" on three occasions",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"repeat\",\"slots\":{\"count\":{\"kind\":\"count\",\"text\":\"3\"},\"body\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"ping\",\"quoted\":true}}}},\"confidence\":0.95}]}",
+   "latency": 1.734470399998827
+  },
+  {
+   "sentence": "raise it by 4",
+   "context": {
+    "symbols": [
+     [
+      "candleCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "candleCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"4\"}},\"confidence\":0.95}]}",
+   "latency": 1.3248009999806527
+  },
+  {
+   "sentence": "print marbleCount",
+   "context": {
+    "symbols": [
+     [
+      "marbleCount",
+      "number"
+     ],
+     [
+      "paperSheets",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "marbleCount",
+     "paperSheets"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"marbleCount\"}},\"confidence\":1.0}]}",
+   "latency": 1.1108091999776661
+  },
+  {
+   "sentence": "do add 2 to stepCount 3 times",
+   "context": {
+    "symbols": [
+     [
+      "stepCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "stepCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"repeat\",\"slots\":{\"count\":{\"kind\":\"count\",\"text\":\"3\"},\"body\":{\"kind\":\"statement\",\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"stepCount\"},\"amount\":{\"kind\":\"number\",\"text\":\"2\"}}}},\"confidence\":0.95}]}",
+   "latency": 2.6073535999748856
+  },
+  {
+   "sentence": "display \"Launch Ready\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.82718510000268
+  },
+  {
+   "sentence": "if mapMode does not equal \"day\" then print \"dim screen\"",
+   "context": {
+    "symbols": [
+     [
+      "mapMode",
+      "string"
+     ]
+    ],
+    "reference_stack": [
+     "mapMode"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\"!=\",\"left\":{\"kind\":\"word\",\"text\":\"mapMode\"},\"right\":{\"kind\":\"string\",\"text\":\"day\",\"quoted\":true}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"dim screen\",\"quoted\":true}}}},\"confidence\":1.0}]}",
+   "latency": 1.49133069999516
+  },
+  {
+   "sentence": "print lanternCount",
+   "context": {
+    "symbols": [
+     [
+      "lanternCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "lanternCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"lanternCount\"}},\"confidence\":0.99}]}",
+   "latency": 0.8142645999905653
+  },
+  {
+   "sentence": "increase the variable by 4",
+   "context": {
+    "symbols": [
+     [
+      "points",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "points"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"the variable\"},\"amount\":{\"kind\":\"number\",\"text\":\"4\"}},\"confidence\":1.0}]}",
+   "latency": 1.301160200004233
+  },
+  {
+   "sentence": "repeat show drumBeat 2 times",
+   "context": {
+    "symbols": [
+     [
+      "drumBeat",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "drumBeat"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"repeat\",\"slots\":{\"count\":{\"kind\":\"count\",\"text\":\"2\"},\"body\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"drumBeat\"}}}},\"confidence\":1.0}]}",
+   "latency": 1.149890900007449
+  },
+  {
+   "sentence": "display dusk",
+   "context": {
+    "symbols": [
+     [
+      "lanternCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "lanternCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"dusk\"}},\"confidence\":0.95}]}",
+   "latency": 1.1390085000020918
+  },
+  {
+   "sentence": "if crateCount is greater than 3 then increase crateCount",
+   "context": {
+    "symbols": [
+     [
+      "crateCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "crateCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\">\",\"left\":{\"kind\":\"word\",\"text\":\"crateCount\"},\"right\":{\"kind\":\"number\",\"text\":\"3\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"crateCount\"},\"amount\":null}}},\"confidence\":0.99}]}",
+   "latency": 1.512810599990189
+  },
+  {
+   "sentence": "show 6 or 11",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.931802900013281
+  },
+  {
+   "sentence": "display \"North\" plus \"Star\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"binop\",\"op\":\"+\",\"left\":{\"kind\":\"string\",\"text\":\"North\",\"quoted\":true},\"right\":{\"kind\":\"string\",\"text\":\"Star\",\"quoted\":true}}},\"confidence\":0.98}]}",
+   "latency": 1.0055464999750257
+  },
+  {
+   "sentence": "show balance",
+   "context": {
+    "symbols": [
+     [
+      "balance",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "balance"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"balance\"}},\"confidence\":0.96}]}",
+   "latency": 1.196753299998818
+  },
+  {
+   "sentence": "multiply subtotal by 4",
+   "context": {
+    "symbols": [
+     [
+      "subtotal",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "subtotal"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"multiply\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"subtotal\"},\"amount\":{\"kind\":\"number\",\"text\":\"4\"}},\"confidence\":1.0}]}",
+   "latency": 1.034187799989013
+  },
+  {
+   "sentence": "display balance",
+   "context": {
+    "symbols": [
+     [
+      "balance",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "balance"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"balance\"}},\"confidence\":0.9}]}",
+   "latency": 1.0020851999870501
+  },
+  {
+   "sentence": "if pressure is at most 8 then assign 1 to flag",
+   "context": {
+    "symbols": [
+     [
+      "pressure",
+      "number"
+     ],
+     [
+      "flag",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "pressure",
+     "flag"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\"<=\",\"left\":{\"kind\":\"word\",\"text\":\"pressure\"},\"right\":{\"kind\":\"number\",\"text\":\"8\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"flag\"},\"value\":{\"kind\":\"number\",\"text\":\"1\"}}}},\"confidence\":0.96}]}",
+   "latency": 1.973804100009147
+  },
+  {
+   "sentence": "print \"North\" plus \"Star\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"binop\",\"op\":\"+\",\"left\":{\"kind\":\"string\",\"text\":\"North\",\"quoted\":true},\"right\":{\"kind\":\"string\",\"text\":\"Star\",\"quoted\":true}}},\"confidence\":0.98}]}",
+   "latency": 1.0171258999907877
+  },
+  {
+   "sentence": "print cargo",
+   "context": {
+    "symbols": [
+     [
+      "crateTotal",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "crateTotal"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"cargo\"}},\"confidence\":0.99}]}",
+   "latency": 0.8849770000088029
+  },
+  {
+   "sentence": "show crateTotal",
+   "context": {
+    "symbols": [
+     [
+      "crateTotal",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "crateTotal"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"crateTotal\"}},\"confidence\":1.0}]}",
+   "latency": 0.909725100005744
+  },
+  {
+   "sentence": "draw a circle on the screen",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6875646999978926
+  },
+  {
+   "sentence": "let ticketQuota be 25",
+   "context": {
+    "symbols": [
+     [
+      "northStock",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "northStock"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"ticketQuota\"},\"value\":{\"kind\":\"number\",\"text\":\"25\"}},\"confidence\":0.99}]}",
+   "latency": 1.0752292000106536
+  },
+  {
+   "sentence": "set unitPrice to 2.75",
+   "context": {
+    "symbols": [
+     [
+      "unitPrice",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "unitPrice"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"unitPrice\"},\"value\":{\"kind\":\"word\",\"text\":\"2.75\"}},\"confidence\":0.95}]}",
+   "latency": 1.3313076000194997
+  },
+  {
+   "sentence": "divide tankVolume by 2 minus 5",
+   "context": {
+    "symbols": [
+     [
+      "tankVolume",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "tankVolume"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"divide\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"tankVolume\"},\"amount\":{\"kind\":\"binop\",\"op\":\"-\",\"left\":{\"kind\":\"number\",\"text\":\"2\"},\"right\":{\"kind\":\"number\",\"text\":\"5\"}}},\"confidence\":0.95}]}",
+   "latency": 1.4769848999858368
+  },
+  {
+   "sentence": "create a new variable named pilotName with value \"Mira\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"pilotName\"},\"value\":{\"kind\":\"string\",\"text\":\"Mira\",\"quoted\":true}},\"confidence\":1.0}]}",
+   "latency": 1.0060328000108711
+  },
+  {
+   "sentence": "repeat display \"ping\" 3 times",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 1.6891585999983363
+  },
+  {
+   "sentence": "multiply that by 7",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"multiply\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"that\"},\"amount\":{\"kind\":\"number\",\"text\":\"7\"}},\"confidence\":0.99}]}",
+   "latency": 1.0363273000111803
+  },
+  {
+   "sentence": "set buoyCount to 7 or 9",
+   "context": {
+    "symbols": [
+     [
+      "buoyCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "buoyCount"
+    ]
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7251643000054173
+  },
+  {
+   "sentence": "if hikerAge is at least 18 then print adult else print junior",
+   "context": {
+    "symbols": [
+     [
+      "hikerAge",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "hikerAge"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\">=\",\"left\":{\"kind\":\"word\",\"text\":\"hikerAge\"},\"right\":{\"kind\":\"number\",\"text\":\"18\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"adult\"}}},\"else\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"junior\"}}}},\"confidence\":1.0}]}",
+   "latency": 2.526584500010358
+  },
+  {
+   "sentence": "print roomTemp",
+   "context": {
+    "symbols": [
+     [
+      "roomTemp",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "roomTemp"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"roomTemp\"}},\"confidence\":1.0}]}",
+   "latency": 1.3271411999885458
+  },
+  {
+   "sentence": "show rockte",
+   "context": {
+    "symbols": [
+     [
+      "rocket",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "rocket"
+    ]
+   },
+   "raw": "{\"readings\":[]}",
+   "latency": 1.638926799991168
+  },
+  {
+   "sentence": "increase it by 3",
+   "context": {
+    "symbols": [
+     [
+      "fabricRolls",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "fabricRolls"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"pronoun\",\"text\":\"it\"},\"amount\":{\"kind\":\"number\",\"text\":\"3\"}},\"confidence\":1.0}]}",
+   "latency": 1.408279199997196
+  },
+  {
+   "sentence": "print balance",
+   "context": {
+    "symbols": [
+     [
+      "balance",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "balance"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"balance\"}},\"confidence\":0.99}]}",
+   "latency": 0.7499421999964397
+  },
+  {
+   "sentence": "if roomTemp is at least 18 then print mild else print cold",
+   "context": {
+    "symbols": [
+     [
+      "roomTemp",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "roomTemp"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\">=\",\"left\":{\"kind\":\"word\",\"text\":\"roomTemp\"},\"right\":{\"kind\":\"number\",\"text\":\"18\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"mild\"}}},\"else\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"cold\"}}}},\"confidence\":1.0}]}",
+   "latency": 1.3630349999875762
+  },
+  {
+   "sentence": "read parcelName from the keyboard",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6519822000118438
+  },
+  {
+   "sentence": "lower voucherCount",
+   "context": {
+    "symbols": [
+     [
+      "voucherCount",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "voucherCount"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"voucherCount\"},\"amount\":null},\"confidence\":0.95}]}",
+   "latency": 1.462895699980436
+  },
+  {
+   "sentence": "reduce tickets by 2",
+   "context": {
+    "symbols": [
+     [
+      "tickets",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "tickets"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"decrement\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"tickets\"},\"amount\":{\"kind\":\"number\",\"text\":\"2\"}},\"confidence\":0.99}]}",
+   "latency": 0.8439579000114463
+  },
+  {
+   "sentence": "show mosaic",
+   "context": {
+    "symbols": [
+     [
+      "tileArea",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "tileArea"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"word\",\"text\":\"mosaic\"}},\"confidence\":0.9}]}",
+   "latency": 1.0981578000064474
+  }
+ ]
+}

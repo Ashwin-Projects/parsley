@@ -1,0 +1,336 @@
+{
+ "version": 1,
+ "model": "openai/gpt-oss-120b",
+ "prompt_sha256": "716c3911a3fa883c0130ba5dfd765fe964374c93ba116191b811058f33747353",
+ "note": "Responses of openai/gpt-oss-120b, recorded by run_eval --record.",
+ "responses": [
+  {
+   "sentence": "define a function called farewell with parameter guest",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.8794125000131316
+  },
+  {
+   "sentence": "initialize seedCount with zero",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"seedCount\"},\"value\":{\"kind\":\"number\",\"text\":\"0\"}},\"confidence\":0.97}]}",
+   "latency": 1.3834574000211433
+  },
+  {
+   "sentence": "calculate the square root of 81",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7938126999943051
+  },
+  {
+   "sentence": "bump visits up by 3",
+   "context": {
+    "symbols": [
+     [
+      "visits",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "visits"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"increment\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"visits\"},\"amount\":{\"kind\":\"number\",\"text\":\"3\"}},\"confidence\":0.97}]}",
+   "latency": 0.8644020999781787
+  },
+  {
+   "sentence": "while lanternCount is below 9 print waiting",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6317436000099406
+  },
+  {
+   "sentence": "join \"North\" and \"Star\" and print the result",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 1.5361629000108223
+  },
+  {
+   "sentence": "call the function farewell",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.4655618999968283
+  },
+  {
+   "sentence": "make temperature six below zero",
+   "context": {
+    "symbols": [
+     [
+      "temperature",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "temperature"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"declare\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"temperature\"},\"value\":{\"kind\":\"neg\",\"operand\":{\"kind\":\"number\",\"text\":\"6\"}}},\"confidence\":0.95}]}",
+   "latency": 2.39714460002142
+  },
+  {
+   "sentence": "for each parcel in shipments print parcel",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7555229999998119
+  },
+  {
+   "sentence": "go to line 24",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7688833999854978
+  },
+  {
+   "sentence": "return early from this program",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.48443070001667365
+  },
+  {
+   "sentence": "when level reaches 10 or higher, print \"ready\"",
+   "context": {
+    "symbols": [
+     [
+      "level",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "level"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\">=\",\"left\":{\"kind\":\"word\",\"text\":\"level\"},\"right\":{\"kind\":\"number\",\"text\":\"10\"}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"ready\",\"quoted\":true}}}},\"confidence\":1.0}]}",
+   "latency": 2.123305800021626
+  },
+  {
+   "sentence": "sort autumnBins in ascending order",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.48391790001187474
+  },
+  {
+   "sentence": "create a list called autumnBins",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6527655000099912
+  },
+  {
+   "sentence": "open the file harvest.csv",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.9055083999992348
+  },
+  {
+   "sentence": "write the report to harvest.csv",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[]}",
+   "latency": 0.8654132999945432
+  },
+  {
+   "sentence": "unless mode equals \"paused\", print \"go\"",
+   "context": {
+    "symbols": [
+     [
+      "mode",
+      "string"
+     ]
+    ],
+    "reference_stack": [
+     "mode"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"if\",\"slots\":{\"condition\":{\"kind\":\"condition\",\"op\":\"==\",\"left\":{\"kind\":\"word\",\"text\":\"mode\"},\"right\":{\"kind\":\"string\",\"text\":\"paused\",\"quoted\":true}},\"then\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"go\",\"quoted\":true}}}},\"confidence\":0.9}]}",
+   "latency": 1.9268731999909505
+  },
+  {
+   "sentence": "append 12 to autumnBins",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6706753999751527
+  },
+  {
+   "sentence": "quadruple subtotal",
+   "context": {
+    "symbols": [
+     [
+      "subtotal",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "subtotal"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"multiply\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"subtotal\"},\"amount\":{\"kind\":\"number\",\"text\":\"4\",\"derived\":true}},\"confidence\":0.9}]}",
+   "latency": 1.2381479000032414
+  },
+  {
+   "sentence": "import statistics",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.8211330999911297
+  },
+  {
+   "sentence": "compute the sine of 45",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7222847000230104
+  },
+  {
+   "sentence": "replace the value of unitPrice with 2.75",
+   "context": {
+    "symbols": [
+     [
+      "unitPrice",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "unitPrice"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"unitPrice\"},\"value\":{\"kind\":\"word\",\"text\":\"2.75\"}},\"confidence\":1.0}]}",
+   "latency": 1.359433200006606
+  },
+  {
+   "sentence": "make budget one fifth of its current value",
+   "context": {
+    "symbols": [
+     [
+      "budget",
+      "number"
+     ]
+    ],
+    "reference_stack": [
+     "budget"
+    ]
+   },
+   "raw": "{\"readings\":[{\"intent\":\"assign\",\"slots\":{\"name\":{\"kind\":\"name\",\"text\":\"budget\"},\"value\":{\"kind\":\"binop\",\"op\":\"/\",\"left\":{\"kind\":\"word\",\"text\":\"its\"},\"right\":{\"kind\":\"number\",\"text\":\"5\"}}},\"confidence\":0.95}]}",
+   "latency": 2.466145599988522
+  },
+  {
+   "sentence": "send an email to the whole team",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6954394000058528
+  },
+  {
+   "sentence": "say \"Launch Ready\"",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"Launch Ready\",\"quoted\":true}},\"confidence\":1.0}]}",
+   "latency": 0.8731842999986839
+  },
+  {
+   "sentence": "ask the user to enter a delivery code",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.4548336999723688
+  },
+  {
+   "sentence": "delete the variable lanternCount",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6487401000049431
+  },
+  {
+   "sentence": "create a dictionary called postalLookup",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.7534510999976192
+  },
+  {
+   "sentence": "print \"ping\" on three occasions",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\":[{\"intent\":\"repeat\",\"slots\":{\"count\":{\"kind\":\"count\",\"text\":\"3\"},\"body\":{\"kind\":\"statement\",\"intent\":\"print\",\"slots\":{\"value\":{\"kind\":\"string\",\"text\":\"ping\",\"quoted\":true}}}},\"confidence\":0.95}]}",
+   "latency": 1.734470399998827
+  },
+  {
+   "sentence": "draw a circle on the screen",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6875646999978926
+  },
+  {
+   "sentence": "read parcelName from the keyboard",
+   "context": {
+    "symbols": [],
+    "reference_stack": []
+   },
+   "raw": "{\"readings\": []}",
+   "latency": 0.6519822000118438
+  }
+ ]
+}
