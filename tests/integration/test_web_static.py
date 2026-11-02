@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from parsley.web.app import _inside, create_app  # noqa: E402
 
 INDEX = "<!doctype html><title>Parsley</title>"
+SECRET = "a file outside the build"
 
 
 @pytest.fixture
@@ -19,7 +20,7 @@ def dist(tmp_path):
     (root / "index.html").write_text(INDEX, encoding="utf-8")
     (root / "parsley.svg").write_text("<svg/>", encoding="utf-8")
     (root / "assets" / "index-abc.js").write_text("console.log(1)", encoding="utf-8")
-    (tmp_path / "secret.txt").write_text("outside", encoding="utf-8")
+    (tmp_path / "secret.txt").write_text(SECRET, encoding="utf-8")
     return root
 
 
@@ -72,7 +73,23 @@ def test_the_api_still_works_beside_the_page(client):
     "/assets/%2e%2e/%2e%2e/secret.txt",
 ])
 def test_nothing_outside_the_build_can_be_read(client, path):
-    assert "outside" not in client.get(path).text
+    response = client.get(path)
+    assert SECRET not in response.text
+    assert response.status_code in (200, 404)
+
+
+@pytest.mark.parametrize("path", ["../secret.txt", "assets/../../secret.txt", "..\\secret.txt"])
+def test_a_path_that_climbs_out_is_refused(dist, path):  # the HTTP client tidies these up before sending
+    assert _inside(dist, path) is False
+
+
+def test_a_link_out_of_the_build_is_refused(dist):
+    link = dist / "link.txt"
+    try:
+        link.symlink_to(dist.parent / "secret.txt")
+    except OSError:
+        pytest.skip("this system cannot create links")
+    assert _inside(dist, "link.txt") is False
 
 
 @pytest.mark.parametrize("path", ["//attacker/share/x", "\\\\attacker\\share", "C:\\Windows\\win.ini", "a:b"])
@@ -94,6 +111,18 @@ def test_hashed_assets_are_cached_and_the_page_is_not(client):
     assert "immutable" in client.get("/assets/index-abc.js").headers["cache-control"]
     assert client.get("/").headers["cache-control"] == "no-cache"
     assert client.get("/some/route").headers["cache-control"] == "no-cache"
+
+
+def test_climbing_out_of_assets_does_not_make_the_page_cached_forever(client):
+    response = client.get("/assets/%2e%2e/index.html")
+    assert response.text == INDEX
+    assert "immutable" not in response.headers["cache-control"]
+
+
+def test_a_route_that_only_starts_like_the_api_is_a_page(client):
+    response = client.get("/apiary")
+    assert response.text == INDEX
+    assert response.headers["cache-control"] == "no-cache"
 
 
 def test_pages_carry_the_security_headers(client):

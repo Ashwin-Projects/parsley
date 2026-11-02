@@ -157,7 +157,7 @@ class _SecurityHeaders:
             if message["type"] == "http.response.start":
                 headers = MutableHeaders(scope=message)
                 headers.update(self._headers)
-                if scope["path"].startswith("/api"):
+                if _is_api(scope["path"].lstrip("/")):
                     headers["Cache-Control"] = "no-store"
             await send(message)
 
@@ -394,6 +394,10 @@ def __getattr__(name: str) -> FastAPI:
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
+def _is_api(path: str) -> bool:
+    return path == "api" or path.startswith("api/")
+
+
 def _serve_frontend(app: FastAPI, dist: Path) -> None:
     """Serve the build at ``/``: a file if there is one, otherwise the page, for client-side routes."""
     root = dist.resolve()
@@ -403,9 +407,10 @@ def _serve_frontend(app: FastAPI, dist: Path) -> None:
 
     @app.api_route("/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
     def frontend(path: str) -> FileResponse:
-        if path == "api" or path.startswith("api/"):
+        if _is_api(path):
             raise HTTPException(404, "not found")
-        hashed = path.startswith("assets/")  # Vite puts a content hash in these names
+        parts = path.split("/")
+        hashed = parts[0] == "assets" and ".." not in parts  # Vite puts a content hash in these names
         if _inside(root, path):
             return FileResponse(root / path, headers={"Cache-Control": _FOREVER if hashed else "no-cache"})
         if hashed:
