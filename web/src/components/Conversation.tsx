@@ -9,6 +9,7 @@ export interface Message {
   result: CompileResult;
   statementIndex?: number;
   answer?: string;
+  exchanges?: { question: string; answer: string; diagnostics: CompileResult['diagnostics'] }[];
 }
 function Question({
   result,

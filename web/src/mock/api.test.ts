@@ -3,6 +3,16 @@ import { createMockTransport } from './api';
 import { createApi } from '../api/client';
 
 describe('mock contract', () => {
+  it('falls back to rules and emits W515 when its LLM budget is exhausted', async () => {
+    const api = createApi(createMockTransport({ llmBudgetRemaining: false }));
+    expect((await api.health()).llm_budget_remaining).toBe(false);
+    const id = (await api.session()).session_id;
+    const result = await api.compile(id, 'set x to 10', 'llm');
+    expect(result.source).toBe('rules');
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: 'W515' })]),
+    );
+  });
   it('reports health and requires explicit derived-value confirmation', async () => {
     const transport = createMockTransport();
     expect(await transport('/api/health')).toMatchObject({

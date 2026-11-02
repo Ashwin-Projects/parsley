@@ -8,7 +8,7 @@
   --surface: #fff;
   --subtle: #f8faf7;
   --ink: #263831;
-  --muted: #748078;
+  --muted: #58675d;
   --border: #e3e8e1;
   --green: #285943;
   --soft-green: #edf4e9;
@@ -35,6 +35,59 @@
 }
 body {
   margin: 0;
+}
+.page-nav {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.page-nav button {
+  padding: 8px 2px;
+}
+.try-link {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 18px;
+  text-decoration: none;
+  border-radius: 8px;
+}
+.intro-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 18px 0 0;
+  padding-left: 20px;
+  font-size: 13px;
+}
+.info-page {
+  max-width: 850px;
+  min-height: 55vh;
+  padding: 50px 0;
+  line-height: 1.8;
+}
+.info-page p {
+  margin: 18px 0;
+}
+.pipeline {
+  padding-left: 24px;
+}
+.pipeline li {
+  padding: 10px;
+  border-left: 2px solid var(--green);
+}
+@media (max-width: 700px) {
+  .site-header {
+    height: auto;
+    min-height: 88px;
+    flex-wrap: wrap;
+    padding: 12px 0;
+    gap: 10px;
+  }
+  .page-nav {
+    order: 3;
+    width: 100%;
+  }
 }
 button,
 input,
@@ -295,6 +348,7 @@ h1 span {
   padding: 0 9px;
 }
 .example-list > button {
+  position: relative;
   display: flex;
   width: 100%;
   padding: 12px 10px;
@@ -310,7 +364,7 @@ h1 span {
 }
 .example-index {
   font-size: 9px;
-  color: #87947e;
+  color: #58675d;
   padding-top: 3px;
   font-family: monospace;
 }
@@ -378,7 +432,7 @@ h1 span {
   flex-direction: column;
 }
 .workspace-toolbar {
-  height: 65px;
+  min-height: 88px;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -387,9 +441,17 @@ h1 span {
   gap: 10px;
 }
 .mode-control {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 10px;
   align-items: center;
+}
+.privacy-note {
+  grid-column: 1 / -1;
+  max-width: 320px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
 }
 .mode-control label {
   font-size: 10px;
@@ -939,7 +1001,7 @@ kbd {
 }
 .code-empty > span:first-child {
   font-size: 9px;
-  color: #607768;
+  color: #a5b7a9;
 }
 .cursor {
   display: inline-block;

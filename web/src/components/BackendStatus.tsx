@@ -63,6 +63,9 @@ export function BackendStatus({
             : 'Checking backend…'}
         {mock ? ' (mock)' : ''}
       </span>
+      {health?.llm_budget_remaining === false && (
+        <span role="status">LLM paused for today, using rules only</span>
+      )}
     </span>
   );
 }

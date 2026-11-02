@@ -232,7 +232,7 @@ function compile(
   );
 }
 
-export function createMockTransport(): Transport {
+export function createMockTransport({ llmBudgetRemaining = true } = {}): Transport {
   const sessions = new Map<string, Session>();
   return async (path, body) => {
     const url = new URL(path, 'http://mock.local');
@@ -240,6 +240,7 @@ export function createMockTransport(): Transport {
       return {
         version: '0.1.0-mock',
         llm_configured: true,
+        llm_budget_remaining: llmBudgetRemaining,
         provider: 'mock',
         model: 'canned-readings',
       };
@@ -254,7 +255,16 @@ export function createMockTransport(): Transport {
     switch (url.pathname) {
       case '/api/compile': {
         if (session.pending) return session.pending.result;
-        return compile(session, String(body?.sentence ?? ''), body?.mode as Mode);
+        const mode = body?.mode as Mode;
+        const fallback = !llmBudgetRemaining && mode !== 'rules';
+        const result = compile(session, String(body?.sentence ?? ''), fallback ? 'rules' : mode);
+        if (fallback)
+          result.diagnostics.unshift({
+            code: 'W515',
+            stage: 'llm',
+            message: 'LLM usage limit reached; using rules only.',
+          });
+        return result;
       }
       case '/api/answer': {
         const pending = session.pending;
