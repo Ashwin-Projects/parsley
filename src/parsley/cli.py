@@ -178,7 +178,7 @@ def _command(text: str, options: argparse.Namespace) -> int | None:
     return 0
 
 
-def _version() -> str:
+def package_version() -> str:
     """The version in pyproject.toml; the installed package metadata if the file is absent."""
     try:
         return tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))["project"]["version"]
@@ -353,7 +353,7 @@ def main(argv: list[str] | None = None) -> int:
         "--mode", choices=pipeline.MODES, default="rules",
         help="candidate source: rules only (default), an LLM, or an LLM when rules are unsure",
     )
-    parser.add_argument("--version", action="version", version=f"parsley {_version()}")
+    parser.add_argument("--version", action="version", version=f"parsley {package_version()}")
     options = parser.parse_args(argv)
     if options.sentence is not None and options.file is not None:
         parser.error("sentence and --file cannot be used together")

@@ -9,15 +9,25 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 
+from fastapi import FastAPI  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from parsley import pipeline  # noqa: E402
-from parsley.llm.provider import FakeProvider, ProviderError, RawProposal  # noqa: E402
+from parsley import cli, pipeline  # noqa: E402
+from parsley.llm.provider import (  # noqa: E402
+    MAX_ATTEMPTS,
+    RETRY_DELAY,
+    FakeProvider,
+    OpenAICompatibleProvider,
+    ProviderError,
+    RawProposal,
+)
+from parsley.web import app as web_app  # noqa: E402
 from parsley.web.app import MAX_BODY_BYTES, MAX_STATEMENTS, create_app  # noqa: E402
 from parsley.web.sessions import SessionStore  # noqa: E402
 
 RECORDED = Path(__file__).resolve().parents[1] / "fixtures_llm" / "recorded.json"
 ORIGIN = "http://localhost:5173"
+BROWSER_DEADLINE = 30  # seconds; web/API_CONTRACT.md
 
 
 @pytest.fixture(autouse=True)
@@ -165,6 +175,14 @@ def test_a_derived_amount_asks_and_never_compiles_unconfirmed(client, sid):
     assert answer(client, sid, "yes")["minilang"] == "visits = visits * 2;"
 
 
+@pytest.mark.parametrize("reply", ["Yes", "No"])
+def test_the_frontends_capitalized_buttons_answer_a_derived_question(client, sid, reply):
+    """The UI always sends ``Yes`` or ``No`` here, though the question's options are lower case."""
+    compile_(client, sid, "let visits be 1")
+    compile_(client, sid, "double visits", "hybrid")
+    assert answer(client, sid, reply)["status"] == ("accepted" if reply == "Yes" else "error")
+
+
 def test_refusing_a_derived_amount_records_nothing(client, sid):
     compile_(client, sid, "let visits be 1")
     compile_(client, sid, "double visits", "hybrid")
@@ -210,6 +228,74 @@ def test_a_failing_provider_falls_back_with_a_warning():
 def test_an_unknown_mode_is_refused(client, sid):
     response = client.post("/api/compile", json={"session_id": sid, "sentence": "print 1", "mode": "magic"})
     assert response.status_code == 422
+
+
+# Health
+
+
+def test_health_without_a_provider_says_it_is_not_configured():
+    class Unavailable:
+        name = "unavailable"
+        error = "no key yet"
+
+    client = TestClient(create_app(provider_factory=Unavailable))
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    assert response.json() == {"version": cli.package_version(), "llm_configured": False}
+
+
+def test_health_names_the_provider_and_model():
+    body = TestClient(create_app(provider=FakeProvider(RECORDED))).get("/api/health").json()
+    assert body == {
+        "version": cli.package_version(), "llm_configured": True, "provider": "fake",
+        "model": json.loads(RECORDED.read_text(encoding="utf-8")).get("model", "fake"),
+    }
+
+
+def test_health_never_exposes_the_key_or_the_base_url():
+    provider = OpenAICompatibleProvider(
+        model="some-model", base_url="https://user:base-secret@llm.example/v1", api_key="sk-SECRET",
+    )
+    response = TestClient(create_app(provider=provider)).get("/api/health")
+    assert response.json() == {
+        "version": cli.package_version(), "llm_configured": True, "provider": "openai", "model": "some-model",
+    }
+    assert "SECRET" not in response.text and "secret" not in response.text and "example" not in response.text
+
+
+def test_health_makes_no_provider_call():
+    class Silent:
+        name = "silent"
+
+        def propose(self, sentence, context) -> list[RawProposal]:
+            raise AssertionError("health called the model")
+
+    assert TestClient(create_app(provider=Silent())).get("/api/health").json()["provider"] == "silent"
+
+
+def test_health_is_open_to_the_frontend(client):
+    assert client.get("/api/health", headers={"origin": ORIGIN}).headers["access-control-allow-origin"] == ORIGIN
+
+
+# Deployment
+
+
+def test_the_docker_entry_point_is_an_app():
+    importer = pytest.importorskip("uvicorn.importer")
+    assert isinstance(importer.import_from_string("parsley.web.app:app"), FastAPI)
+
+
+def test_two_provider_attempts_fit_inside_the_browser_deadline(tmp_path):
+    dotenv = tmp_path / ".env"
+    dotenv.write_text("PARSLEY_LLM_PROVIDER=openai\nPARSLEY_LLM_MODEL=m\nPARSLEY_LLM_TIMEOUT=60\n", encoding="utf-8")
+    provider = web_app._load_provider(dotenv)
+    assert provider.timeout * MAX_ATTEMPTS + RETRY_DELAY < BROWSER_DEADLINE
+
+
+def test_a_shorter_configured_timeout_is_kept(tmp_path):
+    dotenv = tmp_path / ".env"
+    dotenv.write_text("PARSLEY_LLM_PROVIDER=openai\nPARSLEY_LLM_MODEL=m\nPARSLEY_LLM_TIMEOUT=3\n", encoding="utf-8")
+    assert web_app._load_provider(dotenv).timeout == 3
 
 
 # Program, run, undo, reset

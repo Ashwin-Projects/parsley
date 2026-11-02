@@ -27,6 +27,9 @@ truth, together with the decision log in LANGUAGE_SPEC.md Section 9.
    APIs (stdlib urllib only, keys from the environment or .env). It is off
    by default, rules mode never imports it, tests never use the network,
    and its proposals enter only as Candidates that pass N1, N2 and N3.
+   Exception: FastAPI and uvicorn are approved for the optional web API in
+   src/parsley/web/ (and httpx for its tests), through the `web` and `dev`
+   extras, and only there. Core code never imports parsley.web.
 8. Add a test for every new behaviour and bug fix. Run tests;
    report the exact command and output.
 9. Never claim tests passed unless they were run.

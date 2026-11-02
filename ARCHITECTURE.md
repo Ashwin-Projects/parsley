@@ -399,8 +399,8 @@ How each guarantee holds for a model's reading:
 
 ### 2.12 Web API (optional)
 
-`parsley/web/` implements `web/API_CONTRACT.md` from the `web-frontend` branch with FastAPI and
-uvicorn, installed through the `web` extra. It is an adapter: `pipeline.run` and `pipeline.answer`
+`parsley/web/` implements `web/API_CONTRACT.md` with FastAPI and uvicorn, installed through the
+`web` extra. It is an adapter: `pipeline.run` and `pipeline.answer`
 do all compiling, and the core never imports it (a test checks both this and that only
 `parsley/web/` imports the web libraries). `app.py` holds `create_app`, the routes and the
 response shapes; `sessions.py` holds `SessionStore`.
@@ -409,7 +409,9 @@ response shapes; `sessions.py` holds `SessionStore`.
 |---|---|
 | Sessions | In memory. TTL 3600 s, renewed on use; at 1000 sessions the least recently used goes. A lock serializes one session's requests, because a model call can take seconds, and a session holding it does not expire. |
 | State | `Session` plus the English of each accepted statement (kept parallel to `history`), the open question and its sentence, and the mode. A new compile, undo or reset drops an open question. Undo replays history through `semantic.analyze`, the only writer. |
-| Mode | Per session: `compile` sets it, and a compile without `mode` keeps it. The provider loads on first use, so a rules-only server reads no `.env`, and a provider that could not be configured is loaded again on the next request. |
+| Mode | Per session: `compile` sets it, and a compile without `mode` keeps it. The provider loads on first use, and a provider that could not be configured is loaded again on the next request. `rules` compiles never load it; `/api/health` does, because only the configuration can answer `llm_configured`. |
+| Health | `/api/health` returns `version`, `llm_configured` and, when configured, the provider name and model. It makes no model call and never returns a key or base URL. |
+| Timeouts | A web provider waits at most 14 s per attempt, whatever `PARSLEY_LLM_TIMEOUT` says, so two attempts stay inside the frontend's 30-second deadline. |
 | Limits | Sentence and answer 500 characters (422); body 8 KiB (413); 500 statements per session (409), because V3 re-runs the whole session; `run` uses the interpreter's `STEP_LIMIT`. |
 | Errors | Unknown session 404. No open question: 200 with `status: "error"` and `E102`, as the frontend mock does. Validation errors say `invalid request` without echoing input. Anything unexpected stops at `_CatchAll`, is logged by type and answered with `internal error`, so its message reaches neither the client nor the server log. An infinite number travels as text, because JSON has none. |
 | Network | CORS for `localhost:5173` and `127.0.0.1:5173` only; listens on 127.0.0.1 by default; interactive docs are off. |

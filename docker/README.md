@@ -5,24 +5,17 @@ API image installs the Python package with its optional `web` dependencies and
 runs uvicorn. Docker Engine with Linux containers and Docker Compose 2.24.0 or
 newer are required (`env_file.required` permits running without a root `.env`).
 
-## Backend prerequisite
+## Backend
 
-**This frontend branch currently has no `web` extra in `pyproject.toml` and no
-ASGI backend.** The full stack is an integration scaffold until the backend
-branch supplies both. No Python modules or dependencies are added by this Docker
-setup. The API build deliberately reports the missing `web` extra instead of
-producing an image that silently installed only the core package.
-
-The backend must provide a `web` extra including uvicorn, an ASGI app implementing
-[the API contract](../web/API_CONTRACT.md), and its runtime LLM configuration.
-`parsley.web.app:app` is the assumed entry point; set `PARSLEY_ASGI_APP` in the root
-`.env` if the backend uses another import path. The application must listen at
-`/api/...`; nginx preserves that prefix and the query string. The API health check
-requests the contract's `GET /api/health` route and fails on HTTP errors.
+The `web` extra and `parsley.web.app:app` come from `src/parsley/web/`, which implements
+[the API contract](../web/API_CONTRACT.md); set `PARSLEY_ASGI_APP` in the root `.env` to use
+another import path. nginx preserves the `/api` prefix and the query string. The API health
+check requests `GET /api/health` and fails on HTTP errors. LLM settings reach the container
+through the root `.env` at run time.
 
 ## Run
 
-Run these commands from the repository root, after the backend is integrated:
+Run these commands from the repository root:
 
 ```sh
 docker compose config --quiet
@@ -77,8 +70,7 @@ the API's credentials.
 
 Compose configuration can be validated without a running Docker Engine. Building
 images, checking nginx syntax inside its image, confirming static serving and
-exercising API proxying require an engine. A complete API smoke test additionally
-requires the backend prerequisite above. These checks cannot be replaced by a
+exercising API proxying require an engine. These checks cannot be replaced by a
 successful frontend build or a successful Compose parse.
 
 References: [Docker build contexts and ignore files](https://docs.docker.com/build/concepts/context/),

@@ -1,11 +1,11 @@
-"""FastAPI backend for the frontend (``web/API_CONTRACT.md`` on branch ``web-frontend``).
+"""FastAPI backend for the frontend (``web/API_CONTRACT.md``).
 
 A thin adapter: every sentence goes through ``pipeline.run`` and every answer through
 ``pipeline.answer``, so a web request gets the same checks as the CLI. Only the semantic
 analyzer changes a session (undo replays through it). ``run`` uses the V3 interpreter with its
-step budget. A provider is loaded the first time a session asks for ``llm`` or ``hybrid``, so a
-rules-only server never reads ``.env``. Errors never carry a stack trace, a request body or a
-key: ``_CatchAll`` logs an unexpected failure by type and answers ``internal error``. It is
+step budget. A provider is loaded the first time ``/api/health`` or a session asking for ``llm``
+or ``hybrid`` needs it, and a compile in ``rules`` mode never does. Errors never carry a stack
+trace, a request body or a key: ``_CatchAll`` logs an unexpected failure by type and answers ``internal error``. It is
 middleware and not an exception handler because Starlette re-raises after such a handler, and
 uvicorn would then log the message, which can hold a sentence.
 """
@@ -16,6 +16,8 @@ import logging
 import math
 import threading
 from collections.abc import Callable
+from dataclasses import replace
+from pathlib import Path
 from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException, Request
@@ -26,6 +28,7 @@ from pydantic import BaseModel, Field
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from parsley import pipeline
+from parsley.cli import package_version
 from parsley.compiler import codegen
 from parsley.compiler.ast_nodes import Program
 from parsley.compiler.semantic import analyze
@@ -40,6 +43,7 @@ ALLOWED_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")
 MAX_BODY_BYTES = 8 * 1024
 MAX_STATEMENTS = 500  # V3 re-runs the whole session on each sentence, so its cost grows with this
 MAX_ID_CHARS = 128
+PROVIDER_TIMEOUT = 14.0  # seconds; two attempts and the retry delay fit the frontend's 30-second deadline
 
 _STATUS = {"ok": "accepted", "needs_clarification": "clarify", "unsupported": "rejected", "error": "error"}
 _NO_QUESTION = {"code": "E102", "stage": "ambiguity", "message": "There is no pending question."}
@@ -115,6 +119,13 @@ class OkResponse(BaseModel):
     ok: bool
 
 
+class HealthResponse(BaseModel):
+    version: str
+    llm_configured: bool
+    provider: str | None = None
+    model: str | None = None
+
+
 class _BodyLimit:
     """Refuse a body over ``limit`` bytes, whether or not it declares its length."""
 
@@ -165,10 +176,13 @@ class _CatchAll:
                 await JSONResponse({"detail": "internal error"}, status_code=500)(scope, receive, send)
 
 
-def _load_provider() -> object:
+def _load_provider(dotenv: Path = Path(".env")) -> object:
     from parsley.llm.config import load_provider
 
-    return load_provider()
+    provider = load_provider(dotenv)
+    if getattr(provider, "timeout", 0) > PROVIDER_TIMEOUT:
+        return replace(provider, timeout=PROVIDER_TIMEOUT)
+    return provider
 
 
 def create_app(
@@ -208,6 +222,16 @@ def create_app(
         too_long = any(e["type"] == "string_too_long" and e["loc"][-1] == "sentence" for e in error.errors())
         detail = f"the sentence is longer than {MAX_INPUT_CHARS} characters" if too_long else "invalid request"
         return JSONResponse({"detail": detail}, status_code=422)
+
+    @app.get("/api/health", response_model=HealthResponse, response_model_exclude_none=True)
+    def health() -> dict[str, Any]:
+        source = get_provider()
+        if getattr(source, "error", None) is not None:
+            return {"version": package_version(), "llm_configured": False}
+        return {
+            "version": package_version(), "llm_configured": True,
+            "provider": source.name, "model": getattr(source, "model", None),
+        }
 
     @app.post("/api/session", response_model=SessionResponse)
     def create_session() -> dict[str, str]:
@@ -280,6 +304,13 @@ def create_app(
         return {"ok": True}
 
     return app
+
+
+def __getattr__(name: str) -> FastAPI:
+    """``parsley.web.app:app``, for uvicorn (docker/Dockerfile.api); built only when asked for."""
+    if name == "app":
+        return create_app()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def _source(web: WebSession) -> str:
