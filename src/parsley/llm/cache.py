@@ -108,9 +108,7 @@ class MeteredProvider:
 
     def _call(self, key: str, sentence: str, context: LLMContext) -> dict[str, Any]:
         self._pace()
-        started = self._clock()
-        raws = self._with_backoff(sentence, context)
-        latency = self._clock() - started
+        raws, latency = self._with_backoff(sentence, context)
         entry = {
             "model": self.model, "prompt_sha256": PROMPT_SHA256, "sentence": sentence,
             "context": context_json(context), "texts": [raw.text for raw in raws], "latency": latency,
@@ -128,12 +126,14 @@ class MeteredProvider:
                 self._sleep(wait)
         self._last_call = self._clock()
 
-    def _with_backoff(self, sentence: str, context: LLMContext) -> list[RawProposal]:
+    def _with_backoff(self, sentence: str, context: LLMContext) -> tuple[list[RawProposal], float]:
+        """The response and how long its own call took; a wait for a rate limit is not latency."""
         waits = list(self._backoffs)
         while True:
             self.network_calls += 1
+            started = self._clock()
             try:
-                return self._inner.propose(sentence, context)
+                return self._inner.propose(sentence, context), self._clock() - started
             except ProviderRateLimited:
                 self.rate_limited += 1
                 if not waits:

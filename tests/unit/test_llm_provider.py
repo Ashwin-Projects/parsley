@@ -95,6 +95,14 @@ def test_openai_compatible_sends_no_key_when_there_is_none():
     assert "authorization" not in wire.calls[0][1]
 
 
+@pytest.mark.parametrize("build, reply", [(anthropic, ANTHROPIC_OK), (openai, OPENAI_OK)])
+def test_requests_name_parsley_so_a_firewall_does_not_block_urllibs_default_agent(build, reply):
+    wire = Wire((200, reply))
+    build(wire).propose("print x", CONTEXT)
+    assert wire.calls[0][1]["user-agent"] == llm.USER_AGENT
+    assert "urllib" not in llm.USER_AGENT.lower()
+
+
 def test_one_retry_after_a_timeout_then_success():
     wire = Wire(TimeoutError(), (200, ANTHROPIC_OK))
     assert len(anthropic(wire).propose("print x", CONTEXT)) == 1

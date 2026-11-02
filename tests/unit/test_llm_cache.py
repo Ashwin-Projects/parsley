@@ -186,6 +186,15 @@ def test_rate_limits_back_off_and_recover(tmp_path):
     assert provider.rate_limited == 2
 
 
+def test_a_rate_limit_wait_is_not_counted_as_latency(tmp_path):
+    clock = Clock()
+    limited = ProviderRateLimited("slow down")
+    provider = metered(Inner(limited, '{"readings": []}'), tmp_path, clock=clock, backoffs=(60,))
+    provider.propose("a", EMPTY)
+    assert clock.sleeps == [60]
+    assert provider.last_latency == pytest.approx(0)
+
+
 def test_rate_limits_give_up_after_the_last_backoff(tmp_path):
     clock = Clock()
     provider = metered(Inner(ProviderRateLimited("no")), tmp_path, clock=clock, backoffs=(5, 10))

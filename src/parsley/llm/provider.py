@@ -4,7 +4,8 @@
 ``validate.py`` decides whether any of it is usable. Providers use only ``urllib``. One retry
 covers timeouts, connection failures, 429 and 5xx; other statuses fail at once. Redirects are
 not followed, so an API key cannot travel to another host. Errors name the status or the
-reason and never quote a response body or a key.
+reason and never quote a response body or a key. Requests carry their own ``User-Agent``:
+Cloudflare, in front of Groq among others, answers urllib's default with HTTP 403.
 
 ``FakeProvider`` replays a fixtures file; every test and CI run uses it, with no network.
 """
@@ -30,6 +31,7 @@ MAX_RESPONSE_BYTES = 256 * 1024
 MAX_OUTPUT_TOKENS = 16000  # room for thinking on models that always think
 ANTHROPIC_BASE_URL = "https://api.anthropic.com"
 ANTHROPIC_VERSION = "2026-10-21"
+USER_AGENT = "parsley"
 
 Transport = Callable[[str, Mapping[str, str], bytes, float], tuple[int, bytes]]
 
@@ -94,6 +96,7 @@ def _post_json(
 ) -> dict[str, Any]:
     """POST ``payload``; the decoded JSON object, or ProviderError after one retry."""
     body = json.dumps(payload).encode("utf-8")
+    headers = {"user-agent": USER_AGENT, **headers}
     failure = ProviderError("the provider was not called")
     for attempt in range(MAX_ATTEMPTS):
         if attempt:
