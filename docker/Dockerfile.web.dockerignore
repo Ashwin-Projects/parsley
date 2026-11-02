@@ -1,0 +1,29 @@
+# Allow only inputs required by the frontend image; paths are relative to repo root.
+**
+!web/
+!web/package.json
+!web/package-lock.json
+!web/index.html
+!web/tsconfig.json
+!web/vite.config.ts
+!web/src/
+!web/src/**
+!web/public/
+!web/public/**
+!docker/
+!docker/nginx.conf
+
+# Final exclusions also apply within the allowed source and public directories.
+**/.env
+**/.env.*
+**/*.env
+**/*.pem
+**/*.key
+**/secrets
+**/secrets/**
+**/node_modules
+**/node_modules/**
+**/.git
+**/.git/**
+**/dist
+**/dist/**
