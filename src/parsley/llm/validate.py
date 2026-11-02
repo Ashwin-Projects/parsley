@@ -18,9 +18,10 @@ Three rules keep the model below the deterministic stages:
 - **One statement.** Block bodies follow LANGUAGE_SPEC.md 6.3, and a reading holds one
   statement: no extra fields and no lists of statements.
 - **Coverage.** Grounding checks what a reading says, not what it leaves out, and a full
-  check would refuse every paraphrase (the point of asking a model). So two omissions that
-  change the meaning are checked: a reading that drops a negation, and one that drops a
-  second statement after ``and`` or ``then`` when that clause matches a supported pattern.
+  check would refuse every paraphrase (the point of asking a model). So the omissions that
+  change the meaning are checked: a reading that drops a negation, an ``if`` for ``unless``
+  that keeps the stated comparison, and one that drops a second statement after ``and`` or
+  ``then`` when that clause matches a supported pattern.
 """
 
 from __future__ import annotations
@@ -49,6 +50,8 @@ _COUNT = re.compile(r"[0-9]+")
 _FENCE = re.compile(r"```(?:json)?\s*(.*?)\s*```", re.DOTALL)  # one fence around the whole response
 _READING_KEYS = frozenset({"intent", "slots", "confidence"})
 _NEGATORS = frozenset({"not", "never", "no", "don't", "dont", "cannot", "can't", "won't"})
+_UNLESS = "unless"
+_OPPOSITE = {">": "<=", "<": ">=", "==": "!=", "!=": "==", ">=": "<", "<=": ">"}
 _THEN = "then"
 
 Slot = dict[str, Any]
@@ -191,13 +194,19 @@ def _check_coverage(intent: str, slots: dict[str, Slot | None], grounds: _Ground
     """Refuse a reading that drops a negation or a second statement (see the module docstring).
 
     An ``if`` may express a negation through its comparison, and its ``then`` is its own.
+    ``unless`` is the exception: an ``if`` must carry the opposite of what the sentence states.
     """
     tokens = [t for t in grounds.norm.tokens if t.kind == "word"]
     used = {word.lower() for word in _slot_words(slots)}
     if intent != "if":
-        dropped = sorted({t.lower for t in tokens if t.lower in _NEGATORS} - used)
+        dropped = sorted({t.lower for t in tokens if t.lower in _NEGATORS | {_UNLESS}} - used)
         if dropped:
             raise _Reject(Discarded.NOT_COVERED, f"the reading drops {_short(dropped[0])}")
+    elif any(t.lower == _UNLESS for t in tokens):
+        stated = _stated_comparison(tokens)
+        condition = slots["condition"]
+        if stated is None or condition is None or condition["op"] != _OPPOSITE[stated]:
+            raise _Reject(Discarded.NOT_COVERED, "the reading does not reverse the comparison after unless")
     joins = {patterns.CONTINUATION_WORD} if intent == "if" else {patterns.CONTINUATION_WORD, _THEN}
     everything = grounds.norm.tokens
     for position, token in enumerate(everything):
@@ -208,6 +217,12 @@ def _check_coverage(intent: str, slots: dict[str, Slot | None], grounds: _Ground
             rest += 1
         if rest < len(everything) and is_statement(grounds.norm, everything[rest].start):
             raise _Reject(Discarded.NOT_COVERED, "the reading drops a second statement")
+
+
+def _stated_comparison(tokens: list[Any]) -> str | None:
+    """The operator of the first ``patterns.COMPARISONS`` phrase in the sentence's own words."""
+    words = f" {' '.join(t.lower for t in tokens)} "
+    return next((op for phrase, op in patterns.COMPARISONS if f" {phrase} " in words), None)
 
 
 class _Grounds:

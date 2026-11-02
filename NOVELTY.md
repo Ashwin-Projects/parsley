@@ -69,8 +69,8 @@ as proof** that every English interpretation is correct.
 - Any percentage in advance. We report the measured numbers, including failures.
 - Anything from the optional learned scorer (`parsley_ml/`). It is off by default, outside the
   core, and not part of the contribution; all headline numbers are reported with it off.
-- Anything from the optional LLM modes. All headline numbers are `rules` mode. No real model has
-  been evaluated, so there is no measured accuracy for `llm` or `hybrid`.
+- General accuracy for the optional LLM modes. All headline numbers are `rules` mode. One model has
+  been run once on the held-out set (limits below), which says nothing about other models.
 
 The defensible claim is the **specific combination**: a compiler symbol table feeding back
 into English interpretation, explicit ambiguity handling, and layered verification inside a
@@ -110,9 +110,12 @@ What this does not give:
   can still be dropped by a model.
 - **Determinism and offline use do not hold** in these modes, and a sentence, the variable
   names and their types are sent to the configured provider.
-- **No measured benefit yet.** Tests replay hand-written responses, so they show that bad
-  output is contained, not that a real model helps. Measuring that needs a real model and a
-  new blind set, since the existing paraphrase failures have already been seen.
+- **A small benefit, measured on seen data.** One run of `openai/gpt-oss-120b` on Groq raised exact
+  match from 105/118 to 111/118 in both `hybrid` and `llm`, entirely on paraphrases, whose rule
+  failures had already been seen. Its first run produced one wrong program (1/168): 0/168 holds
+  only after a validator fix made with that item in view, so 1/168 is the fair figure. `llm` also
+  lost a sentence the rules read correctly, because the model labelled a number a word (`E209`).
+  A fair measure needs a new blind set.
 
 ## Metrics (Section 8)
 

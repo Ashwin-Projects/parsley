@@ -391,7 +391,7 @@ How each guarantee holds for a model's reading:
 | Typo question for targets (D-12) | A model's `declare` becomes `assign`, so N1 picks implicit `LET` or the typo question, and a type cannot change through `W208`. |
 | Nothing is invented | Grounding: every name, word, pronoun, number and quoted string must come from the sentence. A hostile response can only rearrange the user's words, plus numbers marked `derived`, which always ask. |
 | N2 asks, it does not guess | LLM candidates go through `gate()`. Readings within `CLARIFY_MARGIN` ask; in `llm` mode rule candidates stay in the pool whenever they alone would ask, so a model cannot remove a question. |
-| One statement per sentence (D-4) | Rejections with a reason of their own never reach the LLM; a reading that drops a second statement or a negation is discarded. |
+| One statement per sentence (D-4) | Rejections with a reason of their own never reach the LLM; a reading that drops a second statement or a negation, or does not reverse the comparison after `unless`, is discarded. |
 | N3 | Unchanged. `W513` marks an accepted LLM reading, because V1 is the layer that can catch a misreading, and only if a person reads it. |
 | Only `semantic.py` writes the session | `LLMContext` is a copy; `llm/` imports neither `semantic` nor `codegen`. |
 | Fallback | A provider problem never raises: the rule result stands, with `W510`, `W511`, `W512` or `W514`. Only a KeyboardInterrupt passes through. |

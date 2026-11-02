@@ -460,7 +460,10 @@ any other text around the JSON makes it `malformed_json`.
   number that is in the sentence is ignored.
 - **Coverage:** a reading may not drop a negation (`not`, `never`, `no`, `don't`, `dont`,
   `cannot`, `can't`, `won't`), except in an `if`, whose comparison can express it, or drop a
-  second statement after `and` or `then` when that clause matches a supported pattern.
+  second statement after `and` or `then` when that clause matches a supported pattern. `unless`
+  is checked in an `if` too: the sentence must state a comparison from Section 6.2 and the reading
+  must use its opposite (`unless x equals 1` is `x != 1`); otherwise it is `not_covered`. Rules
+  still have no `unless` pattern.
 - A model's `declare` is treated as `assign`, so Section 4 rule 3 and Section 5 decide what
   happens to the name: implicit `LET` with `W301`, or the typo question.
 
@@ -522,6 +525,7 @@ applied throughout this document.
 | D-15 | Is a model's `declare` an explicit declaration? | No. It is treated as `assign`, because D-12's exemption is for a user who said so. *2026-11-01.* | §7.5 |
 | D-16 | Is a code fence around model JSON malformed? | Exactly one surrounding ```` ``` ```` or ```` ```json ```` fence is stripped; anything else stays malformed (`W512`). *2026-11-01, project lead.* | §7.5 |
 | D-17 | Does an accepted LLM reading always warn? | Yes: `W513` on every accepted LLM reading, including a confirmed derived amount. *2026-11-01, project lead.* | §7.5 |
+| D-18 | How is an `if` reading of `unless` checked? | It must use the opposite of the comparison the sentence states; a comparison outside Section 6.2 cannot be checked and is `not_covered`. A real model dropped the reversal and all three layers agreed with it. *2026-11-02.* | §7.5 |
 
 Edit distance in D-2 is optimal string alignment (an adjacent swap counts as one edit), so
 the plan's demo case `print scroe` stays a typo question for the 5-letter name `score`.

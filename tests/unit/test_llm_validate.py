@@ -425,3 +425,45 @@ def test_a_quoted_payload_stays_a_quoted_string():
 def test_detail_is_short_and_printable():
     result = validate("x\n" * 1000, "print 5")
     assert all(len(d.detail) <= 200 and d.detail.isprintable() for d in result.discarded)
+
+
+def unless_reading(op, left="score", right=None):
+    return reading("if", {
+        "condition": {"kind": "condition", "op": op, "left": {"kind": "word", "text": left},
+                      "right": right or {"kind": "number", "text": "3"}},
+        "then": {"kind": "statement", "intent": "print",
+                 "slots": {"value": {"kind": "string", "text": "low", "quoted": True}}},
+    })
+
+
+@pytest.mark.parametrize("phrase, literal, opposite", [
+    ("is above", ">", "<="),
+    ("is less than", "<", ">="),
+    ("is at least", ">=", "<"),
+    ("is at most", "<=", ">"),
+    ("equals", "==", "!="),
+    ("does not equal", "!=", "=="),
+])
+def test_unless_needs_the_opposite_of_the_stated_comparison(phrase, literal, opposite):
+    sentence = f'unless score {phrase} 3, print "low"'
+    assert reasons(run(sentence, unless_reading(literal))) == [Discarded.NOT_COVERED]
+    assert run(sentence, unless_reading(opposite)).readings
+
+
+def test_unless_with_a_comparison_the_table_does_not_know_cannot_be_checked():
+    assert reasons(run('unless score tops 3, print "low"', unless_reading("<="))) == [Discarded.NOT_COVERED]
+
+
+def test_a_reading_that_drops_unless_altogether_is_refused():
+    slots = {"value": {"kind": "string", "text": "low", "quoted": True}}
+    assert reasons(run('unless score is above 3, print "low"', reading("print", slots))) == [Discarded.NOT_COVERED]
+
+
+def test_unless_inside_a_quoted_string_is_only_text():
+    sentence = 'if score is above 3 then print "unless"'
+    answer = reading("if", {
+        "condition": unless_reading(">")["slots"]["condition"],
+        "then": {"kind": "statement", "intent": "print",
+                 "slots": {"value": {"kind": "string", "text": "unless", "quoted": True}}},
+    })
+    assert run(sentence, answer).readings

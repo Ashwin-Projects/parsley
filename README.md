@@ -307,7 +307,7 @@ Good to know:
   `double x`. Parsley always asks first (`Did you mean: multiply x by 2?`), and in file mode
   that is `E102`, so it never compiles unconfirmed.
 - A model can still misread a sentence in a way that passes every check, such as swapping two
-  variables. No accuracy has been measured for these modes, and the evaluation below is
+  variables. One model has been measured on seen data (`NOVELTY.md`), and the evaluation below is
   `rules` mode only.
 
 ---

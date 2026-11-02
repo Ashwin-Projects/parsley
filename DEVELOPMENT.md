@@ -137,10 +137,20 @@ frontend (ARCHITECTURE.md 2.12).
 playwright.real.config.ts` (in `web/`) runs the browser suite against the real API, replaying the
 hand-written `tests/fixtures_llm/e2e.json`.
 
-The real-model evaluation has still not been run, so no accuracy is claimed for `llm` or `hybrid`.
 `python -m parsley.eval.compare` prints the rules, hybrid and llm columns side by side.
 `tests/integration/test_llm_replay.py` replays `tests/fixtures_llm/recorded_<mode>.json` against
-`tests/golden/<mode>_results.csv` and skips until a real run has been recorded.
+`tests/golden/<mode>_results.csv`, offline, so a change that alters a recorded result fails.
+
+The held-out set was run once with `openai/gpt-oss-120b` on Groq, at `--delay 11` for its 8000
+tokens a minute. The first run gave wrong code 1/168 in both modes (H15-4, `unless`), committed as
+it stood. A validator check for `unless` (D-18), tested on development data only, turned that item
+into a rejection, and one cached re-run gave 0/168 with no other result changed, so exact match
+stayed 111/118. H15-4 has now been seen, so 1/168 is the fair figure.
+
+Known and left alone, because a fix would raise exact match on items already seen: the model labels
+some numbers as words (`{"kind": "word", "text": "2.75"}`), which fails with `E209`. That costs
+H02-1 (`llm` only) and H02-4. Reading a `word` slot that is a number token as a number would fix it,
+and needs a new blind set to measure.
 
 ---
 
