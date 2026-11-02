@@ -315,6 +315,44 @@ Good to know:
 
 ## Web API
 
+### Web playground
+
+From the repository root, start the real API and website with Docker:
+
+```sh
+docker compose up --build
+```
+
+Open <http://localhost:8080>. To run without Docker, install Python 3.11+ and
+Node.js 22.12+, then start the API and frontend in separate terminals:
+
+```sh
+pip install -e ".[web]"
+python -m parsley.web --port 8000
+```
+
+```sh
+cd web
+npm ci
+npm run dev
+```
+
+Set `VITE_USE_MOCK=false` and `VITE_API_URL=http://localhost:8000` in
+`web/.env.local` before starting Vite to connect to the real API. For optional
+LLM modes, copy `.env.example` to the repository root `.env` and configure a
+provider and key as described below. Docker passes this file to the API at
+runtime; never put keys in frontend settings. Select Hybrid or LLM in the
+workspace. Sessions are in memory; download the MiniLang and transcript before
+leaving the page. Live demo: **link coming soon**.
+
+See [the web guide](web/README.md) for screenshots and the browser checks.
+
+![Parsley playground on desktop](web/screenshots/home-desktop.png)
+
+[Mobile home](web/screenshots/home-mobile.png) ·
+[Workspace with clarification](web/screenshots/workspace-desktop.png) ·
+[How it works](web/screenshots/how-it-works-desktop.png)
+
 An optional HTTP API backs the web frontend. It needs the `web` extra:
 
 ```

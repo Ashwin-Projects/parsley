@@ -2,12 +2,34 @@
 
 React + Vite + strict TypeScript, plain CSS. All frontend code, tests and artifacts live under `web/`; the Python compiler is untouched.
 
+## Quick start with Docker
+
+From the repository root, run `docker compose up --build`, then open <http://localhost:8080>. The real API runs behind nginx. Live demo: **link coming soon**.
+
+For LLM modes, copy the root `.env.example` to `.env` and set `PARSLEY_LLM_PROVIDER`, the model and its API key. For Groq use `PARSLEY_LLM_PROVIDER=openai`, `PARSLEY_LLM_BASE_URL=https://api.groq.com/openai/v1`, `PARSLEY_LLM_MODEL=<model>`, and `PARSLEY_LLM_API_KEY=<key>`. Restart the API container after changes. The root `.env` is supplied at runtime; do not place credentials in `VITE_*` variables.
+
+## Run without Docker
+
+In one terminal at the repository root, run `pip install -e ".[web]"` and `python -m parsley.web --port 8000`. In another terminal run `cd web`, `npm ci`, and `npm run dev`. Set `VITE_USE_MOCK=false` and `VITE_API_URL=http://localhost:8000` in `web/.env.local` before starting Vite, then open <http://127.0.0.1:5173>. The default is the browser mock; it simulates compiler results and LLM readings.
+
+The workspace offers separate downloads for the MiniLang program and the session transcript. The transcript includes English, readings, code, clarification exchanges and diagnostics. Sessions are held in memory and are reset on refresh.
+
+## New screenshots
+
+| View                                     | Desktop                                          | Mobile                                          |
+| ---------------------------------------- | ------------------------------------------------ | ----------------------------------------------- |
+| Home                                     | [Home](screenshots/home-desktop.png)             | [Home](screenshots/home-mobile.png)             |
+| Workspace with clarification and LLM tag | [Workspace](screenshots/workspace-desktop.png)   | [Workspace](screenshots/workspace-mobile.png)   |
+| How it works                             | [Pipeline](screenshots/how-it-works-desktop.png) | [Pipeline](screenshots/how-it-works-mobile.png) |
+
+These screenshots use the deterministic mock. The Playwright axe test checks home, workspace, How it works and About for serious or critical violations at both viewport sizes.
+
 ## Run locally
 
 Requires Node.js 22.12+ and npm. In this checkout:
 
 ```powershell
-cd C:\Parsley_web_frontend\web
+cd web
 npm ci
 npm run dev
 ```
@@ -38,11 +60,11 @@ VITE_API_URL=http://localhost:8000
 
 Set `VITE_USE_MOCK=true` for the demo. An absent setting also selects the mock. `VITE_API_URL` is the backend origin, without `/api`; leave it empty to use the frontend origin. A backend on a different origin must allow this frontend origin through CORS. These are public build settings; do not put secrets in them.
 
-The compile contract and new health route are documented in [API_CONTRACT.md](API_CONTRACT.md). The client uses POST JSON for mutations and GET for health and program queries. Switching transports does not change components. Sessions are created on page load; refreshing starts a new session. The HTTP adapter is tested with fetch stubs and browser-local API fixtures; a live backend is not part of this branch.
+The compile contract and health route are documented in [API_CONTRACT.md](API_CONTRACT.md). The client uses POST JSON for mutations and GET for health and program queries. Switching transports does not change components. Sessions are created on page load; refreshing starts a new session. Browser tests can also run against the real backend.
 
 The health pill reports LLM configuration, with version/provider/model in its tooltip. The required health response has no mode field: the pill honestly labels the selected compile mode as **Requested**. If the backend supplies the optional `mode` extension, it shows **Backend** mode instead. Mock health identifies the simulated provider and model.
 
-Accepted LLM readings carry an inline amber **via LLM — check the reading** tag next to V1. W510–W514 diagnostics appear in trace and a polite, dismissible toast that closes after ten seconds; warnings never block input or use error styling. For `derived_value` questions the controls are always Yes and No, even if the backend omits option labels. In the mock, select LLM or Hybrid, send `set x to 10`, then `double x`: **Did you mean: multiply x by 2?** Yes appends the multiplication; No leaves the program unchanged. No real LLM or compiler verification runs in mock mode.
+Accepted LLM readings carry an inline amber **via LLM — check the reading** tag next to V1. W510–W515 diagnostics appear in trace and a polite, dismissible toast that closes after ten seconds; warnings never block input or use error styling. When health reports no remaining LLM budget, a banner says the model is paused and rules are used. For `derived_value` questions the controls are always Yes and No, even if the backend omits option labels. In the mock, select LLM or Hybrid, send `set x to 10`, then `double x`: **Did you mean: multiply x by 2?** Yes appends the multiplication; No leaves the program unchanged. No real LLM or compiler verification runs in mock mode.
 
 HTTP requests have a 30-second deadline. Backend-down and gateway errors give connection guidance; 429 responses show `Retry-After` seconds or date guidance without automatic resubmission. Overlength input stays editable and is blocked before any API call; the 500-character limit counts Unicode code points, matching Python.
 
@@ -70,7 +92,7 @@ The eight sidebar examples come from `LANGUAGE_SPEC.md` sections 4 and 6. Variab
 
 ## Screenshots
 
-Playwright regenerates [desktop](screenshots/workspace-desktop.png) and [mobile](screenshots/workspace-mobile.png) screenshots showing an accepted LLM-tagged reading alongside a pending derived-value clarification. These are review artifacts, not pixel snapshot assertions. Tests run a mock Vite server on port 5173 and a real-HTTP-adapter Vite server on port 5174; browser route fixtures supply the latter's API, so no Python backend or provider keys are needed.
+Playwright regenerates [desktop](screenshots/workspace-desktop.png) and [mobile](screenshots/workspace-mobile.png) screenshots showing an accepted LLM-tagged reading alongside a pending clarification. These are review artifacts, not pixel snapshot assertions. Tests run a mock Vite server on port 5173 and a real-HTTP-adapter Vite server on port 5174; browser route fixtures supply the latter's API, so no Python backend or provider keys are needed.
 
 ## Docker
 
@@ -113,7 +135,7 @@ The API comes from `src/parsley/web/`, and Docker Engine must be running. See [d
 | `BACKEND_PLAN.md`, `BACKEND_VERIFICATION.md`                                                    | Follow-up plan, exact results and changed-file list                   |
 | `../docker/`, `../docker-compose.yml`, `../.github/workflows/web.yml`                           | Containers, runtime configuration and CI                              |
 
-The requested branch is `web-frontend`, based on `main` at `b7ed07c`, in the worktree `C:\Parsley_web_frontend`. This follow-up changes only `web/`, new Docker/workflow files, and the explicitly requested root `docker-compose.yml`. No push, merge, rebase or git reset was performed. Current checks and the complete follow-up file list are in [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md).
+Historical frontend integration notes are in [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md).
 
 ## Browser tests against the real API
 
