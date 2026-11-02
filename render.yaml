@@ -1,0 +1,23 @@
+# Render blueprint; docs/DEPLOY.md has the steps. Render asks for each `sync: false` value when
+# the blueprint is first applied, and none of them is stored in this repository.
+services:
+  - type: web
+    name: parsley
+    runtime: docker
+    plan: free
+    branch: v2
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: false
+    envVars:
+      - key: PARSLEY_LLM_PROVIDER
+        sync: false
+      - key: PARSLEY_LLM_BASE_URL
+        sync: false
+      - key: PARSLEY_LLM_MODEL
+        sync: false
+      - key: PARSLEY_LLM_API_KEY
+        sync: false
+      - key: PARSLEY_CLIENT_IP_HEADER
+        value: CF-Connecting-IP

@@ -5,6 +5,9 @@ API image installs the Python package with its optional `web` dependencies and
 runs uvicorn. Docker Engine with Linux containers and Docker Compose 2.24.0 or
 newer are required (`env_file.required` permits running without a root `.env`).
 
+This is the two-container setup for local use. To run the whole site as one service, use the
+root `Dockerfile` ([docs/DEPLOY.md](../docs/DEPLOY.md)).
+
 ## Backend
 
 The `web` extra and `parsley.web.app:app` come from `src/parsley/web/`, which implements

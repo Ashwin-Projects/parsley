@@ -15,6 +15,8 @@ services:
     env_file:
       - path: .env
         required: false
+    environment:
+      PARSLEY_CLIENT_IP_HEADER: X-Real-IP # nginx sets it; without it every visitor counts as nginx
     expose:
       - "8000"
     init: true

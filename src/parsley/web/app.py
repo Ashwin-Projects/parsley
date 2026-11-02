@@ -8,7 +8,8 @@ or ``hybrid`` needs it, and a compile in ``rules`` mode never does. Errors never
 trace, a request body or a key: ``_CatchAll`` logs an unexpected failure by type and answers ``internal error``. It is
 middleware and not an exception handler because Starlette re-raises after such a handler, and
 uvicorn would then log the message, which can hold a sentence. ``parsley.web.limits`` holds the
-limits of a public deployment.
+limits of a public deployment. Given a built frontend (``PARSLEY_WEB_DIST``), the app also serves
+it, so the whole site can be one service (docs/DEPLOY.md).
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from typing import Any, Literal
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
@@ -48,6 +49,7 @@ MAX_STATEMENTS = 500  # V3 re-runs the whole session on each sentence, so its co
 MAX_ID_CHARS = 128
 PROVIDER_TIMEOUT = 14.0  # seconds for a whole provider call, retry included; the frontend gives up at 30
 
+_FOREVER = "public, max-age=31536000, immutable"
 _STATUS = {"ok": "accepted", "needs_clarification": "clarify", "unsupported": "rejected", "error": "error"}
 _NO_QUESTION = {"code": "E102", "stage": "ambiguity", "message": "There is no pending question."}
 
@@ -231,7 +233,7 @@ def _load_provider(dotenv: Path = Path(".env")) -> object:
 
 def create_app(
     *, provider: object = None, provider_factory: Callable[[], object] = _load_provider,
-    limits: WebLimits | None = None,
+    limits: WebLimits | None = None, web_dist: Path | None = None,
 ) -> FastAPI:
     """The API; ``provider`` overrides the configured one (tests pass a ``FakeProvider``)."""
     limits = limits or WebLimits.from_env(os.environ)
@@ -368,6 +370,9 @@ def create_app(
             web.session, web.statements, web.pending = Session(), [], None
         return {"ok": True}
 
+    built = web_dist or os.environ.get("PARSLEY_WEB_DIST")
+    if built:
+        _serve_frontend(app, Path(built))  # last, so the API's own routes win
     return app
 
 
@@ -376,6 +381,34 @@ def __getattr__(name: str) -> FastAPI:
     if name == "app":
         return create_app()
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def _serve_frontend(app: FastAPI, dist: Path) -> None:
+    """Serve the build at ``/``: a file if there is one, otherwise the page, for client-side routes."""
+    root = dist.resolve()
+    page = root / "index.html"
+    if not page.is_file():
+        raise RuntimeError(f"PARSLEY_WEB_DIST has no index.html: {root}")
+
+    @app.api_route("/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
+    def frontend(path: str) -> FileResponse:
+        if path == "api" or path.startswith("api/"):
+            raise HTTPException(404, "not found")
+        hashed = path.startswith("assets/")  # Vite puts a content hash in these names
+        target = root / path
+        if _inside(root, target):
+            return FileResponse(target, headers={"Cache-Control": _FOREVER if hashed else "no-cache"})
+        if hashed:
+            raise HTTPException(404, "not found")
+        return FileResponse(page, headers={"Cache-Control": "no-cache"})
+
+
+def _inside(root: Path, target: Path) -> bool:
+    """Is ``target`` a file under ``root``, after ``..`` and links are followed?"""
+    try:
+        return target.resolve().is_relative_to(root) and target.is_file()
+    except (OSError, ValueError):  # a NUL byte, or a name the system refuses
+        return False
 
 
 def _source(web: WebSession) -> str:

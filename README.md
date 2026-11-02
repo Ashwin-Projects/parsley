@@ -340,7 +340,7 @@ live in memory only: one expires after an hour unused, and at 1000 sessions the 
 used one is dropped. A sentence can be 500 characters long and a session can hold 500 statements.
 `llm` and `hybrid` use the provider configured above, loaded the first time it is needed, and a
 whole model call stops after 14 seconds. `/api/health` reads that configuration too, but never calls the model
-and never returns a key or a base URL.
+and never returns a key or a base URL. `docs/DEPLOY.md` covers public hosting and the usage limits.
 Unknown or expired sessions return 404, and errors never include a stack trace or a key.
 
 ---
