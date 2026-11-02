@@ -1,5 +1,7 @@
 import type { Program, RunResult } from '../api/types';
 import { Icon } from './Icon';
+import { useEffect, useRef } from 'react';
+import { finalValue, hasPrint } from '../run-values';
 
 function Highlight({ code }: { code: string }) {
   const tokens = code.split(
@@ -45,6 +47,12 @@ export function ProgramPanel({
   onDownload: () => void;
   busy: boolean;
 }) {
+  const resultsRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (output && window.matchMedia?.('(max-width: 600px)').matches) {
+      resultsRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+    }
+  }, [output]);
   let lineNumber = 0;
   return (
     <section className="program-panel" aria-label="MiniLang program">
@@ -112,6 +120,9 @@ export function ProgramPanel({
                     <code>
                       <Highlight code={line} />
                     </code>
+                    {finalValue(line, output) && (
+                      <span className="value-hint">// {finalValue(line, output)}</span>
+                    )}
                   </button>
                 );
               }),
@@ -131,7 +142,7 @@ export function ProgramPanel({
       <p className="mapping-hint">
         <span aria-hidden="true">↖</span> Hover or focus a line to find its English sentence.
       </p>
-      <section className="output-panel" aria-label="Program results">
+      <section ref={resultsRef} className="output-panel" aria-label="Program results">
         <div className="output-heading">
           <h3>
             <span aria-hidden="true">›_</span> Console
@@ -152,6 +163,12 @@ export function ProgramPanel({
             {output.error && (
               <p className="runtime-error" role="alert">
                 {output.error}
+              </p>
+            )}
+            {!output.error && !hasPrint(program.minilang) && (
+              <p className="no-print-hint">
+                This program prints nothing. Its final variables are shown below. Tip: type 'print{' '}
+                {Object.keys(output.variables)[0] ?? 't'}' to add output.
               </p>
             )}
             <section className="variables" aria-label="Final variables">

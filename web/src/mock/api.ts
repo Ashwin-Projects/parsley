@@ -100,6 +100,23 @@ function compile(
     result.question!.kind = 'derived_value';
     return result;
   }
+  match = /^set (\w+) to (-?\d+(?:\.\d+)?) plus (-?\d+(?:\.\d+)?)$/i.exec(text);
+  if (match) {
+    const [, name, left, right] = match;
+    const declared = Object.hasOwn(variables, name);
+    if (declared && typeof variables[name] !== 'number')
+      return fail(`Variable ${name} cannot change type.`, undefined, 'E204');
+    return accept(
+      {
+        minilang: `${declared ? '' : 'LET '}${name} = ${left} + ${right};`,
+        ref: name,
+        execute: (vars) => {
+          vars[name] = Number(left) + Number(right);
+        },
+      },
+      `${declared ? 'set' : 'create variable'} ${name} to ${left} plus ${right}.`,
+    );
+  }
   match = /^set (\w+) to (-?\d+(?:\.\d+)?) or (-?\d+(?:\.\d+)?)$/i.exec(text);
   if (match) {
     const [, name, a, b] = match;

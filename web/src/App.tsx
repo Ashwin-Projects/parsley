@@ -509,6 +509,7 @@ export default function App({ api, mock = true }: { api: Api; mock?: boolean }) 
                 <div className="conversation-scroll">
                   <Conversation
                     messages={messages}
+                    output={output}
                     linked={linked}
                     busy={unavailable}
                     onAnswer={(id, value) => void answer(id, value)}

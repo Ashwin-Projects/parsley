@@ -3,6 +3,18 @@ import { createMockTransport } from './api';
 import { createApi } from '../api/client';
 
 describe('mock contract', () => {
+  it('runs a numeric addition assignment without requiring print', async () => {
+    const api = createApi(createMockTransport());
+    const id = (await api.session()).session_id;
+    expect((await api.compile(id, 'set t to 3 plus 5', 'rules')).minilang).toBe('LET t = 3 + 5;');
+    expect(await api.run(id)).toEqual({ output: [], variables: { t: 8 } });
+  });
+  it('rejects arithmetic assignment to an existing string', async () => {
+    const api = createApi(createMockTransport());
+    const id = (await api.session()).session_id;
+    await api.compile(id, 'set t to "text"', 'rules');
+    expect((await api.compile(id, 'set t to 3 plus 5', 'rules')).status).toBe('rejected');
+  });
   it('falls back to rules and emits W515 when its LLM budget is exhausted', async () => {
     const api = createApi(createMockTransport({ llmBudgetRemaining: false }));
     expect((await api.health()).llm_budget_remaining).toBe(false);

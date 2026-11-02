@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { CompileResult } from '../api/types';
+import type { CompileResult, RunResult } from '../api/types';
+import { finalValue } from '../run-values';
 import { VerificationBadges } from './VerificationBadges';
 import { Icon } from './Icon';
 import { isLlmWarning } from '../diagnostics';
@@ -70,12 +71,14 @@ export function Conversation({
   busy,
   onAnswer,
   onInsert,
+  output,
 }: {
   messages: Message[];
   linked: number | null;
   busy: boolean;
   onAnswer: (id: number, answer: string) => void;
   onInsert: (sentence: string) => void;
+  output: RunResult | null;
 }) {
   return (
     <div
@@ -156,6 +159,14 @@ export function Conversation({
                   <div className="response-meta">
                     <VerificationBadges checks={message.result.checks} />
                   </div>
+                  {message.result.minilang?.split('\n').map((line, i) => {
+                    const value = finalValue(line, output);
+                    return value ? (
+                      <p className="final-value" key={i}>
+                        Final value: {value}
+                      </p>
+                    ) : null;
+                  })}
                 </>
               )}
               {message.result.status === 'clarify' && (
