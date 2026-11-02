@@ -1,0 +1,13 @@
+{
+ "version": 1,
+ "model": "e2e-fixture",
+ "note": "Hand-written model responses for the browser tests against the real API. No real model produced them.",
+ "responses": [
+  {"sentence": "set x to 10", "readings": [{"intent": "assign", "confidence": 0.9, "slots": {
+   "name": {"kind": "name", "text": "x"}, "value": {"kind": "number", "text": "10"}}}]},
+  {"sentence": "double x", "readings": [{"intent": "multiply", "confidence": 0.9, "slots": {
+   "name": {"kind": "name", "text": "x"}, "amount": {"kind": "number", "text": "2", "derived": true}}}]},
+  {"sentence": "double score", "readings": [{"intent": "multiply", "confidence": 0.9, "slots": {
+   "name": {"kind": "name", "text": "score"}, "amount": {"kind": "number", "text": "2", "derived": true}}}]}
+ ]
+}

@@ -131,6 +131,12 @@ against a local stub server, but the real-model run still needs a provider key. 
 golden files only for a deliberate rules-mode change. `parsley/web/` adds the HTTP API for the
 frontend (ARCHITECTURE.md 2.12).
 
+### v2 integration (branch `v2`, 2026-11-02)
+
+`web-frontend` is merged and `/api/health` exists. `npx playwright test -c
+playwright.real.config.ts` (in `web/`) runs the browser suite against the real API, replaying the
+hand-written `tests/fixtures_llm/e2e.json`.
+
 ---
 
 ## Phase 0 - Setup (Days 1-2)

@@ -81,9 +81,9 @@ docker compose config --quiet
 docker compose up --build -d
 ```
 
-Open http://localhost:8080. The multi-stage `docker/Dockerfile.web` builds with Node 22 and `VITE_USE_MOCK=false`, serves static assets with nginx, and proxies same-origin `/api` requests to the `api` service. `docker/Dockerfile.api` installs `.[web]` in Python slim and runs uvicorn. Both builds use explicit allowlist contexts that exclude `.env`, credentials, Git metadata and node_modules. Root `.env` is passed only to the API container at runtime; provider settings never enter frontend bundles or build arguments. Set `PARSLEY_WEB_PORT` there to change the loopback port and `PARSLEY_ASGI_APP` if the backend uses a different app import path.
+Open http://localhost:8080. The multi-stage `docker/Dockerfile.web` builds with Node 22 and `VITE_USE_MOCK=false`, serves static assets with nginx, and proxies same-origin `/api` requests to the `api` service. `docker/Dockerfile.api` installs `.[web]` in Python slim and runs uvicorn. Both builds use explicit allowlist contexts that exclude `.env`, credentials, Git metadata and node_modules. Root `.env` is passed only to the API container at runtime; provider settings never enter frontend bundles or build arguments. Set `PARSLEY_WEB_PORT` there to change the loopback port and `PARSLEY_ASGI_APP` for a different app import path.
 
-**Backend prerequisite:** this branch has no Python `web` extra or ASGI backend. The API build intentionally fails clearly until the backend supplies them. The default assumed ASGI target is `parsley.web.app:app`; it is configurable rather than a claim about an existing module. Docker Engine must also be running. Until integration, `docker compose up --build -d web` can serve the frontend with graceful backend-down errors; use local mock mode for the interactive demo. See [docker/README.md](../docker/README.md) for full setup and validation limits.
+The API comes from `src/parsley/web/`, and Docker Engine must be running. See [docker/README.md](../docker/README.md) for setup and validation limits.
 
 ## GitHub Actions
 
@@ -114,3 +114,12 @@ Open http://localhost:8080. The multi-stage `docker/Dockerfile.web` builds with 
 | `../docker/`, `../docker-compose.yml`, `../.github/workflows/web.yml`                           | Containers, runtime configuration and CI                              |
 
 The requested branch is `web-frontend`, based on `main` at `b7ed07c`, in the worktree `C:\Parsley_web_frontend`. This follow-up changes only `web/`, new Docker/workflow files, and the explicitly requested root `docker-compose.yml`. No push, merge, rebase or git reset was performed. Current checks and the complete follow-up file list are in [BACKEND_VERIFICATION.md](BACKEND_VERIFICATION.md).
+
+## Browser tests against the real API
+
+```sh
+pip install -e "..[web]"
+npx playwright test -c playwright.real.config.ts
+```
+
+This starts `python -m parsley.web` and the Vite dev server with `VITE_USE_MOCK=false`, and the API replays the hand-written `tests/fixtures_llm/e2e.json` with no network. The specs under `HTTP transport with browser-local API fixtures` still stub the API in the browser, because they need failures the real API does not produce on demand. `*.real.spec.ts` runs only in this configuration.
