@@ -26,19 +26,26 @@ The site spends your model API key, so read [Limits](#limits) first. Every sente
 
 `autoDeploy` is off: choose **Manual Deploy** to release a new commit.
 
-**Check the client address.** The blueprint counts visitors by `CF-Connecting-IP`, which only
-protects you if the host overwrites it. This sends 130 requests, each claiming a new address:
+**Check the client address before you share the link.** The blueprint counts visitors by
+`CF-Connecting-IP`, which works only if the host sets that header itself. Render does not document
+it, so test it. This sends 30 requests from your computer, each claiming a new address:
 
 ```sh
-for i in $(seq 1 130); do
-  curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "CF-Connecting-IP: 198.51.100.$((i % 250))" \
+for i in $(seq 1 30); do
+  curl -s -o /dev/null -w '%{http_code}\n' -X POST -H "CF-Connecting-IP: 198.51.100.$i" \
     https://<service>.onrender.com/api/session
 done | sort | uniq -c
 ```
 
-Some `429`s mean the header is safe. All `200`s mean a client can set it: remove
-`PARSLEY_CLIENT_IP_HEADER`, which makes the limit count Render's proxies instead. Visitors may then
-share a limit, so raise `PARSLEY_RATE_LIMIT_PER_MINUTE`. The daily cap protects the key either way.
+Straight away, open the site on a phone using mobile data, not your Wi-Fi.
+
+| `curl` | Phone | Meaning | What to do |
+|---|---|---|---|
+| Some `429` | Works | Each visitor is counted alone | Nothing |
+| All `200` | any | A client can fake its address, so the per-address limits do nothing | Remove `PARSLEY_CLIENT_IP_HEADER` and repeat |
+| Some `429` | "Rate limited" | All visitors share one count | Try another header, or raise `PARSLEY_SESSION_RATE_LIMIT_PER_MINUTE` and `PARSLEY_RATE_LIMIT_PER_MINUTE` |
+
+The daily cap protects the key in every case.
 
 **The free plan sleeps.** After about 15 minutes without traffic the service stops, and the next
 visitor waits for it to start, which can outlast the page's 30-second deadline; retrying works.
@@ -76,8 +83,10 @@ All are environment variables, and a malformed value stops the server at start.
 |---|---|---|
 | `PARSLEY_RATE_LIMIT_PER_MINUTE` | 20 | Requests a minute per address; above it, no model calls (`W515`) |
 | `PARSLEY_HARD_RATE_LIMIT_PER_MINUTE` | 120 | Requests a minute per address; above it, HTTP 429 with `Retry-After` |
+| `PARSLEY_SESSION_RATE_LIMIT_PER_MINUTE` | 10 | New sessions a minute per address; above it, HTTP 429 |
 | `PARSLEY_LLM_DAILY_CAP` | 500 | Model calls per UTC day across the server; 0 turns the model off (`W515`) |
 | `PARSLEY_LLM_SESSION_CAP` | 50 | Model calls per session (`W515`) |
+| `PARSLEY_LLM_ADDRESS_CAP` | 100 | Model calls per address and UTC day, so one visitor cannot spend the day (`W515`) |
 | `PARSLEY_MAX_SESSIONS` | 1000 | Sessions in memory; the least recently used makes room |
 | `PARSLEY_SESSION_TTL` | 3600 | Seconds before an unused session is dropped |
 | `PARSLEY_ALLOWED_ORIGINS` | the Vite dev server | Comma-separated origins for CORS. The one-service site is same-origin and needs none |
@@ -85,11 +94,14 @@ All are environment variables, and a malformed value stops the server at start.
 | `PARSLEY_FRAME_ANCESTORS` | `'none'` | Who may embed the site |
 | `PARSLEY_WEB_DIST` | unset (`/app/web/dist` in the image) | The built frontend to serve |
 
-`W515` keeps the rule result and the request succeeds. `/api/compile`, `/api/answer`, `/api/session`
+`W515` keeps the rule result and the request succeeds. An IPv6 visitor is counted by their /64.
+`/api/compile`, `/api/answer`, `/api/session`
 and `/api/run` count towards the two rates. `/api/health` says whether model budget remains, never how
 much. Bodies over 8 KiB get 413, and sentences over 500 characters get 422.
 
-Counts are held in memory, so run one process: more workers would each have their own.
+Counts are held in memory, so run one process: more workers would each have their own. The caps
+count model calls as the compiler sees them, and a call the provider fails is retried once, so while
+a provider is failing the requests it receives can reach twice the cap.
 
 ## Before you go public
 

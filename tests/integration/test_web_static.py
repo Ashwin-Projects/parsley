@@ -7,7 +7,7 @@ pytest.importorskip("httpx")
 
 from fastapi.testclient import TestClient  # noqa: E402
 
-from parsley.web.app import create_app  # noqa: E402
+from parsley.web.app import _inside, create_app  # noqa: E402
 
 INDEX = "<!doctype html><title>Parsley</title>"
 
@@ -73,6 +73,15 @@ def test_the_api_still_works_beside_the_page(client):
 ])
 def test_nothing_outside_the_build_can_be_read(client, path):
     assert "outside" not in client.get(path).text
+
+
+@pytest.mark.parametrize("path", ["//attacker/share/x", "\\\\attacker\\share", "C:\\Windows\\win.ini", "a:b"])
+def test_a_network_or_drive_path_never_reaches_the_filesystem(dist, path, monkeypatch):
+    def refuse(self, *args, **kwargs):
+        raise AssertionError("the path reached the filesystem")
+
+    monkeypatch.setattr(type(dist), "resolve", refuse)
+    assert _inside(dist, path) is False
 
 
 def test_a_nul_byte_in_a_path_gives_no_trace(client):

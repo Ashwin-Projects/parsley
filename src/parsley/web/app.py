@@ -247,7 +247,8 @@ def create_app(
     app.add_middleware(_SecurityHeaders, frame_ancestors=limits.frame_ancestors)  # outermost: covers every answer
     app.state.store = SessionStore(limits.session_ttl, limits.max_sessions)
     app.state.rate = RateLimiter()
-    app.state.budget = DailyBudget(limits.daily_llm_calls)
+    app.state.new_sessions = RateLimiter()
+    app.state.budget = DailyBudget(limits.daily_llm_calls, limits.address_llm_calls)
     app.state.provider = provider
     app.state.step_limit = STEP_LIMIT
     provider_lock = threading.Lock()
@@ -261,18 +262,26 @@ def create_app(
                 app.state.provider = built
             return built
 
+    def address_of(request: Request) -> str:
+        return client_ip(request, limits.client_ip_header)
+
+    def too_many() -> HTTPException:
+        return HTTPException(429, "too many requests", headers={"Retry-After": "60"})
+
     def count_request(request: Request) -> bool:
         """Count one request from its address: True over the soft limit, a 429 over the hard one."""
-        hits = app.state.rate.hit(client_ip(request, limits.client_ip_header))
+        hits = app.state.rate.hit(address_of(request))
         if hits > limits.hard_rate:
-            raise HTTPException(429, "too many requests", headers={"Retry-After": "60"})
+            raise too_many()
         return hits > limits.soft_rate
 
-    def limited_provider(web: WebSession, too_fast: bool) -> object:
+    def limited_provider(web: WebSession, request: Request, too_fast: bool) -> object:
         source = get_provider()
         if getattr(source, "error", None) is not None:
             return source  # nothing will be called, so nothing is spent
-        return LimitedProvider(source, app.state.budget, web, limits.session_llm_calls, too_fast)
+        return LimitedProvider(
+            source, app.state.budget, web, limits.session_llm_calls, address_of(request), too_fast,
+        )
 
     def session_for(session_id: str) -> WebSession:
         web = app.state.store.get(session_id)
@@ -299,6 +308,8 @@ def create_app(
     @app.post("/api/session", response_model=SessionResponse)
     def create_session(request: Request) -> dict[str, str]:
         count_request(request)
+        if app.state.new_sessions.hit(address_of(request)) > limits.session_rate:
+            raise too_many()
         return {"session_id": app.state.store.create().id}
 
     @app.post("/api/compile", response_model=CompileResponse, response_model_exclude_none=True)
@@ -309,7 +320,7 @@ def create_app(
             if len(web.statements) >= MAX_STATEMENTS:
                 raise HTTPException(409, f"a session holds at most {MAX_STATEMENTS} statements")
             web.mode = body.mode or web.mode
-            source = None if web.mode == "rules" else limited_provider(web, too_fast)
+            source = None if web.mode == "rules" else limited_provider(web, request, too_fast)
             result = pipeline.run(body.sentence, web.session, mode=web.mode, provider=source)
             app.state.store.touch(web)
             return _respond(web, result, body.sentence)
@@ -395,16 +406,22 @@ def _serve_frontend(app: FastAPI, dist: Path) -> None:
         if path == "api" or path.startswith("api/"):
             raise HTTPException(404, "not found")
         hashed = path.startswith("assets/")  # Vite puts a content hash in these names
-        target = root / path
-        if _inside(root, target):
-            return FileResponse(target, headers={"Cache-Control": _FOREVER if hashed else "no-cache"})
+        if _inside(root, path):
+            return FileResponse(root / path, headers={"Cache-Control": _FOREVER if hashed else "no-cache"})
         if hashed:
             raise HTTPException(404, "not found")
         return FileResponse(page, headers={"Cache-Control": "no-cache"})
 
 
-def _inside(root: Path, target: Path) -> bool:
-    """Is ``target`` a file under ``root``, after ``..`` and links are followed?"""
+def _inside(root: Path, path: str) -> bool:
+    """Is ``path`` a file under ``root``, after ``..`` and links are followed?
+
+    A network or drive path is refused untouched: on Windows even resolving ``//host/share``
+    would connect to that host.
+    """
+    if path.startswith("/") or "\\" in path or ":" in path:
+        return False
+    target = root / path
     try:
         return target.resolve().is_relative_to(root) and target.is_file()
     except (OSError, ValueError):  # a NUL byte, or a name the system refuses

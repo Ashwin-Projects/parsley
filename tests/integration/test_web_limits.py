@@ -14,6 +14,8 @@ from parsley.llm.config import ConfigError  # noqa: E402
 from parsley.llm.provider import FakeProvider, ProviderError, RawProposal  # noqa: E402
 from parsley.web.app import create_app  # noqa: E402
 from parsley.web.limits import (  # noqa: E402
+    ADDRESS_SPENT,
+    DAY_SPENT,
     DEFAULT_ORIGINS,
     DailyBudget,
     RateLimiter,
@@ -24,7 +26,10 @@ from parsley.web.sessions import DEFAULT_CAPACITY, DEFAULT_TTL  # noqa: E402
 
 RECORDED = Path(__file__).resolve().parents[1] / "fixtures_llm" / "recorded.json"
 SENTENCE = "store 50 in bonus"  # no rule reads it, and recorded.json holds the model's reading
-GENEROUS = {"soft_rate": 1000, "hard_rate": 1000, "daily_llm_calls": 1000, "session_llm_calls": 1000}
+GENEROUS = {
+    "soft_rate": 1000, "hard_rate": 1000, "session_rate": 1000, "daily_llm_calls": 1000,
+    "session_llm_calls": 1000, "address_llm_calls": 1000,
+}
 
 
 class Counting(FakeProvider):
@@ -55,8 +60,8 @@ def codes(response):
 
 def test_the_defaults():
     limits = WebLimits.from_env({})
-    assert (limits.soft_rate, limits.hard_rate) == (20, 120)
-    assert (limits.daily_llm_calls, limits.session_llm_calls) == (500, 50)
+    assert (limits.soft_rate, limits.hard_rate, limits.session_rate) == (20, 120, 10)
+    assert (limits.daily_llm_calls, limits.session_llm_calls, limits.address_llm_calls) == (500, 50, 100)
     assert (limits.max_sessions, limits.session_ttl) == (DEFAULT_CAPACITY, DEFAULT_TTL)
     assert limits.allowed_origins == DEFAULT_ORIGINS
     assert limits.client_ip_header is None
@@ -66,10 +71,12 @@ def test_every_limit_comes_from_the_environment():
     limits = WebLimits.from_env({
         "PARSLEY_RATE_LIMIT_PER_MINUTE": "5", "PARSLEY_HARD_RATE_LIMIT_PER_MINUTE": "9",
         "PARSLEY_LLM_DAILY_CAP": "7", "PARSLEY_LLM_SESSION_CAP": "3", "PARSLEY_MAX_SESSIONS": "11",
+        "PARSLEY_SESSION_RATE_LIMIT_PER_MINUTE": "4", "PARSLEY_LLM_ADDRESS_CAP": "6",
         "PARSLEY_SESSION_TTL": "60", "PARSLEY_ALLOWED_ORIGINS": "https://a.example, https://b.example",
         "PARSLEY_CLIENT_IP_HEADER": "CF-Connecting-IP", "PARSLEY_FRAME_ANCESTORS": "https://huggingface.co",
     })
     assert (limits.soft_rate, limits.hard_rate, limits.daily_llm_calls, limits.session_llm_calls) == (5, 9, 7, 3)
+    assert (limits.session_rate, limits.address_llm_calls) == (4, 6)
     assert (limits.max_sessions, limits.session_ttl) == (11, 60)
     assert limits.allowed_origins == ("https://a.example", "https://b.example")
     assert limits.client_ip_header == "CF-Connecting-IP"
@@ -157,6 +164,25 @@ def test_creating_sessions_and_running_count_towards_the_hard_limit():
     assert client.post("/api/session").status_code == 429
 
 
+def test_creating_sessions_has_its_own_lower_limit():
+    client, _ = app_with(session_rate=2)
+    sid = new_session(client)
+    new_session(client)
+    response = client.post("/api/session")
+    assert response.status_code == 429 and response.headers["retry-after"] == "60"
+    assert compile_(client, sid, "print 1", "rules").status_code == 200  # the visitor's session still works
+
+
+def test_one_address_cannot_push_out_every_session():
+    app = create_app(limits=WebLimits(**{**GENEROUS, "session_rate": 2, "max_sessions": 3}))
+    visitor = TestClient(app, client=("198.51.100.1", 1))
+    attacker = TestClient(app, client=("198.51.100.2", 1))
+    sid = new_session(visitor)
+    for _ in range(50):
+        attacker.post("/api/session")
+    assert compile_(visitor, sid, "print 1", "rules").status_code == 200
+
+
 def test_one_address_does_not_use_up_anothers_limit():
     app = create_app(provider=FakeProvider(RECORDED), limits=WebLimits(**{**GENEROUS, "hard_rate": 1}))
     first = TestClient(app, client=("198.51.100.1", 1))
@@ -164,6 +190,25 @@ def test_one_address_does_not_use_up_anothers_limit():
     first.post("/api/session")
     assert first.post("/api/session").status_code == 429
     assert second.post("/api/session").status_code == 200
+
+
+def test_new_sessions_from_one_address_cannot_spend_the_whole_day():
+    client, source = app_with(address_llm_calls=2)
+    for _ in range(2):
+        assert compile_(client, new_session(client)).json()["status"] == "accepted"
+    response = compile_(client, new_session(client))
+    assert "W515" in codes(response)
+    assert source.count == 2
+    assert client.get("/api/health").json()["llm_budget_remaining"] is True
+
+
+def test_another_address_keeps_its_share_of_the_day():
+    app = create_app(provider=FakeProvider(RECORDED), limits=WebLimits(**{**GENEROUS, "address_llm_calls": 1}))
+    first = TestClient(app, client=("198.51.100.1", 1))
+    second = TestClient(app, client=("198.51.100.2", 1))
+    compile_(first, new_session(first))
+    assert "W515" in codes(compile_(first, new_session(first)))
+    assert compile_(second, new_session(second)).json()["status"] == "accepted"
 
 
 def test_the_window_slides():
@@ -208,6 +253,26 @@ def test_a_bad_header_falls_back_to_the_socket(value):
     assert client_ip(Peer("10.0.0.1", x_real_ip=value), "X-Real-IP") == "10.0.0.1"
 
 
+def test_an_ipv6_network_counts_as_one_address():
+    first = client_ip(Peer("2001:db8:1:2:aaaa::1"), None)
+    assert first == client_ip(Peer("2001:db8:1:2:bbbb::9"), None) == "2001:db8:1:2::"
+    assert first != client_ip(Peer("2001:db8:1:3::1"), None)
+
+
+def test_an_ipv6_header_value_is_reduced_too():
+    request = Peer("10.0.0.1", cf_connecting_ip="2001:db8:1:2:aaaa::1")
+    assert client_ip(request, "CF-Connecting-IP") == "2001:db8:1:2::"
+
+
+def test_an_ipv4_mapped_address_is_the_ipv4_address():
+    assert client_ip(Peer("::ffff:198.51.100.9"), None) == "198.51.100.9"
+
+
+def test_a_scope_id_cannot_make_a_new_address():
+    request = Peer("10.0.0.1", x_real_ip="fe80::1%anything-at-all")
+    assert client_ip(request, "X-Real-IP") == "10.0.0.1"
+
+
 def test_no_address_at_all_is_one_shared_bucket():
     assert client_ip(Peer(None), None) == "unknown"
 
@@ -226,13 +291,30 @@ def test_the_daily_cap_is_shared_by_every_session_and_falls_back():
 
 def test_the_daily_cap_resets_at_midnight_utc():
     today = [datetime.date(2026, 11, 2)]
-    budget = DailyBudget(1, today=lambda: today[0])
-    assert budget.take() is True
-    assert budget.take() is False
+    budget = DailyBudget(1, 5, today=lambda: today[0])
+    assert budget.take("a") is None
+    assert budget.take("a") == DAY_SPENT
     assert budget.remaining() is False
     today[0] = datetime.date(2026, 11, 3)
     assert budget.remaining() is True
-    assert budget.take() is True
+    assert budget.take("a") is None
+
+
+def test_an_address_gets_a_new_share_each_day():
+    today = [datetime.date(2026, 11, 2)]
+    budget = DailyBudget(9, 1, today=lambda: today[0])
+    assert budget.take("a") is None
+    assert budget.take("a") == ADDRESS_SPENT
+    today[0] = datetime.date(2026, 11, 3)
+    assert budget.take("a") is None
+
+
+def test_a_refused_address_spends_nothing_from_the_day():
+    budget = DailyBudget(2, 1)
+    budget.take("a")
+    budget.take("a")
+    assert budget.take("b") is None
+    assert budget.remaining() is False
 
 
 def test_a_sentence_the_rules_solve_spends_nothing():

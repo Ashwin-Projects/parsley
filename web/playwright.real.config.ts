@@ -24,6 +24,7 @@ export default defineConfig({
         // One address runs the whole suite here, far above what one visitor sends.
         PARSLEY_RATE_LIMIT_PER_MINUTE: '1000',
         PARSLEY_HARD_RATE_LIMIT_PER_MINUTE: '1000',
+        PARSLEY_SESSION_RATE_LIMIT_PER_MINUTE: '1000',
       },
     },
     {

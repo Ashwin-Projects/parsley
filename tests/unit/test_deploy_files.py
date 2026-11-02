@@ -66,7 +66,8 @@ def test_the_guide_covers_both_hosts_and_every_limit():
     assert "Render" in guide and "Hugging Face" in guide
     for name in (
         "PARSLEY_RATE_LIMIT_PER_MINUTE", "PARSLEY_HARD_RATE_LIMIT_PER_MINUTE", "PARSLEY_LLM_DAILY_CAP",
-        "PARSLEY_LLM_SESSION_CAP", "PARSLEY_MAX_SESSIONS", "PARSLEY_SESSION_TTL", "PARSLEY_ALLOWED_ORIGINS",
+        "PARSLEY_LLM_SESSION_CAP", "PARSLEY_LLM_ADDRESS_CAP", "PARSLEY_SESSION_RATE_LIMIT_PER_MINUTE",
+        "PARSLEY_MAX_SESSIONS", "PARSLEY_SESSION_TTL", "PARSLEY_ALLOWED_ORIGINS",
         "PARSLEY_CLIENT_IP_HEADER", "PARSLEY_FRAME_ANCESTORS",
     ):
         assert name in guide, name
